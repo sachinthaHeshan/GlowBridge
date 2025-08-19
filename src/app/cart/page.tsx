@@ -6,9 +6,11 @@ import { formatPrice } from '@/utils/price';
 import { LoadingSpinner, EmptyState } from '@/components/common/UIComponents';
 import { groupCartItemsBySalon } from '@/utils/cart';
 import { AppLayout } from '@/components/AppLayout';
+import { useRouter } from 'next/navigation';
 
 function CartPageContent() {
   const { cart, totals, clearCart } = useCart();
+  const router = useRouter();
 
   if (cart.isLoading) {
     return (
@@ -28,7 +30,7 @@ function CartPageContent() {
             title="Your cart is empty"
             description="Looks like you haven't added any beauty products yet. Explore our marketplace to find amazing products from top salons."
             actionLabel="Start Shopping"
-            onAction={() => window.location.href = '/'}
+            onAction={() => router.push('/')}
           />
         </div>
       </div>
@@ -132,12 +134,15 @@ function CartPageContent() {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                <button className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                <button 
+                  onClick={() => router.push('/checkout')}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
                   Proceed to Checkout
                 </button>
                 
                 <button
-                  onClick={() => window.location.href = '/'}
+                  onClick={() => router.push('/')}
                   className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                 >
                   Continue Shopping

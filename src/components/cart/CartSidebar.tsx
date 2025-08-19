@@ -4,9 +4,17 @@ import { useCart } from '@/contexts/CartContext';
 import { CartItemComponent } from './CartItem';
 import { formatPrice } from '@/utils/price';
 import { LoadingSpinner } from '@/components/common/UIComponents';
+import { useRouter } from 'next/navigation';
 
 export const CartSidebar = () => {
   const { cart, totals, isCartOpen, setIsCartOpen, clearCart } = useCart();
+  const router = useRouter();
+
+  const handleViewCart = () => {
+    console.log('View Cart clicked'); // Debug log
+    setIsCartOpen(false); // Close the sidebar
+    router.push('/cart'); // Navigate to cart page
+  };
 
   if (!isCartOpen) return null;
 
@@ -15,11 +23,20 @@ export const CartSidebar = () => {
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={() => setIsCartOpen(false)}
+        onClick={(e) => {
+          console.log('Backdrop clicked');
+          setIsCartOpen(false);
+        }}
       />
 
       {/* Sidebar */}
-      <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 flex flex-col">
+      <div 
+        className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 flex flex-col"
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent backdrop clicks when clicking inside sidebar
+          console.log('Sidebar clicked');
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -119,14 +136,28 @@ export const CartSidebar = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-2">
-                <button className="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 transition-colors">
-                  Proceed to Checkout
-                </button>
+              <div className="space-y-2 relative z-10">
+                <div 
+                  onClick={() => {
+                    console.log('View Cart clicked - navigating to cart page');
+                    handleViewCart();
+                  }}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 transition-colors cursor-pointer relative z-20 text-center"
+                  style={{ pointerEvents: 'auto' }}
+                >
+                  View Cart
+                </div>
                 
                 <button
-                  onClick={clearCart}
-                  className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md font-medium hover:bg-gray-200 transition-colors"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Clear Cart clicked'); // Debug log
+                    clearCart();
+                  }}
+                  className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md font-medium hover:bg-gray-200 transition-colors cursor-pointer relative z-20"
+                  style={{ pointerEvents: 'auto' }}
                 >
                   Clear Cart
                 </button>
