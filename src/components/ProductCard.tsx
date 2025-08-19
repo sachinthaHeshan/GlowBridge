@@ -23,14 +23,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const hasDiscount = product.discount != null && product.discount > 0;
   const isAvailable = isProductAvailable(product.available_quantity);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e: any) => {
+    console.log('🛒 Add to Cart clicked for product:', product.name);
+    e.preventDefault();
+    e.stopPropagation();
+    
     try {
       setIsAddingToCart(true);
       setAddToCartError(null);
+      console.log('🛒 Calling addToCart service...');
       await addToCart(product.id);
+      console.log('🛒 Add to Cart successful!');
       
       // Show success feedback
-      const button = document.activeElement as HTMLButtonElement;
+      const button = e.currentTarget;
       if (button) {
         const originalText = button.textContent;
         button.textContent = 'Added!';
@@ -41,6 +47,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         }, 1500);
       }
     } catch (error) {
+      console.error('🛒 Add to Cart error:', error);
       setAddToCartError(error instanceof Error ? error.message : 'Failed to add to cart');
     } finally {
       setIsAddingToCart(false);
@@ -120,6 +127,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <p className="text-xs text-red-600">{addToCartError}</p>
           )}
           <button
+            type="button"
             onClick={handleAddToCart}
             disabled={!isAvailable || isAddingToCart}
             className={`w-full py-2 px-4 rounded-md font-medium text-sm transition-colors duration-200 ${

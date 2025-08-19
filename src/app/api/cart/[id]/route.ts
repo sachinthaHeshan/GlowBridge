@@ -22,7 +22,7 @@ export async function PUT(
 
     // For now using a hardcoded user ID until authentication is implemented
     // Using a valid UUID format for the database
-    const userId = '00000000-0000-0000-0000-000000000123';
+    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
 
     const updatedItem = await CartService.updateCartItemQuantity(userId, id, quantity);
     
@@ -62,7 +62,7 @@ export async function DELETE(
 
     // For now using a hardcoded user ID until authentication is implemented
     // Using a valid UUID format for the database
-    const userId = '00000000-0000-0000-0000-000000000123';
+    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
 
     const success = await CartService.removeFromCart(userId, id);
     

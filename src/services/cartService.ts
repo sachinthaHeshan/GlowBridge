@@ -39,13 +39,20 @@ export class CartService {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add item to cart');
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.message || 'Failed to add item to cart');
       }
 
       return await response.json();
     } catch (error) {
       console.error('Error adding to cart:', error);
+      
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error: Unable to connect to server');
+      }
+      
+      // Re-throw the error as-is if it's already a custom error
       throw error;
     }
   }
@@ -64,8 +71,8 @@ export class CartService {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update cart item');
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.message || 'Failed to update cart item');
       }
 
       return await response.json();
@@ -86,8 +93,8 @@ export class CartService {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to remove item from cart');
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.message || 'Failed to remove item from cart');
       }
     } catch (error) {
       console.error('Error removing from cart:', error);
@@ -106,8 +113,8 @@ export class CartService {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to clear cart');
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.message || 'Failed to clear cart');
       }
     } catch (error) {
       console.error('Error clearing cart:', error);

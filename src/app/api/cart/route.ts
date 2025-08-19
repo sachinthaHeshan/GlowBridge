@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     // For now using a hardcoded user ID until authentication is implemented
     // Using a valid UUID format for the database
-    const userId = '00000000-0000-0000-0000-000000000123';
+    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
     
     const cartItems = await CartService.getCartItems(userId);
     
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // For now using a hardcoded user ID until authentication is implemented
     // Using a valid UUID format for the database
-    const userId = '00000000-0000-0000-0000-000000000123';
+    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
     
     const cartItem = await CartService.addToCart(userId, product_id, quantity);
     
@@ -94,7 +94,7 @@ export async function DELETE(request: NextRequest) {
   try {
     // For now using a hardcoded user ID until authentication is implemented
     // Using a valid UUID format for the database
-    const userId = '00000000-0000-0000-0000-000000000123';
+    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
     
     await CartService.clearCart(userId);
     
