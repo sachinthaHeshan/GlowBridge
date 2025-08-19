@@ -1,16 +1,19 @@
-export const calculateDiscountedPrice = (originalPrice: number, discount: number): number => {
-  if (discount <= 0) return originalPrice;
+export const calculateDiscountedPrice = (originalPrice: number, discount: number | null): number => {
+  if (!discount || discount <= 0) return originalPrice;
   return Math.round(originalPrice * (1 - discount / 100));
 };
 
-export const formatPrice = (price: number): string => {
+export const formatPrice = (priceInCents: number): string => {
+  // Convert cents to dollars for formatting
+  const priceInDollars = priceInCents / 100;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(price);
+  }).format(priceInDollars);
 };
 
-export const getDiscountPercentage = (discount: number): string => {
+export const getDiscountPercentage = (discount: number | null): string => {
+  if (!discount || discount <= 0) return '';
   return `${discount}% OFF`;
 };
 

@@ -1,5 +1,35 @@
 import { Product } from '@/types/product';
 
+// TODO: Replace with actual PostgreSQL connection
+// Example query for fetching products:
+/*
+SELECT 
+  p.id,
+  p.salon_id,
+  p.name,
+  p.description,
+  p.price,
+  p.available_quantity,
+  p.is_public,
+  p.discount,
+  s.name as salon_name
+FROM product p
+LEFT JOIN salon s ON p.salon_id = s.id
+WHERE p.is_public = true
+  AND ($1::uuid IS NULL OR p.salon_id = $1)
+  AND ($2::integer IS NULL OR p.price >= $2)
+  AND ($3::integer IS NULL OR p.price <= $3)
+  AND ($4::boolean IS NULL OR p.available_quantity > 0)
+  AND ($5::boolean IS NULL OR p.discount > 0)
+  AND ($6::text IS NULL OR p.name ILIKE '%' || $6 || '%')
+ORDER BY 
+  CASE WHEN $7 = 'price_asc' THEN p.price END ASC,
+  CASE WHEN $7 = 'price_desc' THEN p.price END DESC,
+  CASE WHEN $7 = 'highest_discount' THEN COALESCE(p.discount, 0) END DESC,
+  p.id DESC
+LIMIT $8 OFFSET $9;
+*/
+
 // Mock database - Replace with actual PostgreSQL queries
 const mockProducts: Product[] = [
   {
@@ -7,72 +37,66 @@ const mockProducts: Product[] = [
     salon_id: 'salon-1',
     name: 'Luxury Facial Cream',
     description: 'Premium anti-aging facial cream with natural ingredients',
-    price: 89.99,
+    price: 8999,  // $89.99 stored as cents (8999 cents)
     available_quantity: 15,
     is_public: true,
-    discount: 20,
+    discount: 20,  // 20% discount
     salon_name: 'Bella Beauty Salon',
-    created_at: '2024-01-15',
   },
   {
     id: '2',
     salon_id: 'salon-2',
     name: 'Hair Serum Treatment',
     description: 'Nourishing hair serum for damaged and dry hair',
-    price: 45.50,
+    price: 4550,  // $45.50 stored as cents (4550 cents)
     available_quantity: 0,
     is_public: true,
-    discount: 0,
+    discount: null,  // no discount
     salon_name: 'Glamour Studio',
-    created_at: '2024-01-10',
   },
   {
     id: '3',
     salon_id: 'salon-1',
     name: 'Organic Lip Balm Set',
     description: 'Set of 3 organic lip balms with different flavors',
-    price: 24.99,
+    price: 2499,  // $24.99 stored as cents (2499 cents)
     available_quantity: 8,
     is_public: true,
-    discount: 15,
+    discount: 15,  // 15% discount
     salon_name: 'Bella Beauty Salon',
-    created_at: '2024-01-20',
   },
   {
     id: '4',
     salon_id: 'salon-3',
     name: 'Professional Makeup Kit',
     description: 'Complete makeup kit for professional use',
-    price: 199.99,
+    price: 19999, // $199.99 stored as cents (19999 cents)
     available_quantity: 3,
     is_public: true,
-    discount: 30,
+    discount: 30,  // 30% discount
     salon_name: 'Elite Beauty Center',
-    created_at: '2024-01-18',
   },
   {
     id: '5',
     salon_id: 'salon-2',
     name: 'Moisturizing Body Lotion',
     description: 'Deep moisturizing body lotion for all skin types',
-    price: 32.75,
+    price: 3275,  // $32.75 stored as cents (3275 cents)
     available_quantity: 12,
     is_public: true,
-    discount: 0,
+    discount: null,  // no discount
     salon_name: 'Glamour Studio',
-    created_at: '2024-01-12',
   },
   {
     id: '6',
     salon_id: 'salon-3',
     name: 'Eye Shadow Palette',
     description: '24-color professional eye shadow palette',
-    price: 67.99,
+    price: 6799,  // $67.99 stored as cents (6799 cents)
     available_quantity: 6,
     is_public: true,
-    discount: 25,
+    discount: 25,  // 25% discount
     salon_name: 'Elite Beauty Center',
-    created_at: '2024-01-22',
   },
 ];
 
@@ -92,10 +116,10 @@ export async function GET(request: Request) {
     // Filter products
     let filteredProducts = mockProducts.filter(product => {
       if (salon_id && product.salon_id !== salon_id) return false;
-      if (min_price && product.price < parseFloat(min_price)) return false;
-      if (max_price && product.price > parseFloat(max_price)) return false;
+      if (min_price && product.price < parseFloat(min_price) * 100) return false; // Convert to cents
+      if (max_price && product.price > parseFloat(max_price) * 100) return false; // Convert to cents
       if (in_stock_only && product.available_quantity <= 0) return false;
-      if (has_discount && product.discount <= 0) return false;
+      if (has_discount && (!product.discount || product.discount <= 0)) return false;
       if (search && !product.name.toLowerCase().includes(search.toLowerCase())) return false;
       return product.is_public;
     });
@@ -108,10 +132,13 @@ export async function GET(request: Request) {
         case 'price_desc':
           return b.price - a.price;
         case 'highest_discount':
-          return b.discount - a.discount;
+          const aDiscount = a.discount || 0;
+          const bDiscount = b.discount || 0;
+          return bDiscount - aDiscount;
         case 'newest':
         default:
-          return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
+          // Since we don't have created_at in DB schema, sort by id
+          return b.id.localeCompare(a.id);
       }
     });
 

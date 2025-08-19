@@ -1,18 +1,18 @@
 export interface CartItem {
-  id: string;
-  user_id: string;
-  product_id: string;
-  quantity: number;
+  id: string;          // uuid [pk, not null] - shopping_cart_item.id
+  user_id: string;     // uuid [not null] - foreign key to user.id
+  product_id: string;  // uuid [not null] - foreign key to product.id
+  quantity: number;    // int [not null]
   product?: {
     id: string;
     salon_id: string;
     name: string;
-    description: string;
-    price: number;
+    description: string | null;
+    price: number;        // stored in cents
     available_quantity: number;
-    discount: number;
+    discount: number | null;
     salon_name?: string;
-    image_url?: string;
+    image_url?: string;   // not in DB - handled separately
   };
 }
 

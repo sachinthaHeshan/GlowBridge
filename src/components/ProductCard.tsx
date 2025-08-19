@@ -20,7 +20,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
 
   const discountedPrice = calculateDiscountedPrice(product.price, product.discount);
-  const hasDiscount = product.discount > 0;
+  const hasDiscount = product.discount != null && product.discount > 0;
   const isAvailable = isProductAvailable(product.available_quantity);
 
   const handleAddToCart = async () => {

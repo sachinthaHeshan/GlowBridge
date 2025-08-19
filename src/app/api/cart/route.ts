@@ -1,5 +1,45 @@
 import { CartItem } from '@/types/cart';
 
+// TODO: Replace with actual PostgreSQL connection
+// Example queries for cart operations:
+/*
+-- Get user's cart with product details:
+SELECT 
+  ci.id,
+  ci.user_id,
+  ci.product_id,
+  ci.quantity,
+  p.name,
+  p.description,
+  p.price,
+  p.available_quantity,
+  p.discount,
+  s.name as salon_name
+FROM shopping_cart_item ci
+JOIN product p ON ci.product_id = p.id
+JOIN salon s ON p.salon_id = s.id
+WHERE ci.user_id = $1;
+
+-- Add/Update cart item:
+INSERT INTO shopping_cart_item (id, user_id, product_id, quantity)
+VALUES (uuid_generate_v4(), $1, $2, $3)
+ON CONFLICT (user_id, product_id)
+DO UPDATE SET quantity = shopping_cart_item.quantity + $3;
+
+-- Update cart item quantity:
+UPDATE shopping_cart_item 
+SET quantity = $1 
+WHERE id = $2 AND user_id = $3;
+
+-- Remove cart item:
+DELETE FROM shopping_cart_item 
+WHERE id = $1 AND user_id = $2;
+
+-- Clear user's cart:
+DELETE FROM shopping_cart_item 
+WHERE user_id = $1;
+*/
+
 // Mock user ID - Replace with actual authentication
 const MOCK_USER_ID = 'user-123';
 
@@ -15,9 +55,9 @@ let mockCartItems: CartItem[] = [
       salon_id: 'salon-1',
       name: 'Luxury Facial Cream',
       description: 'Premium anti-aging facial cream with natural ingredients',
-      price: 89.99,
+      price: 8999,  // $89.99 stored as cents
       available_quantity: 15,
-      discount: 20,
+      discount: 20,  // 20% discount
       salon_name: 'Bella Beauty Salon',
     },
   },
@@ -30,9 +70,9 @@ const mockProducts = [
     salon_id: 'salon-1',
     name: 'Luxury Facial Cream',
     description: 'Premium anti-aging facial cream with natural ingredients',
-    price: 89.99,
+    price: 8999,  // $89.99 stored as cents
     available_quantity: 15,
-    discount: 20,
+    discount: 20,  // 20% discount
     salon_name: 'Bella Beauty Salon',
   },
   {
@@ -40,9 +80,9 @@ const mockProducts = [
     salon_id: 'salon-2',
     name: 'Hair Serum Treatment',
     description: 'Nourishing hair serum for damaged and dry hair',
-    price: 45.50,
+    price: 4550,  // $45.50 stored as cents
     available_quantity: 0,
-    discount: 0,
+    discount: null,  // no discount
     salon_name: 'Glamour Studio',
   },
   {
@@ -50,9 +90,9 @@ const mockProducts = [
     salon_id: 'salon-1',
     name: 'Organic Lip Balm Set',
     description: 'Set of 3 organic lip balms with different flavors',
-    price: 24.99,
+    price: 2499,  // $24.99 stored as cents
     available_quantity: 8,
-    discount: 15,
+    discount: 15,  // 15% discount
     salon_name: 'Bella Beauty Salon',
   },
 ];

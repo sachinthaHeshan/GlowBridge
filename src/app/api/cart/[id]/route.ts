@@ -54,7 +54,7 @@ export async function PUT(
 ) {
   try {
     const { quantity } = await request.json();
-    const itemId = params.id;
+    const { id: itemId } = await params;
 
     if (!quantity || quantity < 1) {
       return new Response(
@@ -139,7 +139,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const itemId = params.id;
+    const { id: itemId } = await params;
 
     // TODO: Get user ID from authentication
     const userId = MOCK_USER_ID;
