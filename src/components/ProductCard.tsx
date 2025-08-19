@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Product } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
 import { 
@@ -16,6 +17,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
+  const router = useRouter();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
 
@@ -52,6 +54,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     } finally {
       setIsAddingToCart(false);
     }
+  };
+
+  const handleViewDetails = () => {
+    router.push(`/products/${product.id}`);
   };
 
   return (
@@ -121,11 +127,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </span>
         </div>
 
-        {/* Add to Cart Button */}
+        {/* Action Buttons */}
         <div className="space-y-2">
           {addToCartError && (
             <p className="text-xs text-red-600">{addToCartError}</p>
           )}
+          
+          {/* View Details Button */}
+          <button
+            type="button"
+            onClick={handleViewDetails}
+            className="w-full py-2 px-4 rounded-md font-medium text-sm transition-colors duration-200 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300"
+          >
+            View Details
+          </button>
+          
+          {/* Add to Cart Button */}
           <button
             type="button"
             onClick={handleAddToCart}
