@@ -1,272 +1,121 @@
-import { CartItem } from '@/types/cart';
+import { NextRequest } from 'next/server';
+import { CartService } from '@/services/databaseCartService';
 
-// TODO: Replace with actual PostgreSQL connection
-// Example queries for cart operations:
-/*
--- Get user's cart with product details:
-SELECT 
-  ci.id,
-  ci.user_id,
-  ci.product_id,
-  ci.quantity,
-  p.name,
-  p.description,
-  p.price,
-  p.available_quantity,
-  p.discount,
-  s.name as salon_name
-FROM shopping_cart_item ci
-JOIN product p ON ci.product_id = p.id
-JOIN salon s ON p.salon_id = s.id
-WHERE ci.user_id = $1;
-
--- Add/Update cart item:
-INSERT INTO shopping_cart_item (id, user_id, product_id, quantity)
-VALUES (uuid_generate_v4(), $1, $2, $3)
-ON CONFLICT (user_id, product_id)
-DO UPDATE SET quantity = shopping_cart_item.quantity + $3;
-
--- Update cart item quantity:
-UPDATE shopping_cart_item 
-SET quantity = $1 
-WHERE id = $2 AND user_id = $3;
-
--- Remove cart item:
-DELETE FROM shopping_cart_item 
-WHERE id = $1 AND user_id = $2;
-
--- Clear user's cart:
-DELETE FROM shopping_cart_item 
-WHERE user_id = $1;
-*/
-
-// Mock user ID - Replace with actual authentication
-const MOCK_USER_ID = 'user-123';
-
-// Mock cart data - Replace with actual PostgreSQL database
-let mockCartItems: CartItem[] = [
-  {
-    id: 'cart-1',
-    user_id: MOCK_USER_ID,
-    product_id: '1',
-    quantity: 2,
-    product: {
-      id: '1',
-      salon_id: 'salon-1',
-      name: 'Luxury Facial Cream',
-      description: 'Premium anti-aging facial cream with natural ingredients',
-      price: 8999,  // $89.99 stored as cents
-      available_quantity: 15,
-      discount: 20,  // 20% discount
-      salon_name: 'Bella Beauty Salon',
-    },
-  },
-];
-
-// Mock products for validation - Replace with actual database queries
-const mockProducts = [
-  {
-    id: '1',
-    salon_id: 'salon-1',
-    name: 'Luxury Facial Cream',
-    description: 'Premium anti-aging facial cream with natural ingredients',
-    price: 8999,  // $89.99 stored as cents
-    available_quantity: 15,
-    discount: 20,  // 20% discount
-    salon_name: 'Bella Beauty Salon',
-  },
-  {
-    id: '2',
-    salon_id: 'salon-2',
-    name: 'Hair Serum Treatment',
-    description: 'Nourishing hair serum for damaged and dry hair',
-    price: 4550,  // $45.50 stored as cents
-    available_quantity: 0,
-    discount: null,  // no discount
-    salon_name: 'Glamour Studio',
-  },
-  {
-    id: '3',
-    salon_id: 'salon-1',
-    name: 'Organic Lip Balm Set',
-    description: 'Set of 3 organic lip balms with different flavors',
-    price: 2499,  // $24.99 stored as cents
-    available_quantity: 8,
-    discount: 15,  // 15% discount
-    salon_name: 'Bella Beauty Salon',
-  },
-];
-
-// GET /api/cart - Fetch user's cart items with product details
-export async function GET() {
+// GET /api/cart - Get user's cart items
+export async function GET(request: NextRequest) {
   try {
-    // TODO: Get user ID from authentication
-    const userId = MOCK_USER_ID;
-
-    // TODO: Replace with actual PostgreSQL query
-    // SELECT ci.*, p.name, p.description, p.price, p.available_quantity, p.discount, s.name as salon_name
-    // FROM shopping_cart_item ci
-    // JOIN products p ON ci.product_id = p.id
-    // JOIN salons s ON p.salon_id = s.id
-    // WHERE ci.user_id = $1
-
-    const userCartItems = mockCartItems.filter(item => item.user_id === userId);
-
-    return new Response(JSON.stringify(userCartItems), {
-      headers: { 'Content-Type': 'application/json' },
+    // For now using a hardcoded user ID until authentication is implemented
+    // Using a valid UUID format for the database
+    const userId = '00000000-0000-0000-0000-000000000123';
+    
+    const cartItems = await CartService.getCartItems(userId);
+    
+    return new Response(JSON.stringify(cartItems), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   } catch (error) {
     console.error('Error fetching cart:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to fetch cart' }),
-      { 
+      JSON.stringify({ error: 'Failed to fetch cart items' }),
+      {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
     );
   }
 }
 
 // POST /api/cart - Add item to cart
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { product_id, quantity = 1 } = await request.json();
-
+    
     if (!product_id) {
       return new Response(
         JSON.stringify({ error: 'Product ID is required' }),
-        { 
+        {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
         }
       );
     }
 
-    // TODO: Get user ID from authentication
-    const userId = MOCK_USER_ID;
-
-    // TODO: Replace with actual PostgreSQL query to get product
-    const product = mockProducts.find(p => p.id === product_id);
+    // For now using a hardcoded user ID until authentication is implemented
+    // Using a valid UUID format for the database
+    const userId = '00000000-0000-0000-0000-000000000123';
     
-    if (!product) {
-      return new Response(
-        JSON.stringify({ error: 'Product not found' }),
-        { 
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Check if product is in stock
-    if (product.available_quantity === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Product is out of stock' }),
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Check if item already exists in cart
-    const existingItemIndex = mockCartItems.findIndex(
-      item => item.user_id === userId && item.product_id === product_id
-    );
-
-    let cartItem: CartItem;
-
-    if (existingItemIndex >= 0) {
-      // Update existing item quantity
-      const newQuantity = mockCartItems[existingItemIndex].quantity + quantity;
-      
-      // Validate quantity doesn't exceed available stock
-      if (newQuantity > product.available_quantity) {
-        return new Response(
-          JSON.stringify({ 
-            error: `Cannot add ${quantity} items. Only ${product.available_quantity - mockCartItems[existingItemIndex].quantity} more available.` 
-          }),
-          { 
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      mockCartItems[existingItemIndex].quantity = newQuantity;
-      cartItem = mockCartItems[existingItemIndex];
-    } else {
-      // Validate quantity doesn't exceed available stock
-      if (quantity > product.available_quantity) {
-        return new Response(
-          JSON.stringify({ 
-            error: `Cannot add ${quantity} items. Only ${product.available_quantity} available.` 
-          }),
-          { 
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      // Create new cart item
-      cartItem = {
-        id: `cart-${Date.now()}`,
-        user_id: userId,
-        product_id,
-        quantity,
-        product,
-      };
-
-      mockCartItems.push(cartItem);
-    }
-
-    // TODO: Replace with actual PostgreSQL INSERT/UPDATE
-    // INSERT INTO shopping_cart_item (id, user_id, product_id, quantity)
-    // VALUES ($1, $2, $3, $4)
-    // ON CONFLICT (user_id, product_id)
-    // DO UPDATE SET quantity = shopping_cart_item.quantity + $4
-
+    const cartItem = await CartService.addToCart(userId, product_id, quantity);
+    
     return new Response(JSON.stringify(cartItem), {
       status: 201,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   } catch (error) {
     console.error('Error adding to cart:', error);
+    
+    let errorMessage = 'Failed to add item to cart';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Product not found')) {
+        errorMessage = 'Product not found';
+        statusCode = 404;
+      } else if (error.message.includes('Insufficient inventory')) {
+        errorMessage = 'Insufficient inventory';
+        statusCode = 400;
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     return new Response(
-      JSON.stringify({ error: 'Failed to add item to cart' }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
+      JSON.stringify({ error: errorMessage }),
+      {
+        status: statusCode,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
     );
   }
 }
 
 // DELETE /api/cart - Clear entire cart
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
-    // TODO: Get user ID from authentication
-    const userId = MOCK_USER_ID;
-
-    // TODO: Replace with actual PostgreSQL query
-    // DELETE FROM shopping_cart_item WHERE user_id = $1
-
-    mockCartItems = mockCartItems.filter(item => item.user_id !== userId);
-
+    // For now using a hardcoded user ID until authentication is implemented
+    // Using a valid UUID format for the database
+    const userId = '00000000-0000-0000-0000-000000000123';
+    
+    await CartService.clearCart(userId);
+    
     return new Response(
       JSON.stringify({ message: 'Cart cleared successfully' }),
       {
-        headers: { 'Content-Type': 'application/json' },
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
     );
   } catch (error) {
     console.error('Error clearing cart:', error);
     return new Response(
       JSON.stringify({ error: 'Failed to clear cart' }),
-      { 
+      {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
     );
   }

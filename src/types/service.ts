@@ -1,5 +1,13 @@
 // Service types based on DB structure
 
+// Generic paginated response type
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface GlobalService {
   id: string;              // uuid [pk, not null]
   name: string;            // text [not null]

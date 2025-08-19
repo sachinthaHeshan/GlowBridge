@@ -1,60 +1,14 @@
-import { CartItem } from '@/types/cart';
-
-// Mock user ID - Replace with actual authentication
-const MOCK_USER_ID = 'user-123';
-
-// Mock cart data - Replace with actual PostgreSQL database
-let mockCartItems: CartItem[] = [
-  {
-    id: 'cart-1',
-    user_id: MOCK_USER_ID,
-    product_id: '1',
-    quantity: 2,
-    product: {
-      id: '1',
-      salon_id: 'salon-1',
-      name: 'Luxury Facial Cream',
-      description: 'Premium anti-aging facial cream with natural ingredients',
-      price: 89.99,
-      available_quantity: 15,
-      discount: 20,
-      salon_name: 'Bella Beauty Salon',
-    },
-  },
-];
-
-// Mock products for validation
-const mockProducts = [
-  {
-    id: '1',
-    salon_id: 'salon-1',
-    name: 'Luxury Facial Cream',
-    description: 'Premium anti-aging facial cream with natural ingredients',
-    price: 89.99,
-    available_quantity: 15,
-    discount: 20,
-    salon_name: 'Bella Beauty Salon',
-  },
-  {
-    id: '2',
-    salon_id: 'salon-2',
-    name: 'Hair Serum Treatment',
-    description: 'Nourishing hair serum for damaged and dry hair',
-    price: 45.50,
-    available_quantity: 0,
-    discount: 0,
-    salon_name: 'Glamour Studio',
-  },
-];
+import { NextRequest } from 'next/server';
+import { CartService } from '@/services/databaseCartService';
 
 // PUT /api/cart/[id] - Update item quantity
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const { quantity } = await request.json();
-    const { id: itemId } = await params;
+    const { id } = params;
 
     if (!quantity || quantity < 1) {
       return new Response(
@@ -66,15 +20,13 @@ export async function PUT(
       );
     }
 
-    // TODO: Get user ID from authentication
-    const userId = MOCK_USER_ID;
+    // For now using a hardcoded user ID until authentication is implemented
+    // Using a valid UUID format for the database
+    const userId = '00000000-0000-0000-0000-000000000123';
 
-    // Find cart item
-    const cartItemIndex = mockCartItems.findIndex(
-      item => item.id === itemId && item.user_id === userId
-    );
-
-    if (cartItemIndex === -1) {
+    const updatedItem = await CartService.updateCartItemQuantity(userId, id, quantity);
+    
+    if (!updatedItem) {
       return new Response(
         JSON.stringify({ error: 'Cart item not found' }),
         { 
@@ -84,41 +36,8 @@ export async function PUT(
       );
     }
 
-    const cartItem = mockCartItems[cartItemIndex];
-    
-    // Get product to validate quantity
-    const product = mockProducts.find(p => p.id === cartItem.product_id);
-    
-    if (!product) {
-      return new Response(
-        JSON.stringify({ error: 'Product not found' }),
-        { 
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Validate quantity doesn't exceed available stock
-    if (quantity > product.available_quantity) {
-      return new Response(
-        JSON.stringify({ 
-          error: `Cannot set quantity to ${quantity}. Only ${product.available_quantity} available.` 
-        }),
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Update quantity
-    mockCartItems[cartItemIndex].quantity = quantity;
-
-    // TODO: Replace with actual PostgreSQL UPDATE
-    // UPDATE shopping_cart_item SET quantity = $1 WHERE id = $2 AND user_id = $3
-
-    return new Response(JSON.stringify(mockCartItems[cartItemIndex]), {
+    return new Response(JSON.stringify(updatedItem), {
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
@@ -135,22 +54,19 @@ export async function PUT(
 
 // DELETE /api/cart/[id] - Remove item from cart
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id: itemId } = await params;
+    const { id } = params;
 
-    // TODO: Get user ID from authentication
-    const userId = MOCK_USER_ID;
+    // For now using a hardcoded user ID until authentication is implemented
+    // Using a valid UUID format for the database
+    const userId = '00000000-0000-0000-0000-000000000123';
 
-    // Find and remove cart item
-    const initialLength = mockCartItems.length;
-    mockCartItems = mockCartItems.filter(
-      item => !(item.id === itemId && item.user_id === userId)
-    );
-
-    if (mockCartItems.length === initialLength) {
+    const success = await CartService.removeFromCart(userId, id);
+    
+    if (!success) {
       return new Response(
         JSON.stringify({ error: 'Cart item not found' }),
         { 
@@ -160,12 +76,10 @@ export async function DELETE(
       );
     }
 
-    // TODO: Replace with actual PostgreSQL DELETE
-    // DELETE FROM shopping_cart_item WHERE id = $1 AND user_id = $2
-
     return new Response(
       JSON.stringify({ message: 'Item removed from cart successfully' }),
       {
+        status: 200,
         headers: { 'Content-Type': 'application/json' },
       }
     );
