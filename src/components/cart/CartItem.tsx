@@ -56,7 +56,7 @@ export const CartItemComponent = ({ item }: CartItemComponentProps) => {
   }
 
   const subtotal = getItemSubtotal(item);
-  const hasDiscount = item.product.discount > 0;
+  const hasDiscount = (item.product.discount || 0) > 0;
 
   return (
     <div className="flex items-center gap-4 p-4 border-b border-gray-200">

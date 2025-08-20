@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { CartIcon } from './cart/CartIcon';
 
 export const Header = () => {
@@ -19,18 +20,18 @@ export const Header = () => {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="/" className="text-gray-700 hover:text-gray-900 transition-colors">
+            <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors">
               Products
-            </a>
-            <a href="/cart" className="text-gray-700 hover:text-gray-900 transition-colors">
+            </Link>
+            <Link href="/cart" className="text-gray-700 hover:text-gray-900 transition-colors">
               Cart
-            </a>
-            <a href="/salons" className="text-gray-700 hover:text-gray-900 transition-colors">
+            </Link>
+            <Link href="/salons" className="text-gray-700 hover:text-gray-900 transition-colors">
               Salons
-            </a>
-            <a href="/about" className="text-gray-700 hover:text-gray-900 transition-colors">
+            </Link>
+            <Link href="/about" className="text-gray-700 hover:text-gray-900 transition-colors">
               About
-            </a>
+            </Link>
           </nav>
 
           {/* Right side actions */}
