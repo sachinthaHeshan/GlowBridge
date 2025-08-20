@@ -226,7 +226,7 @@ async function simulatePayment(paymentDetails: PaymentDetails, amount: number): 
 // Calculate estimated delivery date
 function calculateEstimatedDelivery(deliveryTimePreference: string): string {
   const baseDate = new Date();
-  let deliveryDate = new Date(baseDate);
+  const deliveryDate = new Date(baseDate);
 
   // Add delivery days based on preference
   switch (deliveryTimePreference) {

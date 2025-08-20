@@ -4,11 +4,11 @@ import { CartService } from '@/services/databaseCartService';
 // PUT /api/cart/[id] - Update item quantity
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { quantity } = await request.json();
-    const { id } = params;
+    const { id } = await params;
 
     if (!quantity || quantity < 1) {
       return new Response(
@@ -55,10 +55,10 @@ export async function PUT(
 // DELETE /api/cart/[id] - Remove item from cart
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // For now using a hardcoded user ID until authentication is implemented
     // Using a valid UUID format for the database

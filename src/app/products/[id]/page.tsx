@@ -15,7 +15,7 @@ export default function ProductPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-            <p className="text-gray-600">The product you're looking for doesn't exist.</p>
+            <p className="text-gray-600">The product you&apos;re looking for doesn&apos;t exist.</p>
           </div>
         </div>
       </AppLayout>

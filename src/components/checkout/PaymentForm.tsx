@@ -79,9 +79,9 @@ export function PaymentForm({
                   <div>
                     <h4 className="font-medium text-gray-900">{method.name}</h4>
                     <p className="text-sm text-gray-600">{method.description}</p>
-                    {method.processingFee > 0 && (
+                    {(method.processingFee || 0) > 0 && (
                       <p className="text-xs text-orange-600">
-                        Processing fee: LKR {method.processingFee}
+                        Processing fee: LKR {method.processingFee || 0}
                       </p>
                     )}
                   </div>
@@ -251,7 +251,7 @@ export function PaymentForm({
             <div>
               <h4 className="text-sm font-medium text-yellow-800">Cash on Delivery</h4>
               <p className="text-sm text-yellow-700 mt-1">
-                You'll pay in cash when your order is delivered. Please have the exact amount ready.
+                You&apos;ll pay in cash when your order is delivered. Please have the exact amount ready.
                 A processing fee of LKR {paymentDetails.method.processingFee} will be added to your total.
               </p>
             </div>
@@ -271,7 +271,7 @@ export function PaymentForm({
             <div>
               <h4 className="text-sm font-medium text-blue-800">Bank Transfer</h4>
               <p className="text-sm text-blue-700 mt-1">
-                After placing your order, you'll receive bank details via email to complete the payment.
+                After placing your order, you&apos;ll receive bank details via email to complete the payment.
                 Your order will be processed once payment is confirmed.
               </p>
             </div>

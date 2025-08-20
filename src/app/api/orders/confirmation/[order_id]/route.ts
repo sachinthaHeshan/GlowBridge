@@ -3,12 +3,12 @@ import { db } from '@/lib/database';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { order_id: string } }
+  { params }: { params: Promise<{ order_id: string }> }
 ) {
   try {
-    const orderId = params.order_id;
+    const { order_id } = await params;
 
-    if (!orderId) {
+    if (!order_id) {
       return NextResponse.json(
         { error: 'Order ID is required' },
         { status: 400 }
@@ -31,7 +31,7 @@ export async function GET(
       FROM "order" o
       JOIN "user" u ON o.user_id = u.id
       WHERE o.id = $1
-    `, [orderId]);
+    `, [order_id]);
 
     if (orderResult.rows.length === 0) {
       return NextResponse.json(
@@ -59,7 +59,7 @@ export async function GET(
       AND EXISTS (
         SELECT 1 FROM "order" WHERE id = $2 AND user_id = $1
       )
-    `, [order.user_id, orderId]);
+    `, [order.user_id, order_id]);
 
     const orderItems = itemsResult.rows.map(item => ({
       id: item.id,
