@@ -8,7 +8,7 @@ export const formatPrice = (priceInCents: number): string => {
   const priceInDollars = priceInCents / 100;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'LKR',
   }).format(priceInDollars);
 };
 
