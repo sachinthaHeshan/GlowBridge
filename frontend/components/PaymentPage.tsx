@@ -27,9 +27,8 @@ interface PaymentFormData {
   // Billing Address
   address: string;
   city: string;
-  state: string;
+  province: string;
   zipCode: string;
-  country: string;
   
   // Payment Information
   cardNumber: string;
@@ -42,9 +41,8 @@ interface PaymentFormData {
   sameAsBilling: boolean;
   shippingAddress?: string;
   shippingCity?: string;
-  shippingState?: string;
+  shippingProvince?: string;
   shippingZipCode?: string;
-  shippingCountry?: string;
 }
 
 type PaymentStep = 'cart-review' | 'personal-info' | 'billing' | 'payment' | 'review' | 'processing' | 'success' | 'failed';
@@ -55,8 +53,9 @@ export function PaymentPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'apple-pay'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash-on-delivery'>('card');
   const [orderNumber, setOrderNumber] = useState<string>('');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
   const [formData, setFormData] = useState<PaymentFormData>({
     firstName: '',
@@ -65,9 +64,8 @@ export function PaymentPage() {
     phone: '',
     address: '',
     city: '',
-    state: '',
+    province: '',
     zipCode: '',
-    country: 'US',
     cardNumber: '',
     expiryMonth: '',
     expiryYear: '',
@@ -101,7 +99,7 @@ export function PaymentPage() {
   };
 
   const formatPrice = (priceInCents: number) => {
-    return `$${(priceInCents / 100).toFixed(2)}`;
+    return `Rs.${(priceInCents / 100).toFixed(2)}`;
   };
 
   const calculateSubtotal = () => {
@@ -125,27 +123,122 @@ export function PaymentPage() {
 
   const handleInputChange = (field: keyof PaymentFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation error when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Validation functions
+  const validateEmail = (email: string): string => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) return 'Email is required';
+    if (!emailRegex.test(email)) return 'Please enter a valid email address';
+    return '';
+  };
+
+  const validatePhone = (phone: string): string => {
+    const phoneRegex = /^(?:\+94|0)?[1-9]\d{8}$/; // Sri Lankan phone number format
+    if (!phone) return 'Phone number is required';
+    if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
+      return 'Please enter a valid Sri Lankan phone number (e.g., 0771234567 or +94771234567)';
+    }
+    return '';
+  };
+
+  const validateCardNumber = (cardNumber: string): string => {
+    const cleanCard = cardNumber.replace(/\s+/g, '');
+    if (!cleanCard) return 'Card number is required';
+    if (cleanCard.length < 13 || cleanCard.length > 19) {
+      return 'Card number must be between 13 and 19 digits';
+    }
+    if (!/^\d+$/.test(cleanCard)) return 'Card number must contain only digits';
+    
+    // Luhn algorithm validation
+    let sum = 0;
+    let alternate = false;
+    for (let i = cleanCard.length - 1; i >= 0; i--) {
+      let n = parseInt(cleanCard.charAt(i), 10);
+      if (alternate) {
+        n *= 2;
+        if (n > 9) n = (n % 10) + 1;
+      }
+      sum += n;
+      alternate = !alternate;
+    }
+    if (sum % 10 !== 0) return 'Please enter a valid card number';
+    return '';
+  };
+
+  const validateCVV = (cvv: string): string => {
+    if (!cvv) return 'CVV is required';
+    if (!/^\d{3,4}$/.test(cvv)) return 'CVV must be 3 or 4 digits';
+    return '';
+  };
+
+  const validateZipCode = (zipCode: string): string => {
+    const zipRegex = /^\d{5}$/; // Sri Lankan postal codes are 5 digits
+    if (!zipCode) return 'ZIP code is required';
+    if (!zipRegex.test(zipCode)) return 'ZIP code must be 5 digits';
+    return '';
+  };
+
+  const validateRequired = (value: string, fieldName: string): string => {
+    if (!value || value.trim() === '') return `${fieldName} is required`;
+    return '';
   };
 
   const validateStep = (): boolean => {
+    const errors: Record<string, string> = {};
+    
     switch (currentStep) {
       case 'personal-info':
-        return !!(formData.firstName && formData.lastName && formData.email && formData.phone);
+        errors.firstName = validateRequired(formData.firstName, 'First name');
+        errors.lastName = validateRequired(formData.lastName, 'Last name');
+        errors.email = validateEmail(formData.email);
+        errors.phone = validatePhone(formData.phone);
+        break;
+        
       case 'billing':
-        return !!(formData.address && formData.city && formData.state && formData.zipCode);
+        errors.address = validateRequired(formData.address, 'Street address');
+        errors.city = validateRequired(formData.city, 'City');
+        errors.province = validateRequired(formData.province, 'Province');
+        errors.zipCode = validateZipCode(formData.zipCode);
+        break;
+        
       case 'payment':
         if (paymentMethod === 'card') {
-          return !!(formData.cardNumber && formData.expiryMonth && formData.expiryYear && formData.cvv && formData.cardholderName);
+          errors.cardholderName = validateRequired(formData.cardholderName, 'Cardholder name');
+          errors.cardNumber = validateCardNumber(formData.cardNumber);
+          errors.expiryMonth = validateRequired(formData.expiryMonth, 'Expiry month');
+          errors.expiryYear = validateRequired(formData.expiryYear, 'Expiry year');
+          errors.cvv = validateCVV(formData.cvv);
+          
+          // Validate expiry date
+          if (formData.expiryMonth && formData.expiryYear) {
+            const currentDate = new Date();
+            const expiryDate = new Date(parseInt(formData.expiryYear), parseInt(formData.expiryMonth) - 1);
+            if (expiryDate < currentDate) {
+              errors.expiryDate = 'Card has expired';
+            }
+          }
         }
-        return true;
-      default:
-        return true;
+        break;
     }
+
+    // Filter out empty errors
+    const filteredErrors = Object.fromEntries(
+      Object.entries(errors).filter(([_, value]) => value !== '')
+    );
+
+    setValidationErrors(filteredErrors);
+    return Object.keys(filteredErrors).length === 0;
   };
 
   const nextStep = () => {
     if (!validateStep()) {
-      // You can replace this with a toast notification or inline error display
+      // Validation errors are already set in validationErrors state
       return;
     }
 
@@ -220,6 +313,29 @@ export function PaymentPage() {
     }
   };
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Handle Sri Lankan phone number formatting
+    if (digits.startsWith('94')) {
+      // +94 format
+      const formatted = digits.replace(/^94(\d{2})(\d{3})(\d{4})$/, '+94 $1 $2 $3');
+      return formatted;
+    } else if (digits.startsWith('0')) {
+      // 0xx format
+      const formatted = digits.replace(/^0(\d{2})(\d{3})(\d{4})$/, '0$1 $2 $3');
+      return formatted;
+    }
+    
+    return digits;
+  };
+
+  const ErrorMessage = ({ error }: { error?: string }) => {
+    if (!error) return null;
+    return <p className="text-red-500 text-sm mt-1">{error}</p>;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 flex items-center justify-center">
@@ -292,10 +408,13 @@ export function PaymentPage() {
               type="text"
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                validationErrors.firstName ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="Enter your first name"
               required
             />
+            <ErrorMessage error={validationErrors.firstName} />
           </div>
           
           <div>
@@ -304,10 +423,13 @@ export function PaymentPage() {
               type="text"
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                validationErrors.lastName ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="Enter your last name"
               required
             />
+            <ErrorMessage error={validationErrors.lastName} />
           </div>
           
           <div>
@@ -316,10 +438,13 @@ export function PaymentPage() {
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                validationErrors.email ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="Enter your email"
               required
             />
+            <ErrorMessage error={validationErrors.email} />
           </div>
           
           <div>
@@ -327,11 +452,14 @@ export function PaymentPage() {
             <input
               type="tel"
               value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="Enter your phone number"
+              onChange={(e) => handleInputChange('phone', formatPhoneNumber(e.target.value))}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                validationErrors.phone ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Enter your phone number (e.g., 0771234567)"
               required
             />
+            <ErrorMessage error={validationErrors.phone} />
           </div>
         </div>
       </div>
@@ -350,10 +478,13 @@ export function PaymentPage() {
               type="text"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                validationErrors.address ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="Enter your street address"
               required
             />
+            <ErrorMessage error={validationErrors.address} />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -363,51 +494,55 @@ export function PaymentPage() {
                 type="text"
                 value={formData.city}
                 onChange={(e) => handleInputChange('city', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                  validationErrors.city ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter your city"
                 required
               />
+              <ErrorMessage error={validationErrors.city} />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">State *</label>
-              <input
-                type="text"
-                value={formData.state}
-                onChange={(e) => handleInputChange('state', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Enter your state"
+              <label className="block text-sm font-medium text-gray-700 mb-2">Province *</label>
+              <select
+                value={formData.province}
+                onChange={(e) => handleInputChange('province', e.target.value)}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                  validationErrors.province ? 'border-red-500' : 'border-gray-300'
+                }`}
                 required
-              />
+              >
+                <option value="">Select your province</option>
+                <option value="Western">Western Province</option>
+                <option value="Central">Central Province</option>
+                <option value="Southern">Southern Province</option>
+                <option value="Northern">Northern Province</option>
+                <option value="Eastern">Eastern Province</option>
+                <option value="North Western">North Western Province</option>
+                <option value="North Central">North Central Province</option>
+                <option value="Uva">Uva Province</option>
+                <option value="Sabaragamuwa">Sabaragamuwa Province</option>
+              </select>
+              <ErrorMessage error={validationErrors.province} />
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code *</label>
               <input
                 type="text"
                 value={formData.zipCode}
-                onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Enter your ZIP code"
+                onChange={(e) => handleInputChange('zipCode', e.target.value.replace(/\D/g, '').slice(0, 5))}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                  validationErrors.zipCode ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Enter your ZIP code (5 digits)"
+                maxLength={5}
                 required
               />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Country *</label>
-              <select
-                value={formData.country}
-                onChange={(e) => handleInputChange('country', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                required
-              >
-                <option value="US">United States</option>
-                <option value="CA">Canada</option>
-                <option value="UK">United Kingdom</option>
-                <option value="AU">Australia</option>
-              </select>
+              <ErrorMessage error={validationErrors.zipCode} />
             </div>
           </div>
         </div>
@@ -423,7 +558,7 @@ export function PaymentPage() {
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-semibold mb-4">Select Payment Method</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <button
             onClick={() => setPaymentMethod('card')}
             className={`p-4 border-2 rounded-lg transition-all ${
@@ -439,30 +574,16 @@ export function PaymentPage() {
           </button>
           
           <button
-            onClick={() => setPaymentMethod('paypal')}
+            onClick={() => setPaymentMethod('cash-on-delivery')}
             className={`p-4 border-2 rounded-lg transition-all ${
-              paymentMethod === 'paypal' 
+              paymentMethod === 'cash-on-delivery' 
                 ? 'border-pink-500 bg-pink-50' 
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
             <div className="text-center">
-              <div className="text-2xl mb-2">PAY</div>
-              <div className="font-medium">PayPal</div>
-            </div>
-          </button>
-          
-          <button
-            onClick={() => setPaymentMethod('apple-pay')}
-            className={`p-4 border-2 rounded-lg transition-all ${
-              paymentMethod === 'apple-pay' 
-                ? 'border-pink-500 bg-pink-50' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <div className="text-center">
-              <div className="text-2xl mb-2">APPLE</div>
-              <div className="font-medium">Apple Pay</div>
+              <div className="text-2xl mb-2">CASH</div>
+              <div className="font-medium">Cash on Delivery</div>
             </div>
           </button>
         </div>
@@ -476,10 +597,13 @@ export function PaymentPage() {
                 type="text"
                 value={formData.cardholderName}
                 onChange={(e) => handleInputChange('cardholderName', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                  validationErrors.cardholderName ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter cardholder name"
                 required
               />
+              <ErrorMessage error={validationErrors.cardholderName} />
             </div>
             
             <div>
@@ -488,11 +612,14 @@ export function PaymentPage() {
                 type="text"
                 value={formData.cardNumber}
                 onChange={(e) => handleInputChange('cardNumber', formatCardNumber(e.target.value))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                  validationErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="1234 5678 9012 3456"
                 maxLength={19}
                 required
               />
+              <ErrorMessage error={validationErrors.cardNumber} />
             </div>
             
             <div className="grid grid-cols-3 gap-4">
@@ -501,7 +628,9 @@ export function PaymentPage() {
                 <select
                   value={formData.expiryMonth}
                   onChange={(e) => handleInputChange('expiryMonth', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                    validationErrors.expiryMonth ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 >
                   <option value="">MM</option>
@@ -511,6 +640,7 @@ export function PaymentPage() {
                     </option>
                   ))}
                 </select>
+                <ErrorMessage error={validationErrors.expiryMonth} />
               </div>
               
               <div>
@@ -518,7 +648,9 @@ export function PaymentPage() {
                 <select
                   value={formData.expiryYear}
                   onChange={(e) => handleInputChange('expiryYear', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                    validationErrors.expiryYear ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 >
                   <option value="">YYYY</option>
@@ -528,6 +660,7 @@ export function PaymentPage() {
                     </option>
                   ))}
                 </select>
+                <ErrorMessage error={validationErrors.expiryYear} />
               </div>
               
               <div>
@@ -536,27 +669,34 @@ export function PaymentPage() {
                   type="text"
                   value={formData.cvv}
                   onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                    validationErrors.cvv ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="123"
                   maxLength={4}
                   required
                 />
+                <ErrorMessage error={validationErrors.cvv} />
               </div>
             </div>
+            {validationErrors.expiryDate && (
+              <ErrorMessage error={validationErrors.expiryDate} />
+            )}
           </div>
         )}
 
-        {paymentMethod === 'paypal' && (
+        {paymentMethod === 'cash-on-delivery' && (
           <div className="text-center py-8">
-            <div className="text-4xl mb-4">PayPal</div>
-            <p className="text-gray-600">You will be redirected to PayPal to complete your payment.</p>
-          </div>
-        )}
-
-        {paymentMethod === 'apple-pay' && (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">Apple Pay</div>
-            <p className="text-gray-600">Use Touch ID or Face ID to pay with Apple Pay.</p>
+            <div className="text-2xl font-semibold text-gray-800 mb-4">Cash on Delivery</div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+              <h4 className="font-semibold text-blue-800 mb-2">Payment Instructions:</h4>
+              <ul className="text-blue-700 space-y-1 text-sm">
+                <li>• Payment will be collected upon delivery</li>
+                <li>• Please have the exact amount ready</li>
+                <li>• Our delivery agent will provide a receipt</li>
+                <li>• Delivery charges may apply based on location</li>
+              </ul>
+            </div>
           </div>
         )}
       </div>
@@ -614,8 +754,8 @@ export function PaymentPage() {
             <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
             <div className="text-sm text-gray-600">
               <p>{formData.address}</p>
-              <p>{formData.city}, {formData.state} {formData.zipCode}</p>
-              <p>{formData.country}</p>
+              <p>{formData.city}, {formData.province} {formData.zipCode}</p>
+              <p>Sri Lanka</p>
             </div>
           </div>
 
@@ -625,8 +765,7 @@ export function PaymentPage() {
               {paymentMethod === 'card' && (
                 <p>Credit Card ending in {formData.cardNumber.slice(-4)}</p>
               )}
-              {paymentMethod === 'paypal' && <p>PayPal</p>}
-              {paymentMethod === 'apple-pay' && <p>Apple Pay</p>}
+              {paymentMethod === 'cash-on-delivery' && <p>Cash on Delivery</p>}
             </div>
           </div>
         </div>
@@ -684,7 +823,7 @@ export function PaymentPage() {
           </div>
           <div className="flex justify-between">
             <span>Payment Method:</span>
-            <span className="capitalize">{paymentMethod === 'card' ? 'Credit Card' : paymentMethod}</span>
+            <span className="capitalize">{paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'cash-on-delivery' ? 'Cash on Delivery' : paymentMethod}</span>
           </div>
           <div className="flex justify-between">
             <span>Date:</span>
@@ -807,7 +946,7 @@ export function PaymentPage() {
                           ? 'bg-pink-500 text-white' 
                           : 'bg-gray-200 text-gray-600'
                     }`}>
-                      {isCompleted ? 'DONE' : stepNumber}
+                      {isCompleted ? '✓' : stepNumber}
                     </div>
                     <span className={`ml-2 text-sm font-medium ${
                       isActive ? 'text-pink-600' : isCompleted ? 'text-green-600' : 'text-gray-500'

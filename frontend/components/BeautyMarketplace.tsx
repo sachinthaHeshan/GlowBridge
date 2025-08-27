@@ -163,7 +163,7 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
   };
 
   const formatPrice = (priceInCents: number) => {
-    return `$${(priceInCents / 100).toFixed(2)}`;
+    return `Rs.${(priceInCents / 100).toFixed(2)}`;
   };
 
   const getTotalCartItems = () => {
@@ -415,7 +415,7 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
               </div>
             </div>
             <p className="text-gray-500 text-xs mt-4">
-              All systems operational! Enjoy your beautiful shopping experience.
+              Enjoy your beautiful shopping experience.
             </p>
           </div>
         </div>
