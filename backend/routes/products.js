@@ -1,6 +1,77 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
+const { isDatabaseReady } = require('../config/database');
+
+// Mock products for when database is unavailable
+const mockProducts = [
+  {
+    id: '1',
+    name: 'Professional Eyebrow Styling Kit',
+    description: 'Complete eyebrow styling kit with tweezers, scissors, and shaping gel. Perfect for achieving professionally styled eyebrows at home.',
+    price: 2500,
+    available_quantity: 15,
+    salon_name: 'Glamour Beauty Salon',
+    category: 'Beauty Tools',
+    discount: 0,
+    is_public: true
+  },
+  {
+    id: '2', 
+    name: 'Luxury Face Moisturizer',
+    description: 'Premium anti-aging moisturizer with natural ingredients including hyaluronic acid and vitamin E. Suitable for all skin types.',
+    price: 4500,
+    available_quantity: 8,
+    salon_name: 'Glamour Beauty Salon',
+    category: 'Skincare',
+    discount: 10,
+    is_public: true
+  },
+  {
+    id: '3',
+    name: 'Professional Makeup Brush Set',
+    description: '12-piece professional makeup brush set for all your beauty needs. Includes brushes for foundation, eyeshadow, blush and more.',
+    price: 3500,
+    available_quantity: 12,
+    salon_name: 'Glamour Beauty Salon',
+    category: 'Makeup Tools',
+    discount: 0,
+    is_public: true
+  },
+  {
+    id: '4',
+    name: 'Organic Hair Treatment Oil',
+    description: 'Nourishing hair oil made with organic argan and coconut oil. Repairs damaged hair and adds natural shine.',
+    price: 2800,
+    available_quantity: 20,
+    salon_name: 'Glamour Beauty Salon',
+    category: 'Hair Care',
+    discount: 5,
+    is_public: true
+  },
+  {
+    id: '5',
+    name: 'Diamond Glow Face Mask',
+    description: 'Luxury face mask with diamond particles for ultimate glow. Provides deep hydration and luminous skin.',
+    price: 6500,
+    available_quantity: 5,
+    salon_name: 'Glamour Beauty Salon',
+    category: 'Skincare',
+    discount: 15,
+    is_public: true
+  },
+  {
+    id: '6',
+    name: 'Professional Nail Art Kit',
+    description: 'Complete nail art kit with colors, tools, and accessories. Perfect for creating salon-quality nail designs at home.',
+    price: 3200,
+    available_quantity: 10,
+    salon_name: 'Glamour Beauty Salon',
+    category: 'Nail Care',
+    discount: 0,
+    is_public: true
+  }
+];
 
 // GET /api/products - Get all products with filtering and pagination
 router.get('/', async (req, res) => {

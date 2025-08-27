@@ -2,12 +2,14 @@ const express = require('express');
 const router = express.Router();
 const Cart = require('../models/Cart');
 
+// Remove mock cart imports since we're fixing the real database issue
+
 // GET /api/cart - Get user's cart items
 router.get('/', async (req, res) => {
   try {
     // For now using a hardcoded user ID until authentication is implemented
     // TODO: Get user ID from JWT token when auth is implemented
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 2; // Using the test user we just created
     
     const cartItems = await Cart.getByUserId(userId);
     
@@ -39,7 +41,7 @@ router.post('/', async (req, res) => {
 
     // For now using a hardcoded user ID until authentication is implemented
     // TODO: Get user ID from JWT token when auth is implemented
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 2; // Using the test user we just created
     
     const cartItem = await Cart.addItem(userId, product_id, quantity);
     
@@ -80,7 +82,7 @@ router.put('/:productId', async (req, res) => {
 
     // For now using a hardcoded user ID until authentication is implemented
     // TODO: Get user ID from JWT token when auth is implemented
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 2;
     
     const cartItem = await Cart.updateQuantity(userId, productId, quantity);
     
@@ -117,7 +119,7 @@ router.delete('/:productId', async (req, res) => {
     
     // For now using a hardcoded user ID until authentication is implemented
     // TODO: Get user ID from JWT token when auth is implemented
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 2;
     
     await Cart.removeItem(userId, productId);
     
@@ -144,7 +146,7 @@ router.delete('/', async (req, res) => {
   try {
     // For now using a hardcoded user ID until authentication is implemented
     // TODO: Get user ID from JWT token when auth is implemented
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 2;
     
     await Cart.clearCart(userId);
     
@@ -164,7 +166,7 @@ router.get('/total', async (req, res) => {
   try {
     // For now using a hardcoded user ID until authentication is implemented
     // TODO: Get user ID from JWT token when auth is implemented
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 2;
     
     const total = await Cart.getCartTotal(userId);
     

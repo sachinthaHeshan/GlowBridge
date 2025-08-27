@@ -82,12 +82,17 @@ app.use(errorHandler);
 // Initialize database and start server
 async function startServer() {
   try {
-    // Initialize database connection
+    // Try to initialize database connection
     console.log('🔗 Connecting to database...');
-    await initializeDatabase();
-    console.log('✅ Database connected successfully');
+    try {
+      await initializeDatabase();
+      console.log('✅ Database connected successfully');
+    } catch (dbError) {
+      console.warn('⚠️ Database connection failed, running in offline mode:', dbError.message);
+      console.log('📱 Server will start with limited functionality');
+    }
 
-    // Start server
+    // Start server regardless of database status
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
