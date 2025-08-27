@@ -222,10 +222,13 @@ class Cart {
       const result = await db.query(`
         DELETE FROM cart 
         WHERE user_id = $1
-        RETURNING COUNT(*) as deleted_count
+        RETURNING *
       `, [userId]);
 
-      return result.rows[0];
+      return {
+        deletedCount: result.rows.length,
+        message: `Cleared ${result.rows.length} items from cart`
+      };
     } catch (error) {
       console.error('Error clearing cart:', error);
       throw error;

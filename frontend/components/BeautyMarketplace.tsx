@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 interface Product {
   id: string;
@@ -21,6 +22,7 @@ interface BeautyMarketplaceProps {
 }
 
 export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplaceProps) {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,15 +98,14 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
         // Refresh cart items
         await fetchCartItems();
         
-        // Show success message
-        alert(`✅ ${product.name} added to cart successfully!`);
+        // Success - item added to cart (remove alert for better UX)
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to add to cart');
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert(`❌ Failed to add ${product.name} to cart. Please try again.`);
+      // Log error instead of showing alert
     } finally {
       setAddingToCart(null);
     }
@@ -119,13 +120,13 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
 
       if (response.ok) {
         await fetchCartItems();
-        alert('✅ Item removed from cart!');
+        // Item removed successfully
       } else {
         throw new Error('Failed to remove item');
       }
     } catch (error) {
       console.error('Error removing from cart:', error);
-      alert('❌ Failed to remove item from cart');
+      // Log error instead of showing alert
     }
   };
 
@@ -140,30 +141,25 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
 
       if (response.ok) {
         setCartItems([]);
-        alert('✅ Cart cleared successfully!');
+        // Cart cleared successfully
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to clear cart');
       }
     } catch (error) {
       console.error('Error clearing cart:', error);
-      alert('❌ Failed to clear cart');
+      // Log error instead of showing alert
     }
   };
 
   const handleCheckout = () => {
     if (cartItems.length === 0) {
-      alert('Your cart is empty! Add some items before checkout.');
+      // Cart is empty - could show a toast notification instead
       return;
     }
     
-    const totalAmount = getTotalCartValue();
-    const itemCount = getTotalCartItems();
-    
-    if (confirm(`Proceed to checkout?\n\nItems: ${itemCount}\nTotal: ${formatPrice(totalAmount)}\n\nNote: This is a demo checkout.`)) {
-      alert('🎉 Thank you for your order!\n\nThis is a demo checkout. In a real application, you would be redirected to a payment processor.\n\nYour cart will now be cleared.');
-      clearCart();
-    }
+    // Navigate to payment page
+    router.push('/payment');
   };
 
   const formatPrice = (priceInCents: number) => {
@@ -191,7 +187,7 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-pink-500 border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-700 font-semibold text-lg">Loading beautiful products...</p>
-          <p className="text-gray-500 text-sm mt-2">✨ Finding the perfect items for you</p>
+          <p className="text-gray-500 text-sm mt-2">Finding the perfect items for you</p>
         </div>
       </div>
     );
@@ -205,7 +201,7 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <h1 className="text-4xl font-bold font-poppins bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                ✨ GlowBridge
+                GlowBridge
               </h1>
               <p className="ml-4 text-gray-600 font-medium">Beauty Marketplace</p>
             </div>
@@ -214,19 +210,12 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
                 onClick={toggleCart}
                 className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 relative shadow-lg"
               >
-                🛒 Cart ({getTotalCartItems()})
+                Cart ({getTotalCartItems()})
                 {getTotalCartItems() > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center animate-pulse">
                     {getTotalCartItems()}
                   </span>
                 )}
-              </button>
-              <button 
-                onClick={fetchProducts}
-                className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-full hover:from-green-600 hover:to-teal-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
-                disabled={loading}
-              >
-                🔄 Refresh
               </button>
             </div>
           </div>
@@ -255,7 +244,7 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
                     {cartItems.map((item) => (
                       <div key={item.productId} className="flex items-center space-x-3 p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
                         <div className="w-12 h-12 bg-gradient-to-br from-pink-200 to-purple-300 rounded-full flex items-center justify-center">
-                          <span className="text-lg">💄</span>
+                          <span className="text-xs font-bold">ITEM</span>
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-sm text-gray-800">{item.product?.name || 'Unknown Product'}</h3>
@@ -283,20 +272,22 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
                         onClick={handleCheckout}
                         className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg"
                       >
-                        🛍️ Checkout
+                        Checkout
                       </button>
                       <button 
                         onClick={clearCart}
                         className="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 rounded-full hover:from-red-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg"
                       >
-                        🗑️ Clear Cart
+                        Clear Cart
                       </button>
                     </div>
                   </div>
                 </>
               ) : (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🛒</div>
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-gray-500 text-lg">CART</span>
+                  </div>
                   <p className="text-gray-500 font-medium">Your cart is empty</p>
                   <p className="text-gray-400 text-sm mt-2">Add some beautiful products to get started!</p>
                 </div>
@@ -338,7 +329,7 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
                 className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
               >
                 <div className="h-52 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-200 flex items-center justify-center relative">
-                  <span className="text-5xl">💄</span>
+                  <span className="text-2xl font-bold text-gray-600">PRODUCT</span>
                   {product.discount && product.discount > 0 && (
                     <div className="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
                       -{product.discount}%
@@ -370,13 +361,13 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
                   >
                     {addingToCart === product.id ? (
                       <>
-                        <span className="inline-block animate-spin mr-2">⏳</span>
+                        <span className="inline-block animate-spin mr-2">...</span>
                         Adding...
                       </>
                     ) : product.available_quantity > 0 ? (
-                      <>🛒 Add to Cart</>
+                      <>Add to Cart</>
                     ) : (
-                      '❌ Out of Stock'
+                      'Out of Stock'
                     )}
                   </button>
                 </div>
@@ -385,7 +376,9 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
           ) : (
             !loading && (
               <div className="col-span-full text-center py-12">
-                <div className="text-6xl mb-4">🛍️</div>
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-gray-500 text-sm font-bold">SHOP</span>
+                </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
                 <p className="text-gray-600 mb-4">
                   We couldn't find any products. This might be because the backend is not connected to the database.
@@ -394,7 +387,7 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
                   onClick={fetchProducts}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  🔄 Refresh Products
+                  Refresh Products
                 </button>
               </div>
             )
@@ -407,21 +400,17 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <div className="text-2xl font-bold font-poppins bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-4">
-              ✨ GlowBridge Beauty Marketplace
+              GlowBridge Beauty Marketplace
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="bg-green-50 p-4 rounded-xl">
-                <p className="font-semibold text-green-700">🎯 System Status</p>
-                <p className="text-green-600">Backend ✅ | Frontend ✅ | Database ✅</p>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="bg-blue-50 p-4 rounded-xl">
-                <p className="font-semibold text-blue-700">📊 Cart Summary</p>
+                <p className="font-semibold text-blue-700">Cart Summary</p>
                 <p className="text-blue-600">
                   Items: {getTotalCartItems()} | Value: {formatPrice(getTotalCartValue())}
                 </p>
               </div>
               <div className="bg-purple-50 p-4 rounded-xl">
-                <p className="font-semibold text-purple-700">🛍️ Products Available</p>
+                <p className="font-semibold text-purple-700">Products Available</p>
                 <p className="text-purple-600">{products.length} beautiful items</p>
               </div>
             </div>
