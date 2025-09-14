@@ -203,6 +203,43 @@ The old Next.js API routes have been converted to Express.js routes:
 
 Frontend components can be migrated from `src/components/` to `frontend/components/` with minimal changes.
 
+## 🧾 PDF Receipt Generation Feature
+
+GlowBridge now supports instant PDF receipt downloads after successful payment. This feature provides customers with a professional, printable receipt containing all order and payment details.
+
+### How It Works
+- After payment, the success page displays a **Download PDF Receipt** button.
+- Clicking the button generates and downloads a detailed PDF receipt (A4 size) with:
+  - Order number, date, payment method, total amount
+  - Customer info and billing address
+  - Itemized order summary (products, quantities, prices)
+  - Subtotal, tax, shipping, grand total
+  - Thank you message and support contact
+
+### Technical Details
+- Built with [jsPDF](https://github.com/parallax/jsPDF) (and html2canvas for future enhancements)
+- PDF file is named: `GlowBridge-Receipt-{ORDER_NUMBER}.pdf`
+- Works in all modern browsers
+
+### Benefits
+- Instant, professional documentation for customers
+- Printable and easy to share
+- No need to wait for email confirmations
+
+### Example Output
+```
+GlowBridge
+Beauty Marketplace
+Payment Receipt
+Order Number: GLB-12345678
+Date: 14/09/2025
+Payment Method: Credit Card
+Total Amount: Rs.2,499.00
+Customer Information: John Doe, john.doe@email.com, 077 123 4567
+...and more
+```
+
+
 ## 🤝 Contributing
 
 1. Fork the repository

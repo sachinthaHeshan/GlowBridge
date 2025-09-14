@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Product {
   id: string;
@@ -317,6 +319,223 @@ export function PaymentPage() {
     return digits;
   };
 
+  const generatePDFReceipt = async () => {
+    try {
+      // Ensure we have valid data before generating PDF
+      if (!cartItems || cartItems.length === 0) {
+        alert('No items found to generate receipt. Please try again.');
+        return;
+      }
+
+      if (!orderNumber) {
+        alert('Order number not available. Please try again.');
+        return;
+      }
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      
+      // Header
+      pdf.setFontSize(24);
+      pdf.setTextColor(236, 72, 153); // Pink color
+      pdf.text('GlowBridge', pageWidth / 2, 25, { align: 'center' });
+      
+      pdf.setFontSize(14);
+      pdf.setTextColor(107, 114, 128); // Gray color
+      pdf.text('Beauty Marketplace', pageWidth / 2, 35, { align: 'center' });
+      
+      // Receipt Title
+      pdf.setFontSize(20);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Payment Receipt', pageWidth / 2, 55, { align: 'center' });
+      
+      // Order Information
+      let yPosition = 75;
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Order Information', margin, yPosition);
+      
+      yPosition += 10;
+      pdf.setFont('helvetica', 'normal');
+      const orderInfo = [
+        ['Order Number:', orderNumber || 'N/A'],
+        ['Date:', new Date().toLocaleDateString()],
+        ['Payment Method:', paymentMethod === 'card' ? 'Credit Card' : 'Cash on Delivery'],
+        ['Total Amount:', formatPrice(calculateTotal())]
+      ];
+      
+      orderInfo.forEach(([label, value]) => {
+        pdf.text(label, margin, yPosition);
+        pdf.text(value, margin + 60, yPosition);
+        yPosition += 8;
+      });
+      
+      // Customer Information
+      yPosition += 10;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Customer Information', margin, yPosition);
+      
+      yPosition += 10;
+      pdf.setFont('helvetica', 'normal');
+      const customerInfo = [
+        ['Name:', `${formData.firstName || ''} ${formData.lastName || ''}`.trim()],
+        ['Email:', formData.email || 'N/A'],
+        ['Phone:', formData.phone || 'N/A']
+      ];
+      
+      customerInfo.forEach(([label, value]) => {
+        pdf.text(label, margin, yPosition);
+        pdf.text(value, margin + 30, yPosition);
+        yPosition += 8;
+      });
+      
+      // Billing Address
+      yPosition += 10;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Billing Address', margin, yPosition);
+      
+      yPosition += 10;
+      pdf.setFont('helvetica', 'normal');
+      if (formData.address) {
+        pdf.text(formData.address, margin, yPosition);
+        yPosition += 8;
+      }
+      if (formData.city || formData.province || formData.zipCode) {
+        pdf.text(`${formData.city || ''}, ${formData.province || ''} ${formData.zipCode || ''}`.trim(), margin, yPosition);
+        yPosition += 8;
+      }
+      pdf.text('Sri Lanka', margin, yPosition);
+      
+      // Items Section
+      yPosition += 15;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Order Items', margin, yPosition);
+      
+      yPosition += 10;
+      
+      // Table headers with better spacing
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Item', margin, yPosition);
+      pdf.text('Qty', margin + 100, yPosition);
+      pdf.text('Price', margin + 125, yPosition);
+      pdf.text('Total', margin + 155, yPosition);
+      yPosition += 5;
+      
+      // Table line
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 8;
+      
+      // Items with validation and page break handling
+      pdf.setFont('helvetica', 'normal');
+      const maxItemsPerPage = 12; // Maximum items before page break
+      const itemHeight = 8; // Height per item row
+      const summaryHeight = 80; // Estimated height needed for summary section
+      const footerHeight = 30; // Height reserved for footer
+      
+      cartItems.forEach((item, index) => {
+        if (item && item.product) {
+          // Check if we need a new page
+          const remainingSpace = pageHeight - yPosition - summaryHeight - footerHeight;
+          if (remainingSpace < itemHeight && index < cartItems.length - 1) {
+            // Add new page
+            pdf.addPage();
+            yPosition = 30; // Start from top of new page with some margin
+            
+            // Add continuation header
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(14);
+            pdf.text('Order Items (Continued)', margin, yPosition);
+            yPosition += 15;
+            
+            // Repeat table headers
+            pdf.setFontSize(12);
+            pdf.text('Item', margin, yPosition);
+            pdf.text('Qty', margin + 100, yPosition);
+            pdf.text('Price', margin + 125, yPosition);
+            pdf.text('Total', margin + 155, yPosition);
+            yPosition += 5;
+            
+            // Table line
+            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+            yPosition += 8;
+            
+            pdf.setFont('helvetica', 'normal');
+          }
+          
+          const itemPrice = item.product.price || 0;
+          const itemQuantity = item.quantity || 0;
+          const itemTotal = itemPrice * itemQuantity;
+          
+          // Truncate long product names to fit
+          const productName = (item.product.name || 'Unknown Product').substring(0, 40);
+          
+          pdf.text(productName, margin, yPosition);
+          pdf.text(itemQuantity.toString(), margin + 100, yPosition);
+          pdf.text(formatPrice(itemPrice), margin + 125, yPosition);
+          pdf.text(formatPrice(itemTotal), margin + 155, yPosition);
+          yPosition += itemHeight;
+        }
+      });
+      
+      // Check if we need a new page for summary
+      const remainingSpaceForSummary = pageHeight - yPosition - footerHeight;
+      if (remainingSpaceForSummary < summaryHeight) {
+        pdf.addPage();
+        yPosition = 30;
+        
+        // Add summary header on new page
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(14);
+        pdf.text('Order Summary', margin, yPosition);
+        yPosition += 20;
+      }
+      
+      // Summary section with better spacing
+      yPosition += 10;
+      pdf.line(margin + 100, yPosition - 5, pageWidth - margin, yPosition - 5);
+      
+      const subtotal = calculateSubtotal();
+      const tax = calculateTax();
+      const shipping = calculateShipping();
+      const total = calculateTotal();
+      
+      const summaryItems = [
+        ['Subtotal:', formatPrice(subtotal)],
+        ['Tax (8%):', formatPrice(tax)],
+        ['Shipping:', shipping === 0 ? 'FREE' : formatPrice(shipping)],
+        ['Total:', formatPrice(total)]
+      ];
+      
+      summaryItems.forEach(([label, value], index) => {
+        if (index === summaryItems.length - 1) {
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(14);
+        } else {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(12);
+        }
+        pdf.text(label, margin + 100, yPosition);
+        pdf.text(value, margin + 155, yPosition);
+        yPosition += 8;
+      });
+      
+      // Footer
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('Thank you for shopping with GlowBridge!', pageWidth / 2, pageHeight - 20, { align: 'center' });
+      pdf.text('For any questions, contact us at support@glowbridge.com', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      
+      // Save the PDF
+      pdf.save(`GlowBridge-Receipt-${orderNumber}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+
   const ErrorMessage = ({ error }: { error?: string }) => {
     if (!error) return null;
     return <p className="text-red-500 text-sm mt-1">{error}</p>;
@@ -338,7 +557,7 @@ export function PaymentPage() {
       <h2 className="text-2xl font-bold font-poppins text-gray-800">Review Your Order</h2>
       
       <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+        <h3 className="text-lg font-semibold mb-4  text-gray-800">Order Summary</h3>
         
         <div className="space-y-4">
           {cartItems.map((item) => (
@@ -348,8 +567,8 @@ export function PaymentPage() {
               </div>
               <div className="flex-1">
                 <h4 className="font-semibold text-gray-800">{item.product?.name}</h4>
-                <p className="text-gray-600 text-sm">by {item.product?.salon_name}</p>
-                <p className="text-gray-500 text-sm">Quantity: {item.quantity}</p>
+                <p className="text-gray-800 text-sm">by {item.product?.salon_name}</p>
+                <p className="text-gray-700 text-sm">Quantity: {item.quantity}</p>
               </div>
               <div className="text-right">
                 <p className="font-bold text-pink-600">
@@ -361,19 +580,19 @@ export function PaymentPage() {
         </div>
 
         <div className="border-t pt-4 mt-4 space-y-2">
-          <div className="flex justify-between">
+          <div className="flex justify-between text-gray-800">
             <span>Subtotal:</span>
             <span>{formatPrice(calculateSubtotal())}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-gray-800">
             <span>Tax (8%):</span>
             <span>{formatPrice(calculateTax())}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-gray-800">
             <span>Shipping:</span>
             <span>{calculateShipping() === 0 ? 'FREE' : formatPrice(calculateShipping())}</span>
           </div>
-          <div className="flex justify-between text-lg font-bold border-t pt-2">
+          <div className="flex justify-between text-lg font-bold border-t pt-2 text-gray-900">
             <span>Total:</span>
             <span className="text-pink-600">{formatPrice(calculateTotal())}</span>
           </div>
@@ -389,14 +608,14 @@ export function PaymentPage() {
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+            <label className="block text-sm font-medium text-gray-800 mb-2">First Name *</label>
             <input
               type="text"
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                 validationErrors.firstName ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900 placeholder-gray-400`} // <-- dark text, medium placeholder
               placeholder="Enter your first name"
               required
             />
@@ -404,14 +623,14 @@ export function PaymentPage() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+            <label className="block text-sm font-medium text-gray-800 mb-2">Last Name *</label>
             <input
               type="text"
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                 validationErrors.lastName ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900 placeholder-gray-400`} // <-- dark text, medium placeholder
               placeholder="Enter your last name"
               required
             />
@@ -419,14 +638,14 @@ export function PaymentPage() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+            <label className="block text-sm font-medium text-gray-800 mb-2">Email Address *</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                 validationErrors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900 placeholder-gray-400`} // <-- dark text, medium placeholder
               placeholder="Enter your email"
               required
             />
@@ -434,14 +653,14 @@ export function PaymentPage() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+            <label className="block text-sm font-medium text-gray-800 mb-2">Phone Number *</label>
             <input
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', formatPhoneNumber(e.target.value))}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                 validationErrors.phone ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900 placeholder-gray-400`} // <-- dark text, medium placeholder
               placeholder="Enter your phone number (e.g., 0771234567)"
               required
             />
@@ -459,14 +678,14 @@ export function PaymentPage() {
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
+            <label className="block text-sm font-medium text-gray-800 mb-2">Street Address *</label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                 validationErrors.address ? 'border-red-500' : 'border-gray-300'
-              }`}
+              } text-gray-900 placeholder-gray-400`} // <-- dark text, medium placeholder
               placeholder="Enter your street address"
               required
             />
@@ -475,14 +694,14 @@ export function PaymentPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+              <label className="block text-sm font-medium text-gray-800 mb-2">City *</label>
               <input
                 type="text"
                 value={formData.city}
                 onChange={(e) => handleInputChange('city', e.target.value)}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                   validationErrors.city ? 'border-red-500' : 'border-gray-300'
-                }`}
+                } text-gray-900 placeholder-gray-400`} // <-- dark text, medium placeholder
                 placeholder="Enter your city"
                 required
               />
@@ -490,25 +709,25 @@ export function PaymentPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Province *</label>
+              <label className="block text-sm font-medium text-gray-800 mb-2">Province *</label>
               <select
                 value={formData.province}
                 onChange={(e) => handleInputChange('province', e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-gray-900 ${
                   validationErrors.province ? 'border-red-500' : 'border-gray-300'
                 }`}
                 required
               >
-                <option value="">Select your province</option>
-                <option value="Western">Western Province</option>
-                <option value="Central">Central Province</option>
-                <option value="Southern">Southern Province</option>
-                <option value="Northern">Northern Province</option>
-                <option value="Eastern">Eastern Province</option>
-                <option value="North Western">North Western Province</option>
-                <option value="North Central">North Central Province</option>
-                <option value="Uva">Uva Province</option>
-                <option value="Sabaragamuwa">Sabaragamuwa Province</option>
+                <option value="" className="text-gray-800">Select your province</option>
+                <option value="Western" className="text-gray-900">Western Province</option>
+                <option value="Central" className="text-gray-900">Central Province</option>
+                <option value="Southern" className="text-gray-900">Southern Province</option>
+                <option value="Northern" className="text-gray-900">Northern Province</option>
+                <option value="Eastern" className="text-gray-900">Eastern Province</option>
+                <option value="North Western" className="text-gray-900">North Western Province</option>
+                <option value="North Central" className="text-gray-900">North Central Province</option>
+                <option value="Uva" className="text-gray-900">Uva Province</option>
+                <option value="Sabaragamuwa" className="text-gray-900">Sabaragamuwa Province</option>
               </select>
               <ErrorMessage error={validationErrors.province} />
             </div>
@@ -516,14 +735,14 @@ export function PaymentPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code *</label>
+              <label className="block text-sm font-medium text-gray-800 mb-2">ZIP Code *</label>
               <input
                 type="text"
                 value={formData.zipCode}
                 onChange={(e) => handleInputChange('zipCode', e.target.value.replace(/\D/g, '').slice(0, 5))}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                   validationErrors.zipCode ? 'border-red-500' : 'border-gray-300'
-                }`}
+                } text-gray-900 placeholder-gray-400`} // <-- dark text, medium placeholder
                 placeholder="Enter your ZIP code (5 digits)"
                 maxLength={5}
                 required
@@ -542,7 +761,7 @@ export function PaymentPage() {
       
       {/* Payment Method Selection */}
       <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Select Payment Method</h3>
+        <h3 className="text-lg font-semibold mb-4  text-gray-800">Select Payment Method</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <button
@@ -554,8 +773,8 @@ export function PaymentPage() {
             }`}
           >
             <div className="text-center">
-              <div className="text-2xl mb-2">CARD</div>
-              <div className="font-medium">Credit Card</div>
+              <div className="text-2xl mb-2  text-gray-800">CARD</div>
+              <div className="font-medium  text-gray-800">Credit Card</div>
             </div>
           </button>
           
@@ -568,8 +787,8 @@ export function PaymentPage() {
             }`}
           >
             <div className="text-center">
-              <div className="text-2xl mb-2">CASH</div>
-              <div className="font-medium">Cash on Delivery</div>
+              <div className="text-2xl mb-2  text-gray-800">CASH</div>
+              <div className="font-medium  text-gray-800">Cash on Delivery</div>
             </div>
           </button>
         </div>
@@ -578,14 +797,14 @@ export function PaymentPage() {
         {paymentMethod === 'card' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Cardholder Name *</label>
+              <label className="block text-sm font-medium text-gray-800 mb-2">Cardholder Name *</label>
               <input
                 type="text"
                 value={formData.cardholderName}
                 onChange={(e) => handleInputChange('cardholderName', e.target.value)}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                   validationErrors.cardholderName ? 'border-red-500' : 'border-gray-300'
-                }`}
+                } text-gray-900 placeholder-gray-400`} // <-- dark text, medium placeholder
                 placeholder="Enter cardholder name"
                 required
               />
@@ -593,16 +812,16 @@ export function PaymentPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Card Number *</label>
+              <label className="block text-sm font-medium text-gray-800 mb-2">Card Number *</label>
               <input
                 type="text"
                 value={formData.cardNumber}
                 onChange={(e) => handleInputChange('cardNumber', formatCardNumber(e.target.value))}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                   validationErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="1234 5678 9012 3456"
-                maxLength={16}
+                } text-gray-900 placeholder-gray-400`} // <-- dark text, medium placeholder
+                placeholder="XXXX XXXX XXXX XXXX"
+                maxLength={19}
                 required
               />
               <ErrorMessage error={validationErrors.cardNumber} />
@@ -610,18 +829,18 @@ export function PaymentPage() {
             
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Month *</label>
+                <label className="block text-sm font-medium text-gray-800 mb-2">Month *</label>
                 <select
                   value={formData.expiryMonth}
                   onChange={(e) => handleInputChange('expiryMonth', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-gray-900 ${
                     validationErrors.expiryMonth ? 'border-red-500' : 'border-gray-300'
                   }`}
                   required
                 >
                   <option value="">MM</option>
                   {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
+                    <option key={i + 1} value={String(i + 1).padStart(2, '0')} className="text-gray-900">
                       {String(i + 1).padStart(2, '0')}
                     </option>
                   ))}
@@ -630,18 +849,18 @@ export function PaymentPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Year *</label>
+                <label className="block text-sm font-medium text-gray-800 mb-2">Year *</label>
                 <select
                   value={formData.expiryYear}
                   onChange={(e) => handleInputChange('expiryYear', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-gray-900 ${
                     validationErrors.expiryYear ? 'border-red-500' : 'border-gray-300'
                   }`}
                   required
                 >
-                  <option value="">YYYY</option>
+                  <option value="" className="text-gray-800">YYYY</option>
                   {Array.from({ length: 10 }, (_, i) => (
-                    <option key={2025 + i} value={String(2025 + i)}>
+                    <option key={2025 + i} value={String(2025 + i)} className="text-gray-900">
                       {2025 + i}
                     </option>
                   ))}
@@ -650,15 +869,15 @@ export function PaymentPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">CVV *</label>
+                <label className="block text-sm font-medium text-gray-800 mb-2">CVV *</label>
                 <input
                   type="text"
                   value={formData.cvv}
                   onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, '').slice(0, 3))}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-gray-900 placeholder-gray-500 ${
                     validationErrors.cvv ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="123"
+                  placeholder="XXX"
                   maxLength={3}
                   required
                 />
@@ -696,28 +915,28 @@ export function PaymentPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Order Summary */}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+          <h3 className="text-lg font-semibold mb-4  text-gray-800">Order Summary</h3>
           <div className="space-y-3">
             {cartItems.map((item) => (
               <div key={item.productId} className="flex justify-between">
-                <span className="text-gray-600">{item.product?.name} x{item.quantity}</span>
-                <span className="font-medium">{formatPrice((item.product?.price || 0) * item.quantity)}</span>
+                <span className="text-gray-800">{item.product?.name} x{item.quantity}</span>
+                <span className="font-medium text-gray-800">{formatPrice((item.product?.price || 0) * item.quantity)}</span>
               </div>
             ))}
             <div className="border-t pt-3 space-y-1">
-              <div className="flex justify-between">
+              <div className="flex justify-between text-gray-800">
                 <span>Subtotal:</span>
                 <span>{formatPrice(calculateSubtotal())}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-gray-800">
                 <span>Tax:</span>
                 <span>{formatPrice(calculateTax())}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-gray-800">
                 <span>Shipping:</span>
                 <span>{calculateShipping() === 0 ? 'FREE' : formatPrice(calculateShipping())}</span>
               </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-2">
+              <div className="flex justify-between font-bold text-lg border-t pt-2 text-gray-900">
                 <span>Total:</span>
                 <span className="text-pink-600">{formatPrice(calculateTotal())}</span>
               </div>
@@ -728,8 +947,8 @@ export function PaymentPage() {
         {/* Customer Information */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Customer Information</h3>
-            <div className="space-y-2 text-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Customer Information</h3>
+            <div className="space-y-2 text-sm text-gray-800">
               <p><span className="font-medium">Name:</span> {formData.firstName} {formData.lastName}</p>
               <p><span className="font-medium">Email:</span> {formData.email}</p>
               <p><span className="font-medium">Phone:</span> {formData.phone}</p>
@@ -737,8 +956,8 @@ export function PaymentPage() {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
-            <div className="text-sm text-gray-600">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Billing Address</h3>
+            <div className="text-sm text-gray-800">
               <p>{formData.address}</p>
               <p>{formData.city}, {formData.province} {formData.zipCode}</p>
               <p>Sri Lanka</p>
@@ -746,8 +965,8 @@ export function PaymentPage() {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
-            <div className="text-sm text-gray-600">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Payment Method</h3>
+            <div className="text-sm text-gray-800">
               {paymentMethod === 'card' && (
                 <p>Credit Card ending in {formData.cardNumber.slice(-4)}</p>
               )}
@@ -763,7 +982,7 @@ export function PaymentPage() {
     <div className="text-center py-16">
       <div className="animate-spin rounded-full h-20 w-20 border-4 border-pink-500 border-t-transparent mx-auto mb-8"></div>
       <h2 className="text-2xl font-bold font-poppins text-gray-800 mb-4">Processing Your Payment</h2>
-      <p className="text-gray-600 mb-8">Please do not close this window or refresh the page.</p>
+      <p className="text-gray-800 mb-8">Please do not close this window or refresh the page.</p>
       
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
         <div className="space-y-4">
@@ -771,17 +990,17 @@ export function PaymentPage() {
             <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
               <span className="text-white text-xs">✓</span>
             </div>
-            <span className="text-sm">Validating payment information</span>
+            <span className="text-sm text-gray-800">Validating payment information</span>
           </div>
           <div className="flex items-center space-x-3">
             <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
               <span className="text-white text-xs">✓</span>
             </div>
-            <span className="text-sm">Contacting payment processor</span>
+            <span className="text-sm text-gray-800">Contacting payment processor</span>
           </div>
           <div className="flex items-center space-x-3">
             <div className="w-6 h-6 border-2 border-pink-500 rounded-full animate-pulse"></div>
-            <span className="text-sm">Authorizing payment...</span>
+            <span className="text-sm text-gray-800">Authorizing payment...</span>
           </div>
         </div>
       </div>
@@ -794,38 +1013,49 @@ export function PaymentPage() {
         <span className="text-white text-2xl">✓</span>
       </div>
       <h2 className="text-3xl font-bold font-poppins text-green-600 mb-4">Payment Successful!</h2>
-      <p className="text-gray-600 mb-8">Thank you for your order. Your payment has been processed successfully.</p>
+      <p className="text-gray-800 mb-8">Thank you for your order. Your payment has been processed successfully.</p>
       
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">Order Details</h3>
-        <div className="space-y-2 text-sm">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">Order Details</h3>
+        <div className="space-y-2 text-sm text-gray-800">
           <div className="flex justify-between">
             <span>Order Number:</span>
             <span className="font-mono font-bold text-pink-600">{orderNumber}</span>
           </div>
           <div className="flex justify-between">
             <span>Total Amount:</span>
-            <span className="font-bold">{formatPrice(calculateTotal())}</span>
+            <span className="font-bold text-gray-800">{formatPrice(calculateTotal())}</span>
           </div>
           <div className="flex justify-between">
             <span>Payment Method:</span>
-            <span className="capitalize">{paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'cash-on-delivery' ? 'Cash on Delivery' : paymentMethod}</span>
+            <span className="capitalize text-gray-800">{paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'cash-on-delivery' ? 'Cash on Delivery' : paymentMethod}</span>
           </div>
           <div className="flex justify-between">
             <span>Date:</span>
-            <span>{new Date().toLocaleDateString()}</span>
+            <span className="text-gray-800">{new Date().toLocaleDateString()}</span>
           </div>
         </div>
       </div>
 
       <div className="space-y-4">
-        <p className="text-sm text-gray-500">A confirmation email has been sent to {formData.email}</p>
-        <button
-          onClick={() => router.push('/')}
-          className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg"
-        >
-          Continue Shopping
-        </button>
+        <p className="text-sm text-gray-700">A confirmation email has been sent to {formData.email}</p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button
+            onClick={generatePDFReceipt}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-3 rounded-full hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download PDF Receipt
+          </button>
+          <button
+            onClick={() => router.push('/')}
+            className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg"
+          >
+            Continue Shopping
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -836,11 +1066,11 @@ export function PaymentPage() {
         <span className="text-white text-2xl">✕</span>
       </div>
       <h2 className="text-3xl font-bold font-poppins text-red-600 mb-4">Payment Failed</h2>
-      <p className="text-gray-600 mb-8">We encountered an issue processing your payment. Please try again.</p>
+      <p className="text-gray-800 mb-8">We encountered an issue processing your payment. Please try again.</p>
       
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">What went wrong?</h3>
-        <ul className="text-sm text-gray-600 space-y-2 text-left">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">What went wrong?</h3>
+        <ul className="text-sm text-gray-800 space-y-2 text-left">
           <li>• Your card may have been declined</li>
           <li>• Insufficient funds</li>
           <li>• Expired card</li>
@@ -905,7 +1135,7 @@ export function PaymentPage() {
               </h1>
             </div>
             {isNormalStep && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-800">
                 Step {getStepNumber()} of 5
               </div>
             )}
@@ -930,12 +1160,12 @@ export function PaymentPage() {
                         ? 'bg-green-500 text-white' 
                         : isActive 
                           ? 'bg-pink-500 text-white' 
-                          : 'bg-gray-200 text-gray-600'
+                          : 'bg-gray-200 text-gray-700'
                     }`}>
                       {isCompleted ? '✓' : stepNumber}
                     </div>
                     <span className={`ml-2 text-sm font-medium ${
-                      isActive ? 'text-pink-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
+                      isActive ? 'text-pink-600' : isCompleted ? 'text-green-600' : 'text-gray-700'
                     }`}>
                       {step}
                     </span>
