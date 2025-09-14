@@ -150,30 +150,16 @@ export function PaymentPage() {
   const validateCardNumber = (cardNumber: string): string => {
     const cleanCard = cardNumber.replace(/\s+/g, '');
     if (!cleanCard) return 'Card number is required';
-    if (cleanCard.length < 13 || cleanCard.length > 19) {
-      return 'Card number must be between 13 and 19 digits';
+    if (cleanCard.length !== 16) {
+      return 'Card number must be exactly 16 digits';
     }
     if (!/^\d+$/.test(cleanCard)) return 'Card number must contain only digits';
-    
-    // Luhn algorithm validation
-    let sum = 0;
-    let alternate = false;
-    for (let i = cleanCard.length - 1; i >= 0; i--) {
-      let n = parseInt(cleanCard.charAt(i), 10);
-      if (alternate) {
-        n *= 2;
-        if (n > 9) n = (n % 10) + 1;
-      }
-      sum += n;
-      alternate = !alternate;
-    }
-    if (sum % 10 !== 0) return 'Please enter a valid card number';
     return '';
   };
 
   const validateCVV = (cvv: string): string => {
     if (!cvv) return 'CVV is required';
-    if (!/^\d{3,4}$/.test(cvv)) return 'CVV must be 3 or 4 digits';
+    if (!/^\d{3}$/.test(cvv)) return 'CVV must be exactly 3 digits';
     return '';
   };
 
@@ -668,12 +654,12 @@ export function PaymentPage() {
                 <input
                   type="text"
                   value={formData.cvv}
-                  onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, '').slice(0, 3))}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
                     validationErrors.cvv ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="123"
-                  maxLength={4}
+                  maxLength={3}
                   required
                 />
                 <ErrorMessage error={validationErrors.cvv} />
