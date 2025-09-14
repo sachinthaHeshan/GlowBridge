@@ -200,7 +200,7 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <h1 className="text-4xl font-bold font-poppins bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold font-poppins gradient-text title-text">
                 GlowBridge
               </h1>
               <p className="ml-4 text-gray-600 font-medium">Beauty Marketplace</p>
@@ -399,7 +399,7 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
       <footer className="bg-white border-t border-pink-100 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <div className="text-2xl font-bold font-poppins bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-4">
+            <div className="text-2xl font-bold font-poppins gradient-text title-text mb-4">
               GlowBridge Beauty Marketplace
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
