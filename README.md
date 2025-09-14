@@ -1,6 +1,6 @@
 # GlowBridge - Beauty Marketplace
 
-## 🎯 New Project Structure
+## 🎯 Project Structure
 
 This project has been reorganized into a modern, scalable full-stack architecture with clear separation of concerns:
 
