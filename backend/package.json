@@ -6,8 +6,15 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "echo 'No build step required for Node.js backend. Use npm start to run the server.'",
+    "build:prod": "npm install --only=production",
     "test": "jest",
-    "analyze-db": "node scripts/analyze-database.js"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "echo 'Linting not configured yet'",
+    "analyze-db": "node scripts/analyze-database.js",
+    "db:migrate": "echo 'Database migration not configured yet'",
+    "db:seed": "echo 'Database seeding not configured yet'"
   },
   "keywords": [
     "beauty",
