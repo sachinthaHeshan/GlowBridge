@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Product {
   id: string;
@@ -317,42 +319,257 @@ export function PaymentPage() {
     return digits;
   };
 
+  const generatePDFReceipt = async () => {
+    try {
+      // Ensure we have valid data before generating PDF
+      if (!cartItems || cartItems.length === 0) {
+        alert('No items found to generate receipt. Please try again.');
+        return;
+      }
+
+      if (!orderNumber) {
+        alert('Order number not available. Please try again.');
+        return;
+      }
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      
+      // Header
+      pdf.setFontSize(24);
+      pdf.setTextColor(236, 72, 153); // Pink color
+      pdf.text('GlowBridge', pageWidth / 2, 25, { align: 'center' });
+      
+      pdf.setFontSize(14);
+      pdf.setTextColor(107, 114, 128); // Gray color
+      pdf.text('Beauty Marketplace', pageWidth / 2, 35, { align: 'center' });
+      
+      // Receipt Title
+      pdf.setFontSize(20);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Payment Receipt', pageWidth / 2, 55, { align: 'center' });
+      
+      // Order Information
+      let yPosition = 75;
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Order Information', margin, yPosition);
+      
+      yPosition += 10;
+      pdf.setFont('helvetica', 'normal');
+      const orderInfo = [
+        ['Order Number:', orderNumber || 'N/A'],
+        ['Date:', new Date().toLocaleDateString()],
+        ['Payment Method:', paymentMethod === 'card' ? 'Credit Card' : 'Cash on Delivery'],
+        ['Total Amount:', formatPrice(calculateTotal())]
+      ];
+      
+      orderInfo.forEach(([label, value]) => {
+        pdf.text(label, margin, yPosition);
+        pdf.text(value, margin + 60, yPosition);
+        yPosition += 8;
+      });
+      
+      // Customer Information
+      yPosition += 10;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Customer Information', margin, yPosition);
+      
+      yPosition += 10;
+      pdf.setFont('helvetica', 'normal');
+      const customerInfo = [
+        ['Name:', `${formData.firstName || ''} ${formData.lastName || ''}`.trim()],
+        ['Email:', formData.email || 'N/A'],
+        ['Phone:', formData.phone || 'N/A']
+      ];
+      
+      customerInfo.forEach(([label, value]) => {
+        pdf.text(label, margin, yPosition);
+        pdf.text(value, margin + 30, yPosition);
+        yPosition += 8;
+      });
+      
+      // Billing Address
+      yPosition += 10;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Billing Address', margin, yPosition);
+      
+      yPosition += 10;
+      pdf.setFont('helvetica', 'normal');
+      if (formData.address) {
+        pdf.text(formData.address, margin, yPosition);
+        yPosition += 8;
+      }
+      if (formData.city || formData.province || formData.zipCode) {
+        pdf.text(`${formData.city || ''}, ${formData.province || ''} ${formData.zipCode || ''}`.trim(), margin, yPosition);
+        yPosition += 8;
+      }
+      pdf.text('Sri Lanka', margin, yPosition);
+      
+      // Items Section
+      yPosition += 15;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Order Items', margin, yPosition);
+      
+      yPosition += 10;
+      
+      // Table headers with better spacing
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Item', margin, yPosition);
+      pdf.text('Qty', margin + 100, yPosition);
+      pdf.text('Price', margin + 125, yPosition);
+      pdf.text('Total', margin + 155, yPosition);
+      yPosition += 5;
+      
+      // Table line
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 8;
+      
+      // Items with validation and page break handling
+      pdf.setFont('helvetica', 'normal');
+      const maxItemsPerPage = 12; // Maximum items before page break
+      const itemHeight = 8; // Height per item row
+      const summaryHeight = 80; // Estimated height needed for summary section
+      const footerHeight = 30; // Height reserved for footer
+      
+      cartItems.forEach((item, index) => {
+        if (item && item.product) {
+          // Check if we need a new page
+          const remainingSpace = pageHeight - yPosition - summaryHeight - footerHeight;
+          if (remainingSpace < itemHeight && index < cartItems.length - 1) {
+            // Add new page
+            pdf.addPage();
+            yPosition = 30; // Start from top of new page with some margin
+            
+            // Add continuation header
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(14);
+            pdf.text('Order Items (Continued)', margin, yPosition);
+            yPosition += 15;
+            
+            // Repeat table headers
+            pdf.setFontSize(12);
+            pdf.text('Item', margin, yPosition);
+            pdf.text('Qty', margin + 100, yPosition);
+            pdf.text('Price', margin + 125, yPosition);
+            pdf.text('Total', margin + 155, yPosition);
+            yPosition += 5;
+            
+            // Table line
+            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+            yPosition += 8;
+            
+            pdf.setFont('helvetica', 'normal');
+          }
+          
+          const itemPrice = item.product.price || 0;
+          const itemQuantity = item.quantity || 0;
+          const itemTotal = itemPrice * itemQuantity;
+          
+          // Truncate long product names to fit
+          const productName = (item.product.name || 'Unknown Product').substring(0, 40);
+          
+          pdf.text(productName, margin, yPosition);
+          pdf.text(itemQuantity.toString(), margin + 100, yPosition);
+          pdf.text(formatPrice(itemPrice), margin + 125, yPosition);
+          pdf.text(formatPrice(itemTotal), margin + 155, yPosition);
+          yPosition += itemHeight;
+        }
+      });
+      
+      // Check if we need a new page for summary
+      const remainingSpaceForSummary = pageHeight - yPosition - footerHeight;
+      if (remainingSpaceForSummary < summaryHeight) {
+        pdf.addPage();
+        yPosition = 30;
+        
+        // Add summary header on new page
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(14);
+        pdf.text('Order Summary', margin, yPosition);
+        yPosition += 20;
+      }
+      
+      // Summary section with better spacing
+      yPosition += 10;
+      pdf.line(margin + 100, yPosition - 5, pageWidth - margin, yPosition - 5);
+      
+      const subtotal = calculateSubtotal();
+      const tax = calculateTax();
+      const shipping = calculateShipping();
+      const total = calculateTotal();
+      
+      const summaryItems = [
+        ['Subtotal:', formatPrice(subtotal)],
+        ['Tax (8%):', formatPrice(tax)],
+        ['Shipping:', shipping === 0 ? 'FREE' : formatPrice(shipping)],
+        ['Total:', formatPrice(total)]
+      ];
+      
+      summaryItems.forEach(([label, value], index) => {
+        if (index === summaryItems.length - 1) {
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(14);
+        } else {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(12);
+        }
+        pdf.text(label, margin + 100, yPosition);
+        pdf.text(value, margin + 155, yPosition);
+        yPosition += 8;
+      });
+      
+      // Footer
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('Thank you for shopping with GlowBridge!', pageWidth / 2, pageHeight - 20, { align: 'center' });
+      pdf.text('For any questions, contact us at support@glowbridge.com', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      
+      // Save the PDF
+      pdf.save(`GlowBridge-Receipt-${orderNumber}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+
   const ErrorMessage = ({ error }: { error?: string }) => {
     if (!error) return null;
-    return <p className="text-red-500 text-sm mt-1">{error}</p>;
+    return <p className="payment-error-message">{error}</p>;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-pink-500 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-700 font-semibold text-lg">Loading checkout...</p>
-        </div>
+      <div className="payment-loading-container">
+        <div className="payment-loading-spinner"></div>
+        <p className="payment-loading-text">Loading checkout...</p>
       </div>
     );
   }
 
   const renderCartReview = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold font-poppins text-gray-800">Review Your Order</h2>
+    <div className="payment-step-container">
+      <h2 className="payment-step-title">Review Your Order</h2>
       
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+      <div className="payment-card">
+        <h3 className="payment-card-title">Order Summary</h3>
         
-        <div className="space-y-4">
+        <div className="payment-cart-items">
           {cartItems.map((item) => (
-            <div key={item.productId} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
-              <div className="w-16 h-16 bg-gradient-to-br from-pink-200 to-purple-300 rounded-lg flex items-center justify-center">
-                <span className="text-2xl">Product</span>
+            <div key={item.productId} className="payment-cart-item">
+              <div className="payment-cart-item-image">
+                <span className="payment-cart-item-placeholder">Product</span>
               </div>
-              <div className="flex-1">
-                <h4 className="font-semibold text-gray-800">{item.product?.name}</h4>
-                <p className="text-gray-600 text-sm">by {item.product?.salon_name}</p>
-                <p className="text-gray-500 text-sm">Quantity: {item.quantity}</p>
+              <div className="payment-cart-item-details">
+                <h4 className="payment-cart-item-name">{item.product?.name}</h4>
+                <p className="payment-cart-item-salon">by {item.product?.salon_name}</p>
+                <p className="payment-cart-item-quantity">Quantity: {item.quantity}</p>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-pink-600">
+              <div className="payment-cart-item-price">
+                <p className="payment-cart-item-price-text">
                   {formatPrice((item.product?.price || 0) * item.quantity)}
                 </p>
               </div>
@@ -360,22 +577,22 @@ export function PaymentPage() {
           ))}
         </div>
 
-        <div className="border-t pt-4 mt-4 space-y-2">
-          <div className="flex justify-between">
+        <div className="payment-order-totals">
+          <div className="payment-order-total-row">
             <span>Subtotal:</span>
             <span>{formatPrice(calculateSubtotal())}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="payment-order-total-row">
             <span>Tax (8%):</span>
             <span>{formatPrice(calculateTax())}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="payment-order-total-row">
             <span>Shipping:</span>
             <span>{calculateShipping() === 0 ? 'FREE' : formatPrice(calculateShipping())}</span>
           </div>
-          <div className="flex justify-between text-lg font-bold border-t pt-2">
+          <div className="payment-order-total-row payment-order-grand-total">
             <span>Total:</span>
-            <span className="text-pink-600">{formatPrice(calculateTotal())}</span>
+            <span className="payment-order-grand-total-amount">{formatPrice(calculateTotal())}</span>
           </div>
         </div>
       </div>
@@ -383,65 +600,57 @@ export function PaymentPage() {
   );
 
   const renderPersonalInfo = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold font-poppins text-gray-800">Personal Information</h2>
+    <div className="payment-step-container">
+      <h2 className="payment-step-title">Personal Information</h2>
       
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+      <div className="payment-card">
+        <div className="payment-form-grid">
+          <div className="payment-form-group">
+            <label className="payment-form-label">First Name *</label>
             <input
               type="text"
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                validationErrors.firstName ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`payment-form-input ${validationErrors.firstName ? 'error' : ''}`}
               placeholder="Enter your first name"
               required
             />
             <ErrorMessage error={validationErrors.firstName} />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+          <div className="payment-form-group">
+            <label className="payment-form-label">Last Name *</label>
             <input
               type="text"
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                validationErrors.lastName ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`payment-form-input ${validationErrors.lastName ? 'error' : ''}`}
               placeholder="Enter your last name"
               required
             />
             <ErrorMessage error={validationErrors.lastName} />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+          <div className="payment-form-group">
+            <label className="payment-form-label">Email Address *</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                validationErrors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`payment-form-input ${validationErrors.email ? 'error' : ''}`}
               placeholder="Enter your email"
               required
             />
             <ErrorMessage error={validationErrors.email} />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+          <div className="payment-form-group">
+            <label className="payment-form-label">Phone Number *</label>
             <input
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', formatPhoneNumber(e.target.value))}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                validationErrors.phone ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`payment-form-input ${validationErrors.phone ? 'error' : ''}`}
               placeholder="Enter your phone number (e.g., 0771234567)"
               required
             />
@@ -453,50 +662,44 @@ export function PaymentPage() {
   );
 
   const renderBilling = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold font-poppins text-gray-800">Billing Address</h2>
+    <div className="payment-step-container">
+      <h2 className="payment-step-title">Billing Address</h2>
       
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
+      <div className="payment-card">
+        <div className="payment-form-fields">
+          <div className="payment-form-group">
+            <label className="payment-form-label">Street Address *</label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                validationErrors.address ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`payment-form-input ${validationErrors.address ? 'error' : ''}`}
               placeholder="Enter your street address"
               required
             />
             <ErrorMessage error={validationErrors.address} />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+          <div className="payment-form-grid">
+            <div className="payment-form-group">
+              <label className="payment-form-label">City *</label>
               <input
                 type="text"
                 value={formData.city}
                 onChange={(e) => handleInputChange('city', e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                  validationErrors.city ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`payment-form-input ${validationErrors.city ? 'error' : ''}`}
                 placeholder="Enter your city"
                 required
               />
               <ErrorMessage error={validationErrors.city} />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Province *</label>
+            <div className="payment-form-group">
+              <label className="payment-form-label">Province *</label>
               <select
                 value={formData.province}
                 onChange={(e) => handleInputChange('province', e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                  validationErrors.province ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`payment-form-select ${validationErrors.province ? 'error' : ''}`}
                 required
               >
                 <option value="">Select your province</option>
@@ -514,22 +717,18 @@ export function PaymentPage() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code *</label>
-              <input
-                type="text"
-                value={formData.zipCode}
-                onChange={(e) => handleInputChange('zipCode', e.target.value.replace(/\D/g, '').slice(0, 5))}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                  validationErrors.zipCode ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter your ZIP code (5 digits)"
-                maxLength={5}
-                required
-              />
-              <ErrorMessage error={validationErrors.zipCode} />
-            </div>
+          <div className="payment-form-group">
+            <label className="payment-form-label">ZIP Code *</label>
+            <input
+              type="text"
+              value={formData.zipCode}
+              onChange={(e) => handleInputChange('zipCode', e.target.value.replace(/\D/g, '').slice(0, 5))}
+              className={`payment-form-input ${validationErrors.zipCode ? 'error' : ''}`}
+              placeholder="Enter your ZIP code (5 digits)"
+              maxLength={5}
+              required
+            />
+            <ErrorMessage error={validationErrors.zipCode} />
           </div>
         </div>
       </div>
@@ -537,86 +736,72 @@ export function PaymentPage() {
   );
 
   const renderPayment = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold font-poppins text-gray-800">Payment Information</h2>
+    <div className="payment-step-container">
+      <h2 className="payment-step-title">Payment Information</h2>
       
       {/* Payment Method Selection */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Select Payment Method</h3>
+      <div className="payment-card">
+        <h3 className="payment-card-title">Select Payment Method</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="payment-method-grid">
           <button
             onClick={() => setPaymentMethod('card')}
-            className={`p-4 border-2 rounded-lg transition-all ${
-              paymentMethod === 'card' 
-                ? 'border-pink-500 bg-pink-50' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
+            className={`payment-method-button ${paymentMethod === 'card' ? 'selected' : ''}`}
           >
-            <div className="text-center">
-              <div className="text-2xl mb-2">CARD</div>
-              <div className="font-medium">Credit Card</div>
+            <div className="payment-method-content">
+              <div className="payment-method-icon">CARD</div>
+              <div className="payment-method-label">Credit Card</div>
             </div>
           </button>
           
           <button
             onClick={() => setPaymentMethod('cash-on-delivery')}
-            className={`p-4 border-2 rounded-lg transition-all ${
-              paymentMethod === 'cash-on-delivery' 
-                ? 'border-pink-500 bg-pink-50' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
+            className={`payment-method-button ${paymentMethod === 'cash-on-delivery' ? 'selected' : ''}`}
           >
-            <div className="text-center">
-              <div className="text-2xl mb-2">CASH</div>
-              <div className="font-medium">Cash on Delivery</div>
+            <div className="payment-method-content">
+              <div className="payment-method-icon">CASH</div>
+              <div className="payment-method-label">Cash on Delivery</div>
             </div>
           </button>
         </div>
 
         {/* Credit Card Form */}
         {paymentMethod === 'card' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Cardholder Name *</label>
+          <div className="payment-form-fields">
+            <div className="payment-form-group">
+              <label className="payment-form-label">Cardholder Name *</label>
               <input
                 type="text"
                 value={formData.cardholderName}
                 onChange={(e) => handleInputChange('cardholderName', e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                  validationErrors.cardholderName ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`payment-form-input ${validationErrors.cardholderName ? 'error' : ''}`}
                 placeholder="Enter cardholder name"
                 required
               />
               <ErrorMessage error={validationErrors.cardholderName} />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Card Number *</label>
+            <div className="payment-form-group">
+              <label className="payment-form-label">Card Number *</label>
               <input
                 type="text"
                 value={formData.cardNumber}
                 onChange={(e) => handleInputChange('cardNumber', formatCardNumber(e.target.value))}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                  validationErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="1234 5678 9012 3456"
-                maxLength={16}
+                className={`payment-form-input ${validationErrors.cardNumber ? 'error' : ''}`}
+                placeholder="XXXX XXXX XXXX XXXX"
+                maxLength={19}
                 required
               />
               <ErrorMessage error={validationErrors.cardNumber} />
             </div>
             
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Month *</label>
+            <div className="payment-form-grid-cols-3">
+              <div className="payment-form-group">
+                <label className="payment-form-label">Month *</label>
                 <select
                   value={formData.expiryMonth}
                   onChange={(e) => handleInputChange('expiryMonth', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                    validationErrors.expiryMonth ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`payment-form-select ${validationErrors.expiryMonth ? 'error' : ''}`}
                   required
                 >
                   <option value="">MM</option>
@@ -629,14 +814,12 @@ export function PaymentPage() {
                 <ErrorMessage error={validationErrors.expiryMonth} />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Year *</label>
+              <div className="payment-form-group">
+                <label className="payment-form-label">Year *</label>
                 <select
                   value={formData.expiryYear}
                   onChange={(e) => handleInputChange('expiryYear', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                    validationErrors.expiryYear ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`payment-form-select ${validationErrors.expiryYear ? 'error' : ''}`}
                   required
                 >
                   <option value="">YYYY</option>
@@ -649,16 +832,14 @@ export function PaymentPage() {
                 <ErrorMessage error={validationErrors.expiryYear} />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">CVV *</label>
+              <div className="payment-form-group">
+                <label className="payment-form-label">CVV *</label>
                 <input
                   type="text"
                   value={formData.cvv}
                   onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, '').slice(0, 3))}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent ${
-                    validationErrors.cvv ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="123"
+                  className={`payment-form-input ${validationErrors.cvv ? 'error' : ''}`}
+                  placeholder="XXX"
                   maxLength={3}
                   required
                 />
@@ -672,11 +853,11 @@ export function PaymentPage() {
         )}
 
         {paymentMethod === 'cash-on-delivery' && (
-          <div className="text-center py-8">
-            <div className="text-2xl font-semibold text-gray-800 mb-4">Cash on Delivery</div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-              <h4 className="font-semibold text-blue-800 mb-2">Payment Instructions:</h4>
-              <ul className="text-blue-700 space-y-1 text-sm">
+          <div className="payment-cash-delivery">
+            <div className="payment-cash-delivery-title">Cash on Delivery</div>
+            <div className="payment-cash-delivery-info">
+              <h4 className="payment-cash-delivery-info-title">Payment Instructions:</h4>
+              <ul className="payment-cash-delivery-list">
                 <li>• Payment will be collected upon delivery</li>
                 <li>• Please have the exact amount ready</li>
                 <li>• Our delivery agent will provide a receipt</li>
@@ -690,64 +871,64 @@ export function PaymentPage() {
   );
 
   const renderReview = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold font-poppins text-gray-800">Review & Confirm</h2>
+    <div className="payment-step-container">
+      <h2 className="payment-step-title">Review & Confirm</h2>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="payment-review-grid">
         {/* Order Summary */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-          <div className="space-y-3">
+        <div className="payment-card">
+          <h3 className="payment-card-title">Order Summary</h3>
+          <div className="payment-review-items">
             {cartItems.map((item) => (
-              <div key={item.productId} className="flex justify-between">
-                <span className="text-gray-600">{item.product?.name} x{item.quantity}</span>
-                <span className="font-medium">{formatPrice((item.product?.price || 0) * item.quantity)}</span>
+              <div key={item.productId} className="payment-review-item">
+                <span className="payment-review-item-name">{item.product?.name} x{item.quantity}</span>
+                <span className="payment-review-item-price">{formatPrice((item.product?.price || 0) * item.quantity)}</span>
               </div>
             ))}
-            <div className="border-t pt-3 space-y-1">
-              <div className="flex justify-between">
+            <div className="payment-review-totals">
+              <div className="payment-review-total-row">
                 <span>Subtotal:</span>
                 <span>{formatPrice(calculateSubtotal())}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="payment-review-total-row">
                 <span>Tax:</span>
                 <span>{formatPrice(calculateTax())}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="payment-review-total-row">
                 <span>Shipping:</span>
                 <span>{calculateShipping() === 0 ? 'FREE' : formatPrice(calculateShipping())}</span>
               </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-2">
+              <div className="payment-review-total-row payment-review-grand-total">
                 <span>Total:</span>
-                <span className="text-pink-600">{formatPrice(calculateTotal())}</span>
+                <span className="payment-review-grand-total-amount">{formatPrice(calculateTotal())}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Customer Information */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Customer Information</h3>
-            <div className="space-y-2 text-sm">
-              <p><span className="font-medium">Name:</span> {formData.firstName} {formData.lastName}</p>
-              <p><span className="font-medium">Email:</span> {formData.email}</p>
-              <p><span className="font-medium">Phone:</span> {formData.phone}</p>
+        <div className="payment-review-info">
+          <div className="payment-card">
+            <h3 className="payment-card-title">Customer Information</h3>
+            <div className="payment-review-info-content">
+              <p><span className="payment-review-info-label">Name:</span> {formData.firstName} {formData.lastName}</p>
+              <p><span className="payment-review-info-label">Email:</span> {formData.email}</p>
+              <p><span className="payment-review-info-label">Phone:</span> {formData.phone}</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
-            <div className="text-sm text-gray-600">
+          <div className="payment-card">
+            <h3 className="payment-card-title">Billing Address</h3>
+            <div className="payment-review-address">
               <p>{formData.address}</p>
               <p>{formData.city}, {formData.province} {formData.zipCode}</p>
               <p>Sri Lanka</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
-            <div className="text-sm text-gray-600">
+          <div className="payment-card">
+            <h3 className="payment-card-title">Payment Method</h3>
+            <div className="payment-review-payment">
               {paymentMethod === 'card' && (
                 <p>Credit Card ending in {formData.cardNumber.slice(-4)}</p>
               )}
@@ -760,28 +941,24 @@ export function PaymentPage() {
   );
 
   const renderProcessing = () => (
-    <div className="text-center py-16">
-      <div className="animate-spin rounded-full h-20 w-20 border-4 border-pink-500 border-t-transparent mx-auto mb-8"></div>
-      <h2 className="text-2xl font-bold font-poppins text-gray-800 mb-4">Processing Your Payment</h2>
-      <p className="text-gray-600 mb-8">Please do not close this window or refresh the page.</p>
+    <div className="payment-processing-container">
+      <div className="payment-processing-spinner"></div>
+      <h2 className="payment-processing-title">Processing Your Payment</h2>
+      <p className="payment-processing-subtitle">Please do not close this window or refresh the page.</p>
       
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">✓</span>
-            </div>
-            <span className="text-sm">Validating payment information</span>
+      <div className="payment-processing-card">
+        <div className="payment-processing-steps">
+          <div className="payment-processing-step">
+            <div className="payment-processing-step-icon completed"></div>
+            <span className="payment-processing-step-text">Validating payment information</span>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">✓</span>
-            </div>
-            <span className="text-sm">Contacting payment processor</span>
+          <div className="payment-processing-step">
+            <div className="payment-processing-step-icon completed"></div>
+            <span className="payment-processing-step-text">Contacting payment processor</span>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 border-2 border-pink-500 rounded-full animate-pulse"></div>
-            <span className="text-sm">Authorizing payment...</span>
+          <div className="payment-processing-step">
+            <div className="payment-processing-step-icon active"></div>
+            <span className="payment-processing-step-text">Authorizing payment...</span>
           </div>
         </div>
       </div>
@@ -789,58 +966,65 @@ export function PaymentPage() {
   );
 
   const renderSuccess = () => (
-    <div className="text-center py-16">
-      <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-        <span className="text-white text-2xl">✓</span>
-      </div>
-      <h2 className="text-3xl font-bold font-poppins text-green-600 mb-4">Payment Successful!</h2>
-      <p className="text-gray-600 mb-8">Thank you for your order. Your payment has been processed successfully.</p>
+    <div className="payment-success-container">
+      <div className="payment-success-icon"></div>
+      <h2 className="payment-success-title">Payment Successful!</h2>
+      <p className="payment-success-subtitle">Thank you for your order. Your payment has been processed successfully.</p>
       
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">Order Details</h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
+      <div className="payment-success-card">
+        <h3 className="payment-success-card-title">Order Details</h3>
+        <div className="payment-success-details">
+          <div className="payment-success-detail-row">
             <span>Order Number:</span>
-            <span className="font-mono font-bold text-pink-600">{orderNumber}</span>
+            <span className="payment-success-order-number">{orderNumber}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="payment-success-detail-row">
             <span>Total Amount:</span>
-            <span className="font-bold">{formatPrice(calculateTotal())}</span>
+            <span className="payment-success-total-amount">{formatPrice(calculateTotal())}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="payment-success-detail-row">
             <span>Payment Method:</span>
-            <span className="capitalize">{paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'cash-on-delivery' ? 'Cash on Delivery' : paymentMethod}</span>
+            <span className="payment-success-payment-method">{paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'cash-on-delivery' ? 'Cash on Delivery' : paymentMethod}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="payment-success-detail-row">
             <span>Date:</span>
             <span>{new Date().toLocaleDateString()}</span>
           </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <p className="text-sm text-gray-500">A confirmation email has been sent to {formData.email}</p>
-        <button
-          onClick={() => router.push('/')}
-          className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg"
-        >
-          Continue Shopping
-        </button>
+      <div className="payment-success-actions">
+        <p className="payment-success-email-notice">A confirmation email has been sent to {formData.email}</p>
+        <div className="payment-success-button-container">
+          <button
+            onClick={generatePDFReceipt}
+            className="payment-success-pdf-button"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download PDF Receipt
+          </button>
+          <button
+            onClick={() => router.push('/')}
+            className="payment-success-continue-button"
+          >
+            Continue Shopping
+          </button>
+        </div>
       </div>
     </div>
   );
 
   const renderFailed = () => (
-    <div className="text-center py-16">
-      <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-        <span className="text-white text-2xl">✕</span>
-      </div>
-      <h2 className="text-3xl font-bold font-poppins text-red-600 mb-4">Payment Failed</h2>
-      <p className="text-gray-600 mb-8">We encountered an issue processing your payment. Please try again.</p>
+    <div className="payment-failed-container">
+      <div className="payment-failed-icon"></div>
+      <h2 className="payment-failed-title">Payment Failed</h2>
+      <p className="payment-failed-subtitle">We encountered an issue processing your payment. Please try again.</p>
       
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">What went wrong?</h3>
-        <ul className="text-sm text-gray-600 space-y-2 text-left">
+      <div className="payment-failed-card">
+        <h3 className="payment-failed-card-title">What went wrong?</h3>
+        <ul className="payment-failed-reasons">
           <li>• Your card may have been declined</li>
           <li>• Insufficient funds</li>
           <li>• Expired card</li>
@@ -849,16 +1033,16 @@ export function PaymentPage() {
         </ul>
       </div>
 
-      <div className="space-x-4">
+      <div className="payment-failed-actions">
         <button
           onClick={() => setCurrentStep('payment')}
-          className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg"
+          className="payment-failed-try-again-button"
         >
           Try Again
         </button>
         <button
           onClick={() => router.push('/')}
-          className="bg-gray-500 text-white px-8 py-3 rounded-full hover:bg-gray-600 transition-all duration-300 font-semibold"
+          className="payment-failed-back-button"
         >
           Back to Shop
         </button>
@@ -888,61 +1072,49 @@ export function PaymentPage() {
   const isNormalStep = !['processing', 'success', 'failed'].includes(currentStep);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 font-nunito">
+    <div className="payment-page-container">
       {/* Header */}
-      <header className="bg-white shadow-lg sticky top-0 z-40 border-b border-pink-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <button
-                onClick={() => router.push('/')}
-                className="text-pink-500 hover:text-pink-600 mr-4"
-              >
-                ← Back to Shop
-              </button>
-              <h1 className="text-3xl font-bold font-poppins bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                Secure Checkout
-              </h1>
-            </div>
-            {isNormalStep && (
-              <div className="text-sm text-gray-600">
-                Step {getStepNumber()} of 5
-              </div>
-            )}
+      <header className="payment-header">
+        <div className="payment-header-content">
+          <div className="payment-header-left">
+            <button
+              onClick={() => router.push('/')}
+              className="payment-back-button"
+            >
+              ← Back to Shop
+            </button>
+            <h1 className="payment-header-title">
+              Secure Checkout
+            </h1>
           </div>
+          {isNormalStep && (
+            <div className="payment-step-indicator">
+              Step {getStepNumber()} of 5
+            </div>
+          )}
         </div>
       </header>
 
       {/* Progress Bar */}
       {isNormalStep && (
-        <div className="bg-white border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
+        <div className="payment-progress-container">
+          <div className="payment-progress-content">
+            <div className="payment-progress-steps">
               {['Cart', 'Personal', 'Billing', 'Payment', 'Review'].map((step, index) => {
                 const stepNumber = index + 1;
                 const isActive = getStepNumber() === stepNumber;
                 const isCompleted = getStepNumber() > stepNumber;
                 
                 return (
-                  <div key={step} className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      isCompleted 
-                        ? 'bg-green-500 text-white' 
-                        : isActive 
-                          ? 'bg-pink-500 text-white' 
-                          : 'bg-gray-200 text-gray-600'
-                    }`}>
+                  <div key={step} className="payment-progress-step">
+                    <div className={`payment-progress-step-circle ${isCompleted ? 'completed' : isActive ? 'active' : 'inactive'}`}>
                       {isCompleted ? '✓' : stepNumber}
                     </div>
-                    <span className={`ml-2 text-sm font-medium ${
-                      isActive ? 'text-pink-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
-                    }`}>
+                    <span className={`payment-progress-step-label ${isActive ? 'active' : isCompleted ? 'completed' : 'inactive'}`}>
                       {step}
                     </span>
                     {index < 4 && (
-                      <div className={`w-16 h-0.5 mx-4 ${
-                        isCompleted ? 'bg-green-500' : 'bg-gray-200'
-                      }`} />
+                      <div className={`payment-progress-step-line ${isCompleted ? 'completed' : 'inactive'}`} />
                     )}
                   </div>
                 );
@@ -953,22 +1125,22 @@ export function PaymentPage() {
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="payment-main-content">
         {getStepContent()}
 
         {/* Navigation Buttons */}
         {isNormalStep && (
-          <div className="flex justify-between mt-8">
+          <div className="payment-navigation-buttons">
             <button
               onClick={currentStep === 'cart-review' ? () => router.push('/') : prevStep}
-              className="bg-gray-500 text-white px-8 py-3 rounded-full hover:bg-gray-600 transition-all duration-300 font-semibold"
+              className="payment-nav-button-secondary"
             >
               {currentStep === 'cart-review' ? 'Back to Shop' : 'Previous'}
             </button>
             
             <button
               onClick={currentStep === 'review' ? simulatePaymentProcessing : nextStep}
-              className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg"
+              className="payment-nav-button-primary"
               disabled={processing}
             >
               {currentStep === 'review' ? 'Complete Payment' : 'Continue'}

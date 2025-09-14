@@ -88,7 +88,7 @@ h1, h2, h3, h4, h5, h6 {
   background: #a8a8a8;
 }
 
-/* Loading animation */
+/* Loading Animation */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -96,6 +96,507 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* Payment Page Styles */
+.payment-page-container {
+  @apply min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 font-nunito;
+}
+
+.payment-loading-container {
+  @apply min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 flex items-center justify-center;
+}
+
+.payment-loading-spinner {
+  @apply animate-spin rounded-full h-16 w-16 border-4 border-pink-500 border-t-transparent mx-auto mb-4;
+}
+
+.payment-loading-text {
+  @apply text-gray-700 font-semibold text-lg text-center;
+}
+
+.payment-header {
+  @apply bg-white shadow-lg sticky top-0 z-40 border-b border-pink-100;
+}
+
+.payment-header-content {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between;
+}
+
+.payment-header-left {
+  @apply flex items-center mr-auto;
+}
+
+.payment-back-button {
+  @apply text-pink-500 hover:text-pink-600 mr-4;
+}
+
+.payment-header-title {
+  @apply text-3xl font-bold font-poppins bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent;
+}
+
+.payment-header-right {
+  @apply flex items-center space-x-4 ml-auto;
+}
+
+.payment-step-indicator {
+  @apply text-sm text-gray-800;
+}
+
+.payment-progress-container {
+  @apply bg-white border-b;
+}
+
+.payment-progress-content {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4;
+}
+
+.payment-progress-steps {
+  @apply flex items-center justify-between;
+}
+
+.payment-progress-step {
+  @apply flex items-center;
+}
+
+.payment-progress-step-circle {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium;
+}
+
+.payment-progress-step-circle.completed {
+  @apply bg-green-500 text-white;
+}
+
+.payment-progress-step-circle.active {
+  @apply bg-pink-500 text-white;
+}
+
+.payment-progress-step-circle.inactive {
+  @apply bg-gray-200 text-gray-700;
+}
+
+.payment-progress-step-label {
+  @apply ml-2 text-sm font-medium;
+}
+
+.payment-progress-step-label.active {
+  @apply text-pink-600;
+}
+
+.payment-progress-step-label.completed {
+  @apply text-green-600;
+}
+
+.payment-progress-step-label.inactive {
+  @apply text-gray-700;
+}
+
+.payment-progress-step-line {
+  @apply w-16 h-0.5 mx-4;
+}
+
+.payment-progress-step-line.completed {
+  @apply bg-green-500;
+}
+
+.payment-progress-step-line.inactive {
+  @apply bg-gray-200;
+}
+
+.payment-main-content {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.payment-step-container {
+  @apply space-y-6;
+}
+
+.payment-step-title {
+  @apply text-2xl font-bold font-poppins text-gray-800;
+}
+
+.payment-card {
+  @apply bg-white rounded-xl shadow-lg p-6;
+}
+
+.payment-card-title {
+  @apply text-lg font-semibold mb-4 text-gray-800;
+}
+
+.payment-cart-items {
+  @apply space-y-4;
+}
+
+.payment-cart-item {
+  @apply flex items-center space-x-4 p-4 border border-gray-200 rounded-lg;
+}
+
+.payment-cart-item-image {
+  @apply w-16 h-16 bg-gradient-to-br from-pink-200 to-purple-300 rounded-lg flex items-center justify-center;
+}
+
+.payment-cart-item-placeholder {
+  @apply text-2xl;
+}
+
+.payment-cart-item-details {
+  @apply flex-1;
+}
+
+.payment-cart-item-name {
+  @apply font-semibold text-gray-800;
+}
+
+.payment-cart-item-salon {
+  @apply text-gray-800 text-sm;
+}
+
+.payment-cart-item-quantity {
+  @apply text-gray-700 text-sm;
+}
+
+.payment-cart-item-price {
+  @apply text-right;
+}
+
+.payment-cart-item-price-text {
+  @apply font-bold text-pink-600;
+}
+
+.payment-order-totals {
+  @apply border-t pt-4 mt-4 space-y-2;
+}
+
+.payment-order-total-row {
+  @apply flex justify-between text-gray-800;
+}
+
+.payment-order-grand-total {
+  @apply text-lg font-bold border-t pt-2 text-gray-900;
+}
+
+.payment-order-grand-total-amount {
+  @apply text-pink-600;
+}
+
+.payment-form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.payment-form-group {
+  @apply mb-4;
+}
+
+.payment-form-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.payment-form-input {
+  @apply w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent border-gray-300 text-gray-900 placeholder-gray-400;
+}
+
+.payment-form-input.error {
+  @apply border-red-500;
+}
+
+.payment-form-select {
+  @apply w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent border-gray-300 text-gray-900;
+}
+
+.payment-form-select.error {
+  @apply border-red-500;
+}
+
+/* Ensure option elements have proper dark text */
+.payment-form-select option {
+  @apply text-gray-900;
+}
+
+.payment-form-fields {
+  @apply space-y-4;
+}
+
+.payment-form-grid-cols-3 {
+  @apply grid grid-cols-3 gap-4;
+}
+
+.payment-error-message {
+  @apply text-red-500 text-sm mt-1;
+}
+
+.payment-method-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4 mb-6;
+}
+
+.payment-method-button {
+  @apply p-4 border-2 rounded-lg transition-all border-gray-200 hover:border-gray-300;
+}
+
+.payment-method-button.selected {
+  @apply border-pink-500 bg-pink-50;
+}
+
+.payment-method-content {
+  @apply text-center;
+}
+
+.payment-method-icon {
+  @apply text-2xl mb-2 text-gray-800;
+}
+
+.payment-method-label {
+  @apply font-medium text-gray-800;
+}
+
+.payment-cash-delivery {
+  @apply text-center py-8;
+}
+
+.payment-cash-delivery-title {
+  @apply text-2xl font-semibold text-gray-800 mb-4;
+}
+
+.payment-cash-delivery-info {
+  @apply bg-blue-50 border border-blue-200 rounded-lg p-4 text-left;
+}
+
+.payment-cash-delivery-info-title {
+  @apply font-semibold text-blue-800 mb-2;
+}
+
+.payment-cash-delivery-list {
+  @apply text-blue-700 space-y-1 text-sm;
+}
+
+.payment-review-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+}
+
+.payment-review-items {
+  @apply space-y-3;
+}
+
+.payment-review-item {
+  @apply flex justify-between;
+}
+
+.payment-review-item-name {
+  @apply text-gray-800;
+}
+
+.payment-review-item-price {
+  @apply font-medium text-gray-800;
+}
+
+.payment-review-totals {
+  @apply border-t pt-3 space-y-1;
+}
+
+.payment-review-total-row {
+  @apply flex justify-between text-gray-800;
+}
+
+.payment-review-grand-total {
+  @apply font-bold text-lg border-t pt-2 text-gray-900;
+}
+
+.payment-review-grand-total-amount {
+  @apply text-pink-600;
+}
+
+.payment-review-info {
+  @apply space-y-6;
+}
+
+.payment-review-info-content {
+  @apply space-y-2 text-sm text-gray-800;
+}
+
+.payment-review-info-label {
+  @apply font-medium text-gray-800;
+}
+
+.payment-review-address {
+  @apply text-sm text-gray-800;
+}
+
+.payment-review-payment {
+  @apply text-sm text-gray-800;
+}
+
+.payment-processing-container {
+  @apply min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 flex flex-col items-center justify-center text-center;
+}
+
+.payment-processing-spinner {
+  @apply animate-spin rounded-full h-20 w-20 border-4 border-pink-500 border-t-transparent mx-auto mb-8;
+}
+
+.payment-processing-title {
+  @apply text-2xl font-bold font-poppins text-gray-800 mb-4 text-center;
+}
+
+.payment-processing-subtitle {
+  @apply text-gray-800 mb-8 text-center;
+}
+
+.payment-processing-card {
+  @apply max-w-md mx-auto bg-white rounded-xl shadow-lg p-6;
+}
+
+.payment-processing-steps {
+  @apply space-y-4;
+}
+
+.payment-processing-step {
+  @apply flex items-center space-x-3;
+}
+
+.payment-processing-step-icon {
+  @apply w-6 h-6 rounded-full flex items-center justify-center;
+}
+
+.payment-processing-step-icon.completed {
+  @apply bg-green-500;
+}
+
+.payment-processing-step-icon.completed::before {
+  content: '✓';
+  @apply text-white text-xs;
+}
+
+.payment-processing-step-icon.active {
+  @apply border-2 border-pink-500 animate-pulse;
+}
+
+.payment-processing-step-text {
+  @apply text-sm text-gray-800;
+}
+
+.payment-success-container {
+  @apply min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 flex flex-col items-center justify-center text-center;
+}
+
+.payment-success-icon {
+  @apply w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6;
+}
+
+.payment-success-icon::before {
+  content: '✓';
+  @apply text-white text-2xl;
+}
+
+.payment-success-title {
+  @apply text-3xl font-bold font-poppins text-green-600 mb-4 text-center;
+}
+
+.payment-success-subtitle {
+  @apply text-gray-800 mb-8 text-center;
+}
+
+.payment-success-card {
+  @apply max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 mb-8;
+}
+
+.payment-success-card-title {
+  @apply text-lg font-semibold mb-4 text-gray-800;
+}
+
+.payment-success-details {
+  @apply space-y-2 text-sm text-gray-800;
+}
+
+.payment-success-detail-row {
+  @apply flex justify-between text-gray-800;
+}
+
+.payment-success-order-number {
+  @apply font-mono font-bold text-pink-600;
+}
+
+.payment-success-total-amount {
+  @apply font-bold text-gray-800;
+}
+
+.payment-success-payment-method {
+  @apply capitalize text-gray-800;
+}
+
+.payment-success-actions {
+  @apply space-y-4;
+}
+
+.payment-success-button-container {
+  @apply flex flex-row gap-4 justify-center items-center;
+}
+
+.payment-success-pdf-button {
+  @apply bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-3 rounded-full hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg flex items-center justify-center gap-2;
+}
+
+.payment-success-email-notice {
+  @apply text-sm text-gray-700;
+}
+
+.payment-success-continue-button {
+  @apply bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg;
+}
+
+.payment-failed-container {
+  @apply min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 flex flex-col items-center justify-center text-center;
+}
+
+.payment-failed-icon {
+  @apply w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6;
+}
+
+.payment-failed-icon::before {
+  content: '✕';
+  @apply text-white text-2xl;
+}
+
+.payment-failed-title {
+  @apply text-3xl font-bold font-poppins text-red-600 mb-4 text-center;
+}
+
+.payment-failed-subtitle {
+  @apply text-gray-800 mb-8 text-center;
+}
+
+.payment-failed-card {
+  @apply max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 mb-8;
+}
+
+.payment-failed-card-title {
+  @apply text-lg font-semibold mb-4;
+}
+
+.payment-failed-reasons {
+  @apply text-sm text-gray-800 space-y-2 text-left;
+}
+
+.payment-failed-actions {
+  @apply space-x-4;
+}
+
+.payment-failed-try-again-button {
+  @apply bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg;
+}
+
+.payment-failed-back-button {
+  @apply bg-gray-500 text-white px-8 py-3 rounded-full hover:bg-gray-600 transition-all duration-300 font-semibold;
+}
+
+.payment-navigation-buttons {
+  @apply flex justify-between mt-8;
+}
+
+.payment-nav-button-secondary {
+  @apply bg-gray-500 text-white px-8 py-3 rounded-full hover:bg-gray-600 transition-all duration-300 font-semibold;
+}
+
+.payment-nav-button-primary {
+  @apply bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg;
 }
 
 /* Fade in animation */
@@ -106,4 +607,341 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Beauty Marketplace Styles */
+.marketplace-container {
+  @apply min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 font-nunito;
+}
+
+.marketplace-loading-container {
+  @apply min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 flex items-center justify-center;
+}
+
+.marketplace-loading-content {
+  @apply text-center;
+}
+
+.marketplace-loading-spinner {
+  @apply animate-spin rounded-full h-16 w-16 border-4 border-pink-500 border-t-transparent mx-auto mb-4;
+}
+
+.marketplace-loading-title {
+  @apply text-gray-700 font-semibold text-lg text-center;
+}
+
+.marketplace-loading-subtitle {
+  @apply text-gray-500 text-sm mt-2 text-center;
+}
+
+.marketplace-header {
+  @apply bg-white shadow-lg sticky top-0 z-40 border-b border-pink-100;
+}
+
+.marketplace-header-content {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between;
+}
+
+.marketplace-header-left {
+  @apply flex items-center mr-auto;
+}
+
+.marketplace-header-title {
+  @apply text-4xl font-bold font-poppins gradient-text title-text;
+}
+
+.marketplace-header-subtitle {
+  @apply ml-4 text-gray-800 font-medium;
+}
+
+.marketplace-header-right {
+  @apply flex items-center space-x-4 ml-auto;
+}
+
+.marketplace-cart-button {
+  @apply bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 relative shadow-lg;
+}
+
+.marketplace-cart-badge {
+  @apply absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center animate-pulse;
+}
+
+.marketplace-cart-overlay {
+  @apply fixed inset-0 z-50 flex;
+}
+
+.marketplace-cart-backdrop {
+  @apply fixed inset-0 bg-black bg-opacity-50;
+}
+
+.marketplace-cart-sidebar {
+  @apply relative ml-auto w-96 bg-white h-full shadow-2xl;
+}
+
+.marketplace-cart-content {
+  @apply p-6;
+}
+
+.marketplace-cart-header {
+  @apply flex items-center justify-between mb-6;
+}
+
+.marketplace-cart-title {
+  @apply text-xl font-bold font-poppins text-gray-800;
+}
+
+.marketplace-cart-close {
+  @apply text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors;
+}
+
+.marketplace-cart-items {
+  @apply space-y-4 mb-6 max-h-96 overflow-y-auto;
+}
+
+.marketplace-cart-item {
+  @apply flex items-center space-x-3 p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors;
+}
+
+.marketplace-cart-item-image {
+  @apply w-12 h-12 bg-gradient-to-br from-pink-200 to-purple-300 rounded-full flex items-center justify-center;
+}
+
+.marketplace-cart-item-placeholder {
+  @apply text-xs font-bold;
+}
+
+.marketplace-cart-item-details {
+  @apply flex-1;
+}
+
+.marketplace-cart-item-name {
+  @apply font-semibold text-sm text-gray-800;
+}
+
+.marketplace-cart-item-quantity {
+  @apply text-gray-700 text-xs;
+}
+
+.marketplace-cart-item-price {
+  @apply text-pink-600 font-bold;
+}
+
+.marketplace-cart-item-remove {
+  @apply text-red-500 hover:text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-full text-xs font-medium transition-colors;
+}
+
+.marketplace-cart-footer {
+  @apply border-t border-gray-200 pt-4;
+}
+
+.marketplace-cart-total {
+  @apply flex justify-between items-center mb-4;
+}
+
+.marketplace-cart-total-text {
+  @apply font-bold text-lg font-poppins text-gray-800;
+}
+
+.marketplace-cart-actions {
+  @apply space-y-3;
+}
+
+.marketplace-cart-checkout {
+  @apply w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg;
+}
+
+.marketplace-cart-clear {
+  @apply w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 rounded-full hover:from-red-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg;
+}
+
+.marketplace-cart-empty {
+  @apply text-center py-12;
+}
+
+.marketplace-cart-empty-icon {
+  @apply w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4;
+}
+
+.marketplace-cart-empty-text {
+  @apply text-gray-700 text-lg;
+}
+
+.marketplace-cart-empty-title {
+  @apply text-gray-700 font-medium;
+}
+
+.marketplace-cart-empty-subtitle {
+  @apply text-gray-600 text-sm mt-2;
+}
+
+.marketplace-main-content {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.marketplace-error-alert {
+  @apply bg-red-50 border border-red-200 rounded-md p-4 mb-6;
+}
+
+.marketplace-error-content {
+  @apply flex;
+}
+
+.marketplace-error-content > div {
+  @apply ml-3;
+}
+
+.marketplace-error-title {
+  @apply text-sm font-medium text-red-800;
+}
+
+.marketplace-error-message {
+  @apply mt-2 text-sm text-red-700;
+}
+
+.marketplace-error-actions {
+  @apply mt-4;
+}
+
+.marketplace-error-retry {
+  @apply bg-red-100 text-red-800 px-3 py-1 rounded text-sm hover:bg-red-200 transition-colors;
+}
+
+.marketplace-products-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8;
+}
+
+.marketplace-product-card {
+  @apply bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100;
+}
+
+.marketplace-product-image {
+  @apply h-52 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-200 flex items-center justify-center relative;
+}
+
+.marketplace-product-placeholder {
+  @apply text-2xl font-bold text-gray-600;
+}
+
+.marketplace-product-discount {
+  @apply absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold;
+}
+
+.marketplace-product-content {
+  @apply p-6;
+}
+
+.marketplace-product-title {
+  @apply text-lg font-bold font-poppins text-gray-900 mb-2 line-clamp-2;
+}
+
+.marketplace-product-description {
+  @apply text-sm text-gray-800 mb-3 line-clamp-2;
+}
+
+.marketplace-product-price-section {
+  @apply flex items-center justify-between mb-2;
+}
+
+.marketplace-product-price {
+  @apply text-xl font-bold text-pink-600 font-poppins;
+}
+
+.marketplace-product-stock {
+  @apply text-sm text-gray-700 bg-gray-100 px-2 py-1 rounded-full;
+}
+
+.marketplace-product-salon {
+  @apply text-sm text-gray-700 mb-4 font-medium;
+}
+
+.marketplace-product-add-button {
+  @apply w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-4 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed disabled:transform-none font-semibold shadow-lg;
+}
+
+.marketplace-button-spinner {
+  @apply inline-block animate-spin mr-2;
+}
+
+.marketplace-no-products {
+  @apply col-span-full text-center py-12;
+}
+
+.marketplace-no-products-icon {
+  @apply w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4;
+}
+
+.marketplace-no-products-text {
+  @apply text-gray-700 text-sm font-bold;
+}
+
+.marketplace-no-products-title {
+  @apply text-lg font-medium text-gray-900 mb-2;
+}
+
+.marketplace-no-products-message {
+  @apply text-gray-800 mb-4;
+}
+
+.marketplace-no-products-refresh {
+  @apply bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors;
+}
+
+.marketplace-footer {
+  @apply bg-white border-t border-pink-100 mt-16;
+}
+
+.marketplace-footer-content {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.marketplace-footer-main {
+  @apply text-center;
+}
+
+.marketplace-footer-title {
+  @apply text-2xl font-bold font-poppins gradient-text title-text mb-4;
+}
+
+.marketplace-footer-stats {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4 text-sm;
+}
+
+.marketplace-footer-stat {
+  @apply bg-blue-50 p-4 rounded-xl;
+}
+
+.marketplace-footer-stat:first-child {
+  @apply bg-blue-50;
+}
+
+.marketplace-footer-stat:last-child {
+  @apply bg-purple-50;
+}
+
+.marketplace-footer-stat-title {
+  @apply font-semibold text-blue-700;
+}
+
+.marketplace-footer-stat:first-child .marketplace-footer-stat-title {
+  @apply text-blue-700;
+}
+
+.marketplace-footer-stat:last-child .marketplace-footer-stat-title {
+  @apply text-purple-700;
+}
+
+.marketplace-footer-stat-value {
+  @apply text-blue-600;
+}
+
+.marketplace-footer-stat:first-child .marketplace-footer-stat-value {
+  @apply text-blue-600;
+}
+
+.marketplace-footer-stat:last-child .marketplace-footer-stat-value {
+  @apply text-purple-600;
+}
+
+.marketplace-footer-tagline {
+  @apply text-gray-700 text-xs mt-4;
 }

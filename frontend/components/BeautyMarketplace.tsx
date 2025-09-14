@@ -183,56 +183,54 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 flex items-center justify-center font-nunito">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-pink-500 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-700 font-semibold text-lg">Loading beautiful products...</p>
-          <p className="text-gray-500 text-sm mt-2">Finding the perfect items for you</p>
+      <div className="marketplace-loading-container">
+        <div className="marketplace-loading-content">
+          <div className="marketplace-loading-spinner"></div>
+          <p className="marketplace-loading-title">Loading beautiful products...</p>
+          <p className="marketplace-loading-subtitle">Finding the perfect items for you</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 font-nunito">
+    <div className="marketplace-container">
       {/* Header */}
-      <header className="bg-white shadow-lg sticky top-0 z-40 border-b border-pink-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <h1 className="text-4xl font-bold font-poppins gradient-text title-text">
-                GlowBridge
-              </h1>
-              <p className="ml-4 text-gray-600 font-medium">Beauty Marketplace</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={toggleCart}
-                className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 relative shadow-lg"
-              >
-                Cart ({getTotalCartItems()})
-                {getTotalCartItems() > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center animate-pulse">
-                    {getTotalCartItems()}
-                  </span>
-                )}
-              </button>
-            </div>
+      <header className="marketplace-header">
+        <div className="marketplace-header-content">
+          <div className="marketplace-header-left">
+            <h1 className="marketplace-header-title">
+              GlowBridge
+            </h1>
+            <p className="marketplace-header-subtitle">Beauty Marketplace</p>
+          </div>
+          <div className="marketplace-header-right">
+            <button 
+              onClick={toggleCart}
+              className="marketplace-cart-button"
+            >
+              Cart ({getTotalCartItems()})
+              {getTotalCartItems() > 0 && (
+                <span className="marketplace-cart-badge">
+                  {getTotalCartItems()}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </header>
 
       {/* Cart Sidebar */}
       {showCart && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={toggleCart}></div>
-          <div className="relative ml-auto w-96 bg-white h-full shadow-2xl">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold font-poppins text-gray-800">Shopping Cart</h2>
+        <div className="marketplace-cart-overlay">
+          <div className="marketplace-cart-backdrop" onClick={toggleCart}></div>
+          <div className="marketplace-cart-sidebar">
+            <div className="marketplace-cart-content">
+              <div className="marketplace-cart-header">
+                <h2 className="marketplace-cart-title">Shopping Cart</h2>
                 <button 
                   onClick={toggleCart}
-                  className="text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+                  className="marketplace-cart-close"
                 >
                   ✕
                 </button>
@@ -240,22 +238,22 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
               
               {cartItems.length > 0 ? (
                 <>
-                  <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+                  <div className="marketplace-cart-items">
                     {cartItems.map((item) => (
-                      <div key={item.productId} className="flex items-center space-x-3 p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="w-12 h-12 bg-gradient-to-br from-pink-200 to-purple-300 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold">ITEM</span>
+                      <div key={item.productId} className="marketplace-cart-item">
+                        <div className="marketplace-cart-item-image">
+                          <span className="marketplace-cart-item-placeholder">ITEM</span>
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-sm text-gray-800">{item.product?.name || 'Unknown Product'}</h3>
-                          <p className="text-gray-500 text-xs">Qty: {item.quantity}</p>
-                          <p className="text-pink-600 font-bold">
+                        <div className="marketplace-cart-item-details">
+                          <h3 className="marketplace-cart-item-name">{item.product?.name || 'Unknown Product'}</h3>
+                          <p className="marketplace-cart-item-quantity">Qty: {item.quantity}</p>
+                          <p className="marketplace-cart-item-price">
                             {formatPrice((item.product?.price || 0) * item.quantity)}
                           </p>
                         </div>
                         <button
                           onClick={() => removeFromCart(item.productId)}
-                          className="text-red-500 hover:text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-full text-xs font-medium transition-colors"
+                          className="marketplace-cart-item-remove"
                         >
                           Remove
                         </button>
@@ -263,20 +261,20 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
                     ))}
                   </div>
                   
-                  <div className="border-t border-gray-200 pt-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="font-bold text-lg font-poppins text-gray-800">Total: {formatPrice(getTotalCartValue())}</span>
+                  <div className="marketplace-cart-footer">
+                    <div className="marketplace-cart-total">
+                      <span className="marketplace-cart-total-text">Total: {formatPrice(getTotalCartValue())}</span>
                     </div>
-                    <div className="space-y-3">
+                    <div className="marketplace-cart-actions">
                       <button 
                         onClick={handleCheckout}
-                        className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg"
+                        className="marketplace-cart-checkout"
                       >
                         Checkout
                       </button>
                       <button 
                         onClick={clearCart}
-                        className="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-3 rounded-full hover:from-red-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg"
+                        className="marketplace-cart-clear"
                       >
                         Clear Cart
                       </button>
@@ -284,12 +282,12 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
                   </div>
                 </>
               ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-gray-500 text-lg">CART</span>
+                <div className="marketplace-cart-empty">
+                  <div className="marketplace-cart-empty-icon">
+                    <span className="marketplace-cart-empty-text">CART</span>
                   </div>
-                  <p className="text-gray-500 font-medium">Your cart is empty</p>
-                  <p className="text-gray-400 text-sm mt-2">Add some beautiful products to get started!</p>
+                  <p className="marketplace-cart-empty-title">Your cart is empty</p>
+                  <p className="marketplace-cart-empty-subtitle">Add some beautiful products to get started!</p>
                 </div>
               )}
             </div>
@@ -298,70 +296,68 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="marketplace-main-content">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-            <div className="flex">
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>{error}</p>
-                </div>
-                <div className="mt-4">
-                  <button
-                    onClick={fetchProducts}
-                    className="bg-red-100 text-red-800 px-3 py-1 rounded text-sm hover:bg-red-200 transition-colors"
-                  >
-                    Try Again
-                  </button>
-                </div>
+          <div className="marketplace-error-alert">
+            <div className="marketplace-error-content">
+              <h3 className="marketplace-error-title">Error</h3>
+              <div className="marketplace-error-message">
+                <p>{error}</p>
+              </div>
+              <div className="marketplace-error-actions">
+                <button
+                  onClick={fetchProducts}
+                  className="marketplace-error-retry"
+                >
+                  Try Again
+                </button>
               </div>
             </div>
           </div>
         )}
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="marketplace-products-grid">
           {products.length > 0 ? (
             products.map((product) => (
               <div
                 key={product.id}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+                className="marketplace-product-card"
               >
-                <div className="h-52 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-200 flex items-center justify-center relative">
-                  <span className="text-2xl font-bold text-gray-600">PRODUCT</span>
+                <div className="marketplace-product-image">
+                  <span className="marketplace-product-placeholder">PRODUCT</span>
                   {product.discount && product.discount > 0 && (
-                    <div className="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                    <div className="marketplace-product-discount">
                       -{product.discount}%
                     </div>
                   )}
                 </div>
-                <div className="p-6">
-                  <h3 className="text-lg font-bold font-poppins text-gray-900 mb-2 line-clamp-2">
+                <div className="marketplace-product-content">
+                  <h3 className="marketplace-product-title">
                     {product.name}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  <p className="marketplace-product-description">
                     {product.description}
                   </p>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xl font-bold text-pink-600 font-poppins">
+                  <div className="marketplace-product-price-section">
+                    <span className="marketplace-product-price">
                       {formatPrice(product.price)}
                     </span>
-                    <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                    <span className="marketplace-product-stock">
                       Stock: {product.available_quantity}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 mb-4 font-medium">
+                  <p className="marketplace-product-salon">
                     by {product.salon_name}
                   </p>
                   <button
                     onClick={() => addToCart(product)}
-                    className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-4 rounded-full hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed disabled:transform-none font-semibold shadow-lg"
+                    className="marketplace-product-add-button"
                     disabled={product.available_quantity === 0 || addingToCart === product.id}
                   >
                     {addingToCart === product.id ? (
                       <>
-                        <span className="inline-block animate-spin mr-2">...</span>
+                        <span className="marketplace-button-spinner">...</span>
                         Adding...
                       </>
                     ) : product.available_quantity > 0 ? (
@@ -375,17 +371,17 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
             ))
           ) : (
             !loading && (
-              <div className="col-span-full text-center py-12">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-gray-500 text-sm font-bold">SHOP</span>
+              <div className="marketplace-no-products">
+                <div className="marketplace-no-products-icon">
+                  <span className="marketplace-no-products-text">SHOP</span>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="marketplace-no-products-title">No products found</h3>
+                <p className="marketplace-no-products-message">
                   We couldn't find any products. This might be because the backend is not connected to the database.
                 </p>
                 <button
                   onClick={fetchProducts}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  className="marketplace-no-products-refresh"
                 >
                   Refresh Products
                 </button>
@@ -396,25 +392,25 @@ export function BeautyMarketplace({ initialProducts = [] }: BeautyMarketplacePro
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-pink-100 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <div className="text-2xl font-bold font-poppins gradient-text title-text mb-4">
+      <footer className="marketplace-footer">
+        <div className="marketplace-footer-content">
+          <div className="marketplace-footer-main">
+            <div className="marketplace-footer-title">
               GlowBridge Beauty Marketplace
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="bg-blue-50 p-4 rounded-xl">
-                <p className="font-semibold text-blue-700">Cart Summary</p>
-                <p className="text-blue-600">
+            <div className="marketplace-footer-stats">
+              <div className="marketplace-footer-stat">
+                <p className="marketplace-footer-stat-title">Cart Summary</p>
+                <p className="marketplace-footer-stat-value">
                   Items: {getTotalCartItems()} | Value: {formatPrice(getTotalCartValue())}
                 </p>
               </div>
-              <div className="bg-purple-50 p-4 rounded-xl">
-                <p className="font-semibold text-purple-700">Products Available</p>
-                <p className="text-purple-600">{products.length} beautiful items</p>
+              <div className="marketplace-footer-stat">
+                <p className="marketplace-footer-stat-title">Products Available</p>
+                <p className="marketplace-footer-stat-value">{products.length} beautiful items</p>
               </div>
             </div>
-            <p className="text-gray-500 text-xs mt-4">
+            <p className="marketplace-footer-tagline">
               Enjoy your beautiful shopping experience.
             </p>
           </div>
