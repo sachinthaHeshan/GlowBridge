@@ -602,7 +602,7 @@ export function PaymentPage() {
                   validationErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="1234 5678 9012 3456"
-                maxLength={19}
+                maxLength={16}
                 required
               />
               <ErrorMessage error={validationErrors.cardNumber} />
