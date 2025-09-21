@@ -1,95 +1,21 @@
-const { db } = require('../config/database');
-const bcrypt = require('bcryptjs');
+﻿const { db } = require('../config/database');
 
 class User {
   constructor(data) {
     this.id = data.id;
-    this.username = data.username;
+    this.first_name = data.first_name;
+    this.last_name = data.last_name;
     this.email = data.email;
-    this.full_name = data.full_name;
-    this.phone = data.phone;
-    this.address = data.address;
-    this.created_at = data.created_at;
-    this.updated_at = data.updated_at;
-    // Don't include password in the model
+    this.contact_number = data.contact_number;
+    this.role = data.role;
   }
 
-  // Create a new user
-  static async create(userData) {
-    try {
-      const { username, email, password, full_name, phone, address } = userData;
-
-      // Check if user already exists
-      const existingUser = await db.query(`
-        SELECT id FROM users WHERE username = $1 OR email = $2
-      `, [username, email]);
-
-      if (existingUser.rows.length > 0) {
-        throw new Error('User with this username or email already exists');
-      }
-
-      // Hash password
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-      // Create user
-      const result = await db.query(`
-        INSERT INTO users (username, email, password, full_name, phone, address)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, username, email, full_name, phone, address, created_at, updated_at
-      `, [username, email, hashedPassword, full_name, phone, address]);
-
-      return new User(result.rows[0]);
-    } catch (error) {
-      console.error('Error creating user:', error);
-      throw error;
-    }
-  }
-
-  // Find user by email
-  static async findByEmail(email) {
-    try {
-      const result = await db.query(`
-        SELECT id, username, email, password, full_name, phone, address, created_at, updated_at
-        FROM users WHERE email = $1
-      `, [email]);
-
-      if (result.rows.length === 0) {
-        return null;
-      }
-
-      return result.rows[0]; // Return raw data including password for authentication
-    } catch (error) {
-      console.error('Error finding user by email:', error);
-      throw error;
-    }
-  }
-
-  // Find user by username
-  static async findByUsername(username) {
-    try {
-      const result = await db.query(`
-        SELECT id, username, email, password, full_name, phone, address, created_at, updated_at
-        FROM users WHERE username = $1
-      `, [username]);
-
-      if (result.rows.length === 0) {
-        return null;
-      }
-
-      return result.rows[0]; // Return raw data including password for authentication
-    } catch (error) {
-      console.error('Error finding user by username:', error);
-      throw error;
-    }
-  }
-
-  // Find user by ID (excluding password)
+  // Find user by ID
   static async findById(id) {
     try {
       const result = await db.query(`
-        SELECT id, username, email, full_name, phone, address, created_at, updated_at
-        FROM users WHERE id = $1
+        SELECT id, first_name, last_name, email, contact_number, role
+        FROM "user" WHERE id = $1
       `, [id]);
 
       if (result.rows.length === 0) {
@@ -103,61 +29,71 @@ class User {
     }
   }
 
-  // Update user profile
-  static async updateProfile(id, updateData) {
+  // Find user by email
+  static async findByEmail(email) {
     try {
-      const { full_name, phone, address } = updateData;
-      
       const result = await db.query(`
-        UPDATE users 
-        SET full_name = $2, phone = $3, address = $4, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1
-        RETURNING id, username, email, full_name, phone, address, created_at, updated_at
-      `, [id, full_name, phone, address]);
+        SELECT id, first_name, last_name, email, contact_number, role
+        FROM "user" WHERE email = $1
+      `, [email]);
 
       if (result.rows.length === 0) {
-        throw new Error('User not found');
+        return null;
       }
 
       return new User(result.rows[0]);
     } catch (error) {
-      console.error('Error updating user profile:', error);
+      console.error('Error finding user by email:', error);
       throw error;
     }
   }
 
-  // Update password
-  static async updatePassword(id, newPassword) {
+  // Create a new user
+  static async create(userData) {
     try {
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+      const { first_name, last_name, email, contact_number, role = 'customer' } = userData;
 
-      const result = await db.query(`
-        UPDATE users 
-        SET password = $2, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1
-        RETURNING id
-      `, [id, hashedPassword]);
+      // Check if user already exists
+      const existingUser = await db.query(`
+        SELECT id FROM "user" WHERE email = $1
+      `, [email]);
 
-      if (result.rows.length === 0) {
-        throw new Error('User not found');
+      if (existingUser.rows.length > 0) {
+        throw new Error('User with this email already exists');
       }
 
-      return true;
+      // Create user
+      const result = await db.query(`
+        INSERT INTO "user" (first_name, last_name, email, contact_number, role)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, first_name, last_name, email, contact_number, role
+      `, [first_name, last_name, email, contact_number, role]);
+
+      return new User(result.rows[0]);
     } catch (error) {
-      console.error('Error updating password:', error);
+      console.error('Error creating user:', error);
       throw error;
     }
   }
 
-  // Verify password
-  static async verifyPassword(plainPassword, hashedPassword) {
-    try {
-      return await bcrypt.compare(plainPassword, hashedPassword);
-    } catch (error) {
-      console.error('Error verifying password:', error);
-      throw error;
-    }
+  // Get full name
+  getFullName() {
+    return `${this.first_name} ${this.last_name}`;
+  }
+
+  // Check if user has specific role
+  hasRole(role) {
+    return this.role === role;
+  }
+
+  // Check if user is admin
+  isAdmin() {
+    return this.role === 'admin';
+  }
+
+  // Check if user is customer
+  isCustomer() {
+    return this.role === 'customer';
   }
 }
 

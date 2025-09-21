@@ -6,8 +6,6 @@ class Cart {
     this.user_id = data.user_id;
     this.product_id = data.product_id;
     this.quantity = data.quantity;
-    this.created_at = data.created_at;
-    this.updated_at = data.updated_at;
     
     // Product details if joined
     if (data.product_name) {
@@ -31,18 +29,16 @@ class Cart {
           c.user_id,
           c.product_id,
           c.quantity,
-          c.created_at,
-          c.updated_at,
           p.name as product_name,
           p.price as product_price,
           p.available_quantity,
           p.discount as product_discount,
           s.name as salon_name
-        FROM cart c
+        FROM shopping_cart_item c
         JOIN product p ON c.product_id = p.id
         JOIN salon s ON p.salon_id = s.id
         WHERE c.user_id = $1
-        ORDER BY c.created_at DESC
+        ORDER BY p.name ASC
       `, [userId]);
 
       return result.rows.map(row => new Cart(row));
@@ -71,7 +67,7 @@ class Cart {
       // Check if item already exists in cart
       const existingResult = await db.query(`
         SELECT id, quantity 
-        FROM cart 
+        FROM shopping_cart_item 
         WHERE user_id = $1 AND product_id = $2
       `, [userId, productId]);
 
@@ -88,8 +84,8 @@ class Cart {
         }
         
         const updateResult = await db.query(`
-          UPDATE cart 
-          SET quantity = $3, updated_at = CURRENT_TIMESTAMP
+          UPDATE shopping_cart_item 
+          SET quantity = $3
           WHERE user_id = $1 AND product_id = $2
           RETURNING *
         `, [userId, productId, newQuantity]);
@@ -103,7 +99,7 @@ class Cart {
         
         // Create new cart item
         const insertResult = await db.query(`
-          INSERT INTO cart (user_id, product_id, quantity)
+          INSERT INTO shopping_cart_item (user_id, product_id, quantity)
           VALUES ($1, $2, $3)
           RETURNING *
         `, [userId, productId, quantity]);
@@ -118,14 +114,12 @@ class Cart {
           c.user_id,
           c.product_id,
           c.quantity,
-          c.created_at,
-          c.updated_at,
           p.name as product_name,
           p.price as product_price,
           p.available_quantity,
           p.discount as product_discount,
           s.name as salon_name
-        FROM cart c
+        FROM shopping_cart_item c
         JOIN product p ON c.product_id = p.id
         JOIN salon s ON p.salon_id = s.id
         WHERE c.id = $1
@@ -159,8 +153,8 @@ class Cart {
       }
 
       const result = await db.query(`
-        UPDATE cart 
-        SET quantity = $3, updated_at = CURRENT_TIMESTAMP
+        UPDATE shopping_cart_item 
+        SET quantity = $3
         WHERE user_id = $1 AND product_id = $2
         RETURNING *
       `, [userId, productId, quantity]);
@@ -176,14 +170,12 @@ class Cart {
           c.user_id,
           c.product_id,
           c.quantity,
-          c.created_at,
-          c.updated_at,
           p.name as product_name,
           p.price as product_price,
           p.available_quantity,
           p.discount as product_discount,
           s.name as salon_name
-        FROM cart c
+        FROM shopping_cart_item c
         JOIN product p ON c.product_id = p.id
         JOIN salon s ON p.salon_id = s.id
         WHERE c.id = $1
@@ -200,7 +192,7 @@ class Cart {
   static async removeItem(userId, productId) {
     try {
       const result = await db.query(`
-        DELETE FROM cart 
+        DELETE FROM shopping_cart_item 
         WHERE user_id = $1 AND product_id = $2
         RETURNING *
       `, [userId, productId]);
@@ -220,7 +212,7 @@ class Cart {
   static async clearCart(userId) {
     try {
       const result = await db.query(`
-        DELETE FROM cart 
+        DELETE FROM shopping_cart_item 
         WHERE user_id = $1
         RETURNING *
       `, [userId]);
@@ -247,7 +239,7 @@ class Cart {
             THEN p.price * (1 - p.discount / 100.0)
             ELSE p.price
           END) as total_amount
-        FROM cart c
+        FROM shopping_cart_item c
         JOIN product p ON c.product_id = p.id
         WHERE c.user_id = $1
       `, [userId]);

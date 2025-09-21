@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
 
     // For now using a hardcoded user ID until authentication is implemented
     // TODO: Get user ID from JWT token when auth is implemented
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 'd131a52e-82e9-42e1-b1f0-07fb33e35e67';
 
     const orderData = {
       shipping_address,
@@ -66,7 +66,7 @@ router.get('/', async (req, res) => {
 
     // For now using a hardcoded user ID until authentication is implemented
     // TODO: Get user ID from JWT token when auth is implemented
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 'd131a52e-82e9-42e1-b1f0-07fb33e35e67';
 
     const result = await Order.findByUserId(userId, parsedPage, parsedLimit);
 

@@ -109,7 +109,7 @@ router.get('/profile', async (req, res) => {
   try {
     // TODO: Add authentication middleware to extract user ID from token
     // For now, using hardcoded user ID
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 'd131a52e-82e9-42e1-b1f0-07fb33e35e67';
 
     const user = await User.findById(userId);
     
@@ -135,7 +135,7 @@ router.put('/profile', async (req, res) => {
   try {
     // TODO: Add authentication middleware to extract user ID from token
     // For now, using hardcoded user ID
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 'd131a52e-82e9-42e1-b1f0-07fb33e35e67';
     
     const { full_name, phone, address } = req.body;
 
@@ -169,7 +169,7 @@ router.put('/change-password', async (req, res) => {
   try {
     // TODO: Add authentication middleware to extract user ID from token
     // For now, using hardcoded user ID
-    const userId = '1919f650-bb52-4d9d-a1c3-3667f57be959';
+    const userId = 'd131a52e-82e9-42e1-b1f0-07fb33e35e67';
     
     const { currentPassword, newPassword } = req.body;
 
