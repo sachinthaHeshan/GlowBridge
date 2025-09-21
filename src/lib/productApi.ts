@@ -171,6 +171,8 @@ const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<unknown> => {
+  console.log("BACKEND_URL", BACKEND_URL);
+  console.log("endpoint", endpoint);
   const url = `${BACKEND_URL}/api${endpoint}`;
 
   const config: RequestInit = {
