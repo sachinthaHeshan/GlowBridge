@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -27,66 +34,78 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, MapPin, Phone, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Phone } from "lucide-react";
+import { SalonType } from "@/constraint";
+import {
+  Salon as ApiSalon,
+  createSalon,
+  fetchSalons,
+  updateSalon,
+  deleteSalon,
+} from "@/lib/salonApi";
+import {
+  showApiErrorToast,
+  handleFormSubmissionWithToast,
+} from "@/lib/errorToast";
+import { Pagination } from "@/shared/components/pagination";
 
-interface Salon {
-  id: string;
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  status: "active" | "inactive";
-  userCount: number;
-}
+// Use API salon interface directly
+type Salon = ApiSalon;
 
 export function SalonManagement() {
-  const [salons, setSalons] = useState<Salon[]>([
-    {
-      id: "1",
-      name: "Glamour Studio",
-      address: "123 Beauty Ave, New York, NY 10001",
-      phone: "+1 (555) 123-4567",
-      email: "info@glamourstudio.com",
-      status: "active",
-      userCount: 12,
-    },
-    {
-      id: "2",
-      name: "Elite Hair Lounge",
-      address: "456 Style St, Los Angeles, CA 90210",
-      phone: "+1 (555) 987-6543",
-      email: "contact@elitehair.com",
-      status: "active",
-      userCount: 8,
-    },
-    {
-      id: "3",
-      name: "Serenity Spa",
-      address: "789 Wellness Way, Miami, FL 33101",
-      phone: "+1 (555) 456-7890",
-      email: "hello@serenityspa.com",
-      status: "inactive",
-      userCount: 5,
-    },
-  ]);
+  const [salons, setSalons] = useState<Salon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSalon, setEditingSalon] = useState<Salon | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    address: "",
-    phone: "",
-    email: "",
+    type: SalonType.SALON,
+    bio: "",
+    location: "",
+    contact_number: "",
     status: "active" as "active" | "inactive",
   });
+
+  // Load salons from API
+  const loadSalons = async (page: number = 1, limit: number = 10) => {
+    try {
+      setLoading(true);
+      const response = await fetchSalons(page, limit);
+      setSalons(response.salons);
+      setPagination({
+        page: response.page,
+        limit: response.limit,
+        total: response.total,
+        totalPages: response.totalPages,
+      });
+    } catch (err) {
+      showApiErrorToast(err, "Failed to load salons");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load salons on component mount
+  useEffect(() => {
+    loadSalons();
+  }, []);
 
   const handleAddSalon = () => {
     setEditingSalon(null);
     setFormData({
       name: "",
-      address: "",
-      phone: "",
-      email: "",
+      type: SalonType.SALON,
+      bio: "",
+      location: "",
+      contact_number: "",
       status: "active",
     });
     setIsDialogOpen(true);
@@ -96,34 +115,62 @@ export function SalonManagement() {
     setEditingSalon(salon);
     setFormData({
       name: salon.name,
-      address: salon.address,
-      phone: salon.phone,
-      email: salon.email,
-      status: salon.status,
+      type: salon.type,
+      bio: salon.bio,
+      location: salon.location,
+      contact_number: salon.contact_number,
+      status: salon.status as "active" | "inactive",
     });
     setIsDialogOpen(true);
   };
 
-  const handleSaveSalon = () => {
-    if (editingSalon) {
-      setSalons(
-        salons.map((salon) =>
-          salon.id === editingSalon.id ? { ...salon, ...formData } : salon
-        )
-      );
-    } else {
-      const newSalon: Salon = {
-        id: Date.now().toString(),
-        ...formData,
-        userCount: 0,
-      };
-      setSalons([...salons, newSalon]);
+  const handleSaveSalon = async () => {
+    const result = await handleFormSubmissionWithToast(
+      async () => {
+        setSubmitting(true);
+
+        if (editingSalon) {
+          // Update existing salon
+          const updatedSalon = await updateSalon(editingSalon.id, formData);
+          setSalons(
+            salons.map((salon) =>
+              salon.id === editingSalon.id ? updatedSalon : salon
+            )
+          );
+          return updatedSalon;
+        } else {
+          // Create new salon
+          const newSalon = await createSalon(formData);
+          // Reload salons to get updated list with proper pagination
+          await loadSalons(pagination.page, pagination.limit);
+          return newSalon;
+        }
+      },
+      editingSalon ? "Updating salon..." : "Creating salon...",
+      editingSalon
+        ? "Salon updated successfully!"
+        : "Salon created successfully!",
+      editingSalon ? "Failed to update salon" : "Failed to create salon"
+    );
+
+    if (result) {
+      setIsDialogOpen(false);
     }
-    setIsDialogOpen(false);
+    setSubmitting(false);
   };
 
-  const handleDeleteSalon = (id: string) => {
-    setSalons(salons.filter((salon) => salon.id !== id));
+  const handleDeleteSalon = async (id: string) => {
+    await handleFormSubmissionWithToast(
+      async () => {
+        await deleteSalon(id);
+        // Reload salons to get updated list with proper pagination
+        await loadSalons(pagination.page, pagination.limit);
+        return true;
+      },
+      "Deleting salon...",
+      "Salon deleted successfully!",
+      "Failed to delete salon"
+    );
   };
 
   return (
@@ -147,8 +194,22 @@ export function SalonManagement() {
         </Button>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <span className="text-sm text-muted-foreground">
+                Loading salons...
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -156,7 +217,7 @@ export function SalonManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{salons.length}</div>
+            <div className="text-2xl font-bold">{pagination.total}</div>
           </CardContent>
         </Card>
         <Card>
@@ -167,19 +228,31 @@ export function SalonManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">
-              {salons.filter((s) => s.status === "active").length}
+              {salons.filter((salon) => salon.status === "active").length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Users
+              Inactive Salons
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-500">
+              {salons.filter((salon) => salon.status === "inactive").length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Current Page
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {salons.reduce((sum, salon) => sum + salon.userCount, 0)}
+              {pagination.page} of {pagination.totalPages}
             </div>
           </CardContent>
         </Card>
@@ -190,7 +263,7 @@ export function SalonManagement() {
         <CardHeader>
           <CardTitle>All Salons</CardTitle>
           <CardDescription>
-            A list of all salon locations with their details and status
+            A list of all salon locations with their details
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -198,9 +271,10 @@ export function SalonManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>Salon Name</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Users</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -212,20 +286,17 @@ export function SalonManagement() {
                       <div className="font-medium">{salon.name}</div>
                       <div className="text-sm text-muted-foreground flex items-center mt-1">
                         <MapPin className="h-3 w-3 mr-1" />
-                        {salon.address}
+                        {salon.location}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      <div className="text-sm flex items-center">
-                        <Phone className="h-3 w-3 mr-1" />
-                        {salon.phone}
-                      </div>
-                      <div className="text-sm flex items-center">
-                        <Mail className="h-3 w-3 mr-1" />
-                        {salon.email}
-                      </div>
+                    <Badge variant="outline">{salon.type}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm flex items-center">
+                      <Phone className="h-3 w-3 mr-1" />
+                      {salon.contact_number}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -233,11 +304,22 @@ export function SalonManagement() {
                       variant={
                         salon.status === "active" ? "default" : "secondary"
                       }
+                      className={
+                        salon.status === "active"
+                          ? "bg-green-500 hover:bg-green-600"
+                          : "bg-red-500 hover:bg-red-600"
+                      }
                     >
                       {salon.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{salon.userCount}</TableCell>
+                  <TableCell>
+                    <div className="text-sm text-muted-foreground">
+                      {salon.created_at
+                        ? new Date(salon.created_at).toLocaleDateString()
+                        : "N/A"}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
                       <Button
@@ -261,6 +343,16 @@ export function SalonManagement() {
               ))}
             </TableBody>
           </Table>
+
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.total}
+            itemsPerPage={pagination.limit}
+            onPageChange={(page) => loadSalons(page, pagination.limit)}
+            disabled={loading}
+            itemLabel="salons"
+          />
         </CardContent>
       </Card>
 
@@ -290,46 +382,102 @@ export function SalonManagement() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
+              <Label htmlFor="type">Salon Type</Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value: SalonType) =>
+                  setFormData({ ...formData, type: value })
                 }
-                placeholder="Enter full address"
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select salon type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SalonType.SALON}>Salon</SelectItem>
+                  <SelectItem value={SalonType.BARBERSHOP}>
+                    Barbershop
+                  </SelectItem>
+                  <SelectItem value={SalonType.BEAUTY_PARLOR}>
+                    Beauty Parlor
+                  </SelectItem>
+                  <SelectItem value={SalonType.NAIL_SALON}>
+                    Nail Salon
+                  </SelectItem>
+                  <SelectItem value={SalonType.HAIR_SALON}>
+                    Hair Salon
+                  </SelectItem>
+                  <SelectItem value={SalonType.MAKEUP_SALON}>
+                    Makeup Salon
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="bio">Description</Label>
+              <Input
+                id="bio"
+                value={formData.bio}
+                onChange={(e) =>
+                  setFormData({ ...formData, bio: e.target.value })
+                }
+                placeholder="Enter salon description"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="location">Location</Label>
               <Input
-                id="phone"
-                value={formData.phone}
+                id="location"
+                value={formData.location}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
+                  setFormData({ ...formData, location: e.target.value })
                 }
-                placeholder="Enter phone number"
+                placeholder="Enter full address/location"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="contact_number">Contact Number</Label>
               <Input
-                id="email"
-                type="email"
-                value={formData.email}
+                id="contact_number"
+                value={formData.contact_number}
                 onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
+                  setFormData({ ...formData, contact_number: e.target.value })
                 }
-                placeholder="Enter email address"
+                placeholder="Enter contact number"
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value: "active" | "inactive") =>
+                  setFormData({ ...formData, status: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={submitting}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveSalon}>
-              {editingSalon ? "Update" : "Create"} Salon
+            <Button onClick={handleSaveSalon} disabled={submitting}>
+              {submitting && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              )}
+              {submitting
+                ? `${editingSalon ? "Updating" : "Creating"}...`
+                : `${editingSalon ? "Update" : "Create"} Salon`}
             </Button>
           </div>
         </DialogContent>

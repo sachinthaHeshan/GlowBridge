@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,136 +34,71 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Mail, Phone, ArrowLeft } from "lucide-react";
-
-interface Salon {
-  id: string;
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  status: "active" | "inactive";
-  userCount: number;
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: "admin" | "stylist" | "receptionist";
-  status: "active" | "inactive";
-  joinDate: string;
-  salonId: string;
-}
+import { Plus, Edit, Trash2, Search, Loader2 } from "lucide-react";
+import {
+  fetchUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  User,
+} from "@/lib/userApi";
+import { UserRole } from "@/constraint";
+import { showApiErrorToast } from "@/lib/errorToast";
+import { Pagination } from "@/shared/components/pagination";
 
 export function UserManagement() {
-  const [selectedSalon, setSelectedSalon] = useState<Salon | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    role: "stylist" as "admin" | "stylist" | "receptionist",
+    role: UserRole.STAFF,
     status: "active" as "active" | "inactive",
   });
 
-  // Mock data
-  const salons: Salon[] = [
-    {
-      id: "1",
-      name: "Glamour Studio",
-      address: "123 Beauty Ave, New York, NY 10001",
-      phone: "+1 (555) 123-4567",
-      email: "info@glamourstudio.com",
-      status: "active",
-      userCount: 12,
-    },
-    {
-      id: "2",
-      name: "Elite Hair Lounge",
-      address: "456 Style St, Los Angeles, CA 90210",
-      phone: "+1 (555) 987-6543",
-      email: "contact@elitehair.com",
-      status: "active",
-      userCount: 8,
-    },
-    {
-      id: "3",
-      name: "Serenity Spa",
-      address: "789 Wellness Way, Miami, FL 33101",
-      phone: "+1 (555) 456-7890",
-      email: "hello@serenityspa.com",
-      status: "inactive",
-      userCount: 5,
-    },
-  ];
+  // Load users from API
+  const loadUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const result = await fetchUsers(currentPage, itemsPerPage, roleFilter);
+      setUsers(result.users);
+      setTotalUsers(result.total);
+      setTotalPages(result.totalPages);
+    } catch (error) {
+      console.error("Failed to load users:", error);
+      showApiErrorToast(error, "Failed to load users");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, itemsPerPage, roleFilter]);
 
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      name: "Sarah Johnson",
-      email: "sarah@glamourstudio.com",
-      phone: "+1 (555) 111-2222",
-      role: "admin",
-      status: "active",
-      joinDate: "2024-01-15",
-      salonId: "1",
-    },
-    {
-      id: "2",
-      name: "Mike Chen",
-      email: "mike@glamourstudio.com",
-      phone: "+1 (555) 333-4444",
-      role: "stylist",
-      status: "active",
-      joinDate: "2024-02-20",
-      salonId: "1",
-    },
-    {
-      id: "3",
-      name: "Emma Davis",
-      email: "emma@glamourstudio.com",
-      phone: "+1 (555) 555-6666",
-      role: "receptionist",
-      status: "active",
-      joinDate: "2024-03-10",
-      salonId: "1",
-    },
-    {
-      id: "4",
-      name: "Alex Rodriguez",
-      email: "alex@elitehair.com",
-      phone: "+1 (555) 777-8888",
-      role: "admin",
-      status: "active",
-      joinDate: "2024-01-05",
-      salonId: "2",
-    },
-    {
-      id: "5",
-      name: "Lisa Wang",
-      email: "lisa@elitehair.com",
-      phone: "+1 (555) 999-0000",
-      role: "stylist",
-      status: "inactive",
-      joinDate: "2024-02-15",
-      salonId: "2",
-    },
-  ]);
+  // Load users on component mount and when page/filter changes
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
-  const filteredUsers = selectedSalon
-    ? users.filter((user) => user.salonId === selectedSalon.id)
-    : [];
+  // Filter users locally for search (since API doesn't support search yet)
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return users;
+    return users.filter((user) => {
+      const matchesSearch =
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    });
+  }, [users, searchTerm]);
 
-  const handleSalonSelect = (salon: Salon) => {
-    setSelectedSalon(salon);
-  };
-
-  const handleBackToSalons = () => {
-    setSelectedSalon(null);
-  };
+  const paginatedUsers = filteredUsers;
 
   const handleAddUser = () => {
     setEditingUser(null);
@@ -171,7 +106,7 @@ export function UserManagement() {
       name: "",
       email: "",
       phone: "",
-      role: "stylist",
+      role: UserRole.STAFF,
       status: "active",
     });
     setIsDialogOpen(true);
@@ -189,118 +124,75 @@ export function UserManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleSaveUser = () => {
-    if (editingUser) {
-      setUsers(
-        users.map((user) =>
-          user.id === editingUser.id ? { ...user, ...formData } : user
-        )
+  const handleSaveUser = async () => {
+    setIsSubmitting(true);
+    try {
+      if (editingUser) {
+        // Update existing user
+        await updateUser(editingUser.id, formData);
+      } else {
+        // Create new user
+        await createUser(formData);
+      }
+      setIsDialogOpen(false);
+      await loadUsers(); // Reload users after save
+    } catch (error) {
+      console.error("Failed to save user:", error);
+      showApiErrorToast(
+        error,
+        editingUser ? "Failed to update user" : "Failed to create user"
       );
-    } else {
-      const newUser: User = {
-        id: Date.now().toString(),
-        ...formData,
-        joinDate: new Date().toISOString().split("T")[0],
-        salonId: selectedSalon!.id,
-      };
-      setUsers([...users, newUser]);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsDialogOpen(false);
   };
 
-  const handleDeleteUser = (id: string) => {
-    setUsers(users.filter((user) => user.id !== id));
+  const handleDeleteUser = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+      await deleteUser(id);
+      await loadUsers(); // Reload users after delete
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      showApiErrorToast(error, "Failed to delete user");
+    }
   };
 
-  const getRoleBadgeVariant = (role: string) => {
+  const getRoleBadgeVariant = (role: UserRole) => {
     switch (role) {
-      case "admin":
+      case UserRole.ADMIN:
         return "default";
-      case "stylist":
+      case UserRole.STAFF:
         return "secondary";
-      case "receptionist":
+      case UserRole.SALON_OWNER:
         return "outline";
+      case UserRole.CUSTOMER:
       default:
         return "secondary";
     }
   };
 
-  // Salon selection view
-  if (!selectedSalon) {
-    return (
-      <div className="space-y-6">
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleRoleFilterChange = (value: string) => {
+    setRoleFilter(value);
+    setCurrentPage(1);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
             User Management
           </h1>
           <p className="text-muted-foreground">
-            Select a salon to manage its users
+            Manage all users across all salon locations
           </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {salons.map((salon) => (
-            <Card
-              key={salon.id}
-              className="cursor-pointer hover:bg-accent/50 transition-colors"
-              onClick={() => handleSalonSelect(salon)}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{salon.name}</CardTitle>
-                  <Badge
-                    variant={
-                      salon.status === "active" ? "default" : "secondary"
-                    }
-                  >
-                    {salon.status}
-                  </Badge>
-                </div>
-                <CardDescription>{salon.address}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Phone className="h-4 w-4 mr-2" />
-                    {salon.phone}
-                  </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4 mr-2" />
-                    {salon.email}
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm text-muted-foreground">
-                      Users:
-                    </span>
-                    <span className="font-semibold">{salon.userCount}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // User management view for selected salon
-  return (
-    <div className="space-y-6">
-      {/* Header with back button */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={handleBackToSalons}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Salons
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              {selectedSalon.name}
-            </h1>
-            <p className="text-muted-foreground">
-              Manage users for this salon location
-            </p>
-          </div>
         </div>
         <Button
           onClick={handleAddUser}
@@ -311,7 +203,6 @@ export function UserManagement() {
         </Button>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -320,7 +211,7 @@ export function UserManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{filteredUsers.length}</div>
+            <div className="text-2xl font-bold">{totalUsers}</div>
           </CardContent>
         </Card>
         <Card>
@@ -331,19 +222,19 @@ export function UserManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">
-              {filteredUsers.filter((u) => u.status === "active").length}
+              {users.filter((u) => u.status === "active").length}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Stylists
+              Staff
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {filteredUsers.filter((u) => u.role === "stylist").length}
+              {users.filter((u) => u.role === UserRole.STAFF).length}
             </div>
           </CardContent>
         </Card>
@@ -355,19 +246,45 @@ export function UserManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {filteredUsers.filter((u) => u.role === "admin").length}
+              {users.filter((u) => u.role === UserRole.ADMIN).length}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <CardDescription>
-            All users associated with {selectedSalon.name}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>All Users</CardTitle>
+              <CardDescription>
+                Manage users from all salon locations
+              </CardDescription>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
+              <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="salon_staff">Staff</SelectItem>
+                  <SelectItem value="salon_owner">Salon Owner</SelectItem>
+                  <SelectItem value="customer">Customer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -382,68 +299,98 @@ export function UserManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        {/* User icon */}
-                      </div>
-                      <div>
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{user.phone}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getRoleBadgeVariant(user.role)}>
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        user.status === "active" ? "default" : "secondary"
-                      }
-                    >
-                      {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(user.joinDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                    <div className="text-muted-foreground">
+                      Loading users...
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : paginatedUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <div className="text-muted-foreground">No users found</div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-sm font-medium">
+                            {user.name.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium">{user.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">{user.phone}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getRoleBadgeVariant(user.role)}>
+                        {user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          user.status === "active" ? "default" : "secondary"
+                        }
+                      >
+                        {user.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(user.joinDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditUser(user)}
+                          disabled={isLoading}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="text-destructive hover:text-destructive"
+                          disabled={isLoading}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalUsers}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            disabled={isLoading}
+            itemLabel="users"
+          />
         </CardContent>
       </Card>
 
-      {/* Add/Edit User Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -453,7 +400,7 @@ export function UserManagement() {
             <DialogDescription>
               {editingUser
                 ? "Update the user information below."
-                : `Add a new user to ${selectedSalon.name}.`}
+                : "Add a new user to the system."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -495,7 +442,7 @@ export function UserManagement() {
               <Label htmlFor="role">Role</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value: "admin" | "stylist" | "receptionist") =>
+                onValueChange={(value: UserRole) =>
                   setFormData({ ...formData, role: value })
                 }
               >
@@ -503,9 +450,12 @@ export function UserManagement() {
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="stylist">Stylist</SelectItem>
-                  <SelectItem value="receptionist">Receptionist</SelectItem>
+                  <SelectItem value={UserRole.ADMIN}>Admin</SelectItem>
+                  <SelectItem value={UserRole.STAFF}>Staff</SelectItem>
+                  <SelectItem value={UserRole.SALON_OWNER}>
+                    Salon Owner
+                  </SelectItem>
+                  <SelectItem value={UserRole.CUSTOMER}>Customer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -528,10 +478,17 @@ export function UserManagement() {
             </div>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveUser}>
+            <Button onClick={handleSaveUser} disabled={isSubmitting}>
+              {isSubmitting && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
               {editingUser ? "Update" : "Create"} User
             </Button>
           </div>
