@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,80 +34,80 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Package } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Package,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import {
+  Product,
+  fetchSalonProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  ApiError,
+} from "@/lib/productApi";
+import { showApiErrorToast } from "@/lib/errorToast";
 
-interface InventoryItem {
-  id: string;
-  name: string;
-  category: "hair-care" | "skin-care" | "tools" | "accessories";
-  quantity: number;
-  price: number;
-  status: "in-stock" | "low-stock" | "out-of-stock";
-  lastUpdated: string;
-
-}
+// Use Product interface from productApi
+type InventoryItem = Product;
 
 export function InventoryManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Default salon ID - in a real app, this would come from user context or route params
+  const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55"; // You may want to get this from props or context
+
   const [formData, setFormData] = useState({
     name: "",
-    category: "hair-care" as "hair-care" | "skin-care" | "tools" | "accessories",
+    category: "hair-care" as
+      | "hair-care"
+      | "skin-care"
+      | "tools"
+      | "accessories",
     quantity: 0,
     price: 0,
     status: "in-stock" as "in-stock" | "low-stock" | "out-of-stock",
+    description: "",
+    isPublic: true,
+    discount: 0,
   });
 
-  // Mock data
-  // Mock data for items
+  // Fetch products on component mount
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const products = await fetchSalonProducts(salonId);
+        setItems(products);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+        if (error instanceof ApiError) {
+          setError(error.message);
+          showApiErrorToast(error, "Failed to load products");
+        } else {
+          setError("Failed to load products");
+          showApiErrorToast(
+            new Error("Failed to load products"),
+            "Failed to load products"
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const [items, setItems] = useState<InventoryItem[]>([
-    {
-      id: "1",
-      name: "Professional Hair Shampoo",
-      category: "hair-care",
-      quantity: 50,
-      price: 24.99,
-      status: "in-stock",
-      lastUpdated: "2024-03-15",
-    },
-    {
-      id: "2",
-      name: "Hair Treatment Mask",
-      category: "hair-care",
-      quantity: 35,
-      price: 34.99,
-      status: "in-stock",
-      lastUpdated: "2024-03-14",
-    },
-    {
-      id: "3",
-      name: "Professional Hair Dryer",
-      category: "tools",
-      quantity: 5,
-      price: 199.99,
-      status: "low-stock",
-      lastUpdated: "2024-03-10",
-    },
-    {
-      id: "4",
-      name: "Facial Cleanser",
-      category: "skin-care",
-      quantity: 0,
-      price: 29.99,
-      status: "out-of-stock",
-      lastUpdated: "2024-03-01",
-    },
-    {
-      id: "5",
-      name: "Hair Clips Set",
-      category: "accessories",
-      quantity: 100,
-      price: 12.99,
-      status: "in-stock",
-      lastUpdated: "2024-03-12",
-    },
-  ]);
+    loadProducts();
+  }, [salonId]);
 
   const handleAddItem = () => {
     setEditingItem(null);
@@ -117,6 +117,9 @@ export function InventoryManagement() {
       quantity: 0,
       price: 0,
       status: "in-stock",
+      description: "",
+      isPublic: true,
+      discount: 0,
     });
     setIsDialogOpen(true);
   };
@@ -129,37 +132,89 @@ export function InventoryManagement() {
       quantity: item.quantity,
       price: item.price,
       status: item.status,
+      description: item.description || "",
+      isPublic: item.isPublic,
+      discount: item.discount,
     });
     setIsDialogOpen(true);
   };
 
-  const handleSaveItem = () => {
-    if (editingItem) {
-      setItems(
-        items.map((item) =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                ...formData,
-                lastUpdated: new Date().toISOString().split("T")[0],
-              }
-            : item
-        )
-      );
-    } else {
-      const newItem: InventoryItem = {
-        id: Date.now().toString(),
-        ...formData,
-        lastUpdated: new Date().toISOString().split("T")[0],
+  const handleSaveItem = async () => {
+    try {
+      setSaving(true);
+      setError(null);
 
-      };
-      setItems([...items, newItem]);
+      if (editingItem) {
+        // Update existing item
+        const updatedItem = await updateProduct(editingItem.id, {
+          name: formData.name,
+          category: formData.category,
+          quantity: formData.quantity,
+          price: formData.price,
+          description: formData.description,
+          isPublic: formData.isPublic,
+          discount: formData.discount,
+        });
+
+        setItems(
+          items.map((item) => (item.id === editingItem.id ? updatedItem : item))
+        );
+      } else {
+        // Create new item
+        const newItem = await createProduct({
+          name: formData.name,
+          category: formData.category,
+          quantity: formData.quantity,
+          price: formData.price,
+          status: formData.status,
+          salonId: salonId,
+          description: formData.description,
+          isPublic: formData.isPublic,
+          discount: formData.discount,
+        });
+
+        setItems([...items, newItem]);
+      }
+
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to save product:", error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+        showApiErrorToast(
+          error,
+          editingItem ? "Failed to update product" : "Failed to create product"
+        );
+      } else {
+        setError("Failed to save product");
+        showApiErrorToast(
+          new Error("Failed to save product"),
+          "Failed to save product"
+        );
+      }
+    } finally {
+      setSaving(false);
     }
-    setIsDialogOpen(false);
   };
 
-  const handleDeleteItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
+  const handleDeleteItem = async (id: string) => {
+    try {
+      setError(null);
+      await deleteProduct(id);
+      setItems(items.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+        showApiErrorToast(error, "Failed to delete product");
+      } else {
+        setError("Failed to delete product");
+        showApiErrorToast(
+          new Error("Failed to delete product"),
+          "Failed to delete product"
+        );
+      }
+    }
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -174,6 +229,62 @@ export function InventoryManagement() {
         return "secondary";
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Inventory Management
+              </h1>
+              <p className="text-muted-foreground">
+                Manage inventory for this salon location
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-lg">Loading products...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && items.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Inventory Management
+              </h1>
+              <p className="text-muted-foreground">
+                Manage inventory for this salon location
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              Failed to load products
+            </h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Inventory management view
   return (
@@ -190,7 +301,11 @@ export function InventoryManagement() {
             </p>
           </div>
         </div>
-        <Button onClick={handleAddItem} className="bg-primary hover:bg-primary/90">
+        <Button
+          onClick={handleAddItem}
+          className="bg-primary hover:bg-primary/90"
+          disabled={saving}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Item
         </Button>
@@ -250,9 +365,7 @@ export function InventoryManagement() {
       <Card>
         <CardHeader>
           <CardTitle>Inventory Items</CardTitle>
-          <CardDescription>
-            Manage your products and supplies
-          </CardDescription>
+          <CardDescription>Manage your products and supplies</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -346,9 +459,9 @@ export function InventoryManagement() {
               <Label htmlFor="category">Category</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value: "hair-care" | "skin-care" | "tools" | "accessories") =>
-                  setFormData({ ...formData, category: value })
-                }
+                onValueChange={(
+                  value: "hair-care" | "skin-care" | "tools" | "accessories"
+                ) => setFormData({ ...formData, category: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
@@ -392,12 +505,57 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="Enter product description"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="discount">Discount (%)</Label>
+              <Input
+                id="discount"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.discount}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    discount: parseInt(e.target.value) || 0,
+                  })
+                }
+                placeholder="Enter discount percentage"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="isPublic">Visibility</Label>
+              <Select
+                value={formData.isPublic ? "public" : "private"}
+                onValueChange={(value: "public" | "private") =>
+                  setFormData({ ...formData, isPublic: value === "public" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select visibility" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value: "in-stock" | "low-stock" | "out-of-stock") =>
-                  setFormData({ ...formData, status: value })
-                }
+                onValueChange={(
+                  value: "in-stock" | "low-stock" | "out-of-stock"
+                ) => setFormData({ ...formData, status: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
@@ -411,11 +569,22 @@ export function InventoryManagement() {
             </div>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveItem}>
-              {editingItem ? "Update" : "Create"} Item
+            <Button onClick={handleSaveItem} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {editingItem ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                <>{editingItem ? "Update" : "Create"} Item</>
+              )}
             </Button>
           </div>
         </DialogContent>

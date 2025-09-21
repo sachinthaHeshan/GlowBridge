@@ -2,8 +2,7 @@
 
 import { SalonType } from "@/constraint";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3005";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3005";
 
 // Backend salon structure (reflects actual API response)
 interface BackendSalon {
