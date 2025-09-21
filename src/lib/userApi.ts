@@ -31,6 +31,7 @@ interface CreateUserPayload {
   email: string;
   contact_number: string;
   role: string; // Send backend-compatible role string ("admin" | "customer" | "salon_owner" | "salon_staff")
+  password?: string; // Optional password field
 }
 
 // Update user payload for backend
@@ -63,8 +64,26 @@ interface DeleteResponse {
   message: string;
 }
 
-// Map UserRole enum to backend API role (since backend expects specific strings)
-const mapUserRoleToBackendRole = (userRole: UserRole): string => {
+// Map UserRole enum or string to backend API role (since backend expects specific strings)
+const mapUserRoleToBackendRole = (userRole: UserRole | string): string => {
+  // Handle string inputs (like "CUSTOMER", "ADMIN", etc.)
+  if (typeof userRole === "string") {
+    const roleString = userRole.toLowerCase();
+    switch (roleString) {
+      case "admin":
+        return "admin";
+      case "staff":
+      case "salon_staff":
+        return "salon_staff";
+      case "salon_owner":
+        return "salon_owner";
+      case "customer":
+      default:
+        return "customer";
+    }
+  }
+
+  // Handle UserRole enum inputs
   switch (userRole) {
     case UserRole.ADMIN:
       return "admin";
@@ -212,8 +231,9 @@ export const createUser = async (userData: {
   name: string;
   email: string;
   phone: string;
-  role: UserRole;
+  role: UserRole | string;
   status: "active" | "inactive";
+  password?: string;
 }): Promise<User> => {
   // Split name into first and last name
   const nameParts = userData.name.trim().split(" ");
@@ -227,6 +247,41 @@ export const createUser = async (userData: {
     contact_number: userData.phone,
     role: mapUserRoleToBackendRole(userData.role),
   };
+
+  // Add password if provided
+  if (userData.password) {
+    payload.password = userData.password;
+  }
+
+  const response = (await apiRequest("/users", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })) as UserResponse;
+
+  return transformBackendUser(response.user);
+};
+
+// Create user with raw backend format (direct API format)
+export const createUserDirect = async (userData: {
+  first_name: string;
+  last_name: string;
+  email: string;
+  contact_number: string;
+  role: string;
+  password?: string;
+}): Promise<User> => {
+  const payload: CreateUserPayload = {
+    first_name: userData.first_name,
+    last_name: userData.last_name,
+    email: userData.email,
+    contact_number: userData.contact_number,
+    role: mapUserRoleToBackendRole(userData.role),
+  };
+
+  // Add password if provided
+  if (userData.password) {
+    payload.password = userData.password;
+  }
 
   const response = (await apiRequest("/users", {
     method: "POST",
