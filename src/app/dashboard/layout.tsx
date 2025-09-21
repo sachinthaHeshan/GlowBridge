@@ -24,6 +24,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       description: "Manage all salons",
     },
     {
+      href: "/dashboard/inventory",
+      name: "Inventory Management",
+      icon: Building2,
+      description: "Manage all inventory",
+    },
+    {
       href: "/dashboard/users",
       name: "User Management",
       icon: Users,
