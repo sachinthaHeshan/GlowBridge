@@ -120,7 +120,7 @@ const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<unknown> => {
-  const url = `/api${endpoint}`;
+  const url = `/api_g${endpoint}`;
 
   const config: RequestInit = {
     headers: {
