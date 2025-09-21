@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Middleware to verify JWT token
+// verify JWT token
 const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
       return res.status(401).json({
@@ -49,7 +49,7 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Middleware to optionally authenticate token (for routes that work with or without auth)
+// optionally authenticate token (for routes that work with or without auth) (only optional)
 const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];

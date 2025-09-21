@@ -45,13 +45,13 @@ class Product {
 
     if (filters.min_price !== undefined) {
       query += ` AND p.price >= $${paramIndex}`;
-      params.push(Math.round(filters.min_price * 100)); // Convert to cents
+      params.push(Math.round(filters.min_price * 100));
       paramIndex++;
     }
 
     if (filters.max_price !== undefined) {
       query += ` AND p.price <= $${paramIndex}`;
-      params.push(Math.round(filters.max_price * 100)); // Convert to cents
+      params.push(Math.round(filters.max_price * 100));
       paramIndex++;
     }
 

@@ -7,7 +7,7 @@ class Cart {
     this.product_id = data.product_id;
     this.quantity = data.quantity;
     
-    // Product details if joined
+    // Product details
     if (data.product_name) {
       this.product = {
         id: data.product_id,
@@ -208,7 +208,7 @@ class Cart {
     }
   }
 
-  // Clear entire cart for user
+  // Clear entire cart
   static async clearCart(userId) {
     try {
       const result = await db.query(`
@@ -227,7 +227,7 @@ class Cart {
     }
   }
 
-  // Get cart total for user
+  // Get cart total
   static async getCartTotal(userId) {
     try {
       const result = await db.query(`

@@ -57,7 +57,7 @@ const errorHandler = (err, req, res, next) => {
     }
   }
 
-  // Don't expose internal errors in production
+  // internal errors in production
   if (process.env.NODE_ENV === 'production' && error.status === 500) {
     error.message = 'Internal Server Error';
   }

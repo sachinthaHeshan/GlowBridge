@@ -1,6 +1,6 @@
 const { Pool } = require('pg');
 
-// Singleton pattern for database connection pool
+// DB Connection
 class Database {
   constructor() {
     this.pool = null;
@@ -53,7 +53,7 @@ class Database {
     return this.pool.connect();
   }
 
-  // Execute a query directly
+  // Execute a query
   async query(text, params = []) {
     if (!this.pool) {
       throw new Error('Database pool not initialized');
@@ -96,7 +96,7 @@ class Database {
     }
   }
 
-  // Test connection
+  // Test DB connection
   async testConnection() {
     try {
       const result = await this.query('SELECT NOW() as current_time');
@@ -112,7 +112,7 @@ class Database {
 // Export singleton instance
 const db = new Database();
 
-// Helper function to initialize database tables
+// Helper function to initialize database tables (check that the database is initialized correctly)
 async function initializeDatabase() {
   try {
     // Test connection first
@@ -129,7 +129,7 @@ async function initializeDatabase() {
   }
 }
 
-// Helper function to check if database is ready
+// Helper function to check if database is ready (in here system check DB is ready to use)
 async function isDatabaseReady() {
   try {
     await db.query('SELECT 1');
