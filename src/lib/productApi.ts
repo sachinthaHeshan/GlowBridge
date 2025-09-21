@@ -1,7 +1,5 @@
 // Product API functions for backend integration
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3005";
-
 // Backend product structure (reflects actual API response)
 interface BackendProduct {
   id: string;
@@ -171,9 +169,7 @@ const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<unknown> => {
-  console.log("BACKEND_URL", BACKEND_URL);
-  console.log("endpoint", endpoint);
-  const url = `${BACKEND_URL}/api${endpoint}`;
+  const url = `/api${endpoint}`;
 
   const config: RequestInit = {
     headers: {

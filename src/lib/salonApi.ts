@@ -2,8 +2,6 @@
 
 import { SalonType } from "@/constraint";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3005";
-
 // Backend salon structure (reflects actual API response)
 interface BackendSalon {
   id: string;
@@ -122,7 +120,7 @@ const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<unknown> => {
-  const url = `${BACKEND_URL}/api${endpoint}`;
+  const url = `/api${endpoint}`;
 
   const config: RequestInit = {
     headers: {

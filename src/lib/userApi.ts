@@ -2,8 +2,6 @@
 
 import { UserRole } from "@/constraint";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3005";
-
 // Backend user structure (reflects actual API response)
 interface BackendUser {
   id: string;
@@ -126,7 +124,7 @@ const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<unknown> => {
-  const url = `${BACKEND_URL}/api${endpoint}`;
+  const url = `/api${endpoint}`;
 
   const config: RequestInit = {
     headers: {
