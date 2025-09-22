@@ -1,14 +1,46 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Switch } from "@/components/ui/switch"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Clock, User, Edit, Save, X } from "lucide-react"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Clock, User, Edit, Save, X } from "lucide-react";
+
+interface DaySchedule {
+  enabled: boolean;
+  start: string;
+  end: string;
+}
+
+type DayOfWeek =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
+
+interface Staff {
+  id: number;
+  name: string;
+  avatar: string;
+  role: string;
+  salon: string;
+  schedule: Record<DayOfWeek, DaySchedule>;
+  totalHours: number;
+  status: string;
+}
 
 // Dummy data for staff working hours
 const staffWorkingHours = [
@@ -84,9 +116,9 @@ const staffWorkingHours = [
     totalHours: 48,
     status: "Active",
   },
-]
+];
 
-const daysOfWeek = [
+const daysOfWeek: Array<{ key: DayOfWeek; label: string }> = [
   { key: "monday", label: "Monday" },
   { key: "tuesday", label: "Tuesday" },
   { key: "wednesday", label: "Wednesday" },
@@ -94,42 +126,46 @@ const daysOfWeek = [
   { key: "friday", label: "Friday" },
   { key: "saturday", label: "Saturday" },
   { key: "sunday", label: "Sunday" },
-]
+];
 
-function StaffScheduleCard({ staff }: { staff: any }) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedSchedule, setEditedSchedule] = useState(staff.schedule)
+function StaffScheduleCard({ staff }: { staff: Staff }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedSchedule, setEditedSchedule] = useState(staff.schedule);
 
   const handleSave = () => {
     // Here you would typically save to your backend
-    console.log("Saving schedule for", staff.name, editedSchedule)
-    setIsEditing(false)
-  }
+    console.log("Saving schedule for", staff.name, editedSchedule);
+    setIsEditing(false);
+  };
 
   const handleCancel = () => {
-    setEditedSchedule(staff.schedule)
-    setIsEditing(false)
-  }
+    setEditedSchedule(staff.schedule);
+    setIsEditing(false);
+  };
 
-  const toggleDay = (day: string) => {
+  const toggleDay = (day: DayOfWeek) => {
     setEditedSchedule({
       ...editedSchedule,
       [day]: {
         ...editedSchedule[day],
         enabled: !editedSchedule[day].enabled,
       },
-    })
-  }
+    });
+  };
 
-  const updateTime = (day: string, timeType: "start" | "end", value: string) => {
+  const updateTime = (
+    day: DayOfWeek,
+    timeType: "start" | "end",
+    value: string
+  ) => {
     setEditedSchedule({
       ...editedSchedule,
       [day]: {
         ...editedSchedule[day],
         [timeType]: value,
       },
-    })
-  }
+    });
+  };
 
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
@@ -137,7 +173,10 @@ function StaffScheduleCard({ staff }: { staff: any }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={staff.avatar || "/placeholder.svg"} alt={staff.name} />
+              <AvatarImage
+                src={staff.avatar || "/placeholder.svg"}
+                alt={staff.name}
+              />
               <AvatarFallback>
                 {staff.name
                   .split(" ")
@@ -159,7 +198,11 @@ function StaffScheduleCard({ staff }: { staff: any }) {
               {staff.totalHours}h/week
             </Badge>
             {!isEditing ? (
-              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsEditing(true)}
+              >
                 <Edit className="h-3 w-3 mr-1" />
                 Edit
               </Button>
@@ -181,16 +224,30 @@ function StaffScheduleCard({ staff }: { staff: any }) {
       <CardContent>
         <div className="space-y-3">
           {daysOfWeek.map((day) => {
-            const daySchedule = isEditing ? editedSchedule[day.key] : staff.schedule[day.key]
+            const daySchedule = isEditing
+              ? editedSchedule[day.key]
+              : staff.schedule[day.key];
             return (
-              <div key={day.key} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+              <div
+                key={day.key}
+                className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
+              >
                 <div className="flex items-center gap-3">
                   {isEditing ? (
-                    <Switch checked={daySchedule.enabled} onCheckedChange={() => toggleDay(day.key)} />
+                    <Switch
+                      checked={daySchedule.enabled}
+                      onCheckedChange={() => toggleDay(day.key)}
+                    />
                   ) : (
-                    <div className={`w-3 h-3 rounded-full ${daySchedule.enabled ? "bg-green-500" : "bg-gray-300"}`} />
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        daySchedule.enabled ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                    />
                   )}
-                  <Label className="font-medium text-gray-900 w-20">{day.label}</Label>
+                  <Label className="font-medium text-gray-900 w-20">
+                    {day.label}
+                  </Label>
                 </div>
 
                 {daySchedule.enabled ? (
@@ -200,14 +257,18 @@ function StaffScheduleCard({ staff }: { staff: any }) {
                         <Input
                           type="time"
                           value={daySchedule.start}
-                          onChange={(e) => updateTime(day.key, "start", e.target.value)}
+                          onChange={(e) =>
+                            updateTime(day.key, "start", e.target.value)
+                          }
                           className="w-24 h-8"
                         />
                         <span className="text-gray-500">to</span>
                         <Input
                           type="time"
                           value={daySchedule.end}
-                          onChange={(e) => updateTime(day.key, "end", e.target.value)}
+                          onChange={(e) =>
+                            updateTime(day.key, "end", e.target.value)
+                          }
                           className="w-24 h-8"
                         />
                       </>
@@ -221,17 +282,20 @@ function StaffScheduleCard({ staff }: { staff: any }) {
                     )}
                   </div>
                 ) : (
-                  <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                  <Badge
+                    variant="secondary"
+                    className="bg-gray-100 text-gray-600"
+                  >
                     Day Off
                   </Badge>
                 )}
               </div>
-            )
+            );
           })}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default function WorkingHoursPage() {
@@ -239,8 +303,12 @@ export default function WorkingHoursPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Staff Working Hours</h1>
-          <p className="text-gray-600 mt-2">Manage working days and hours for all staff members</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Staff Working Hours
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Manage working days and hours for all staff members
+          </p>
         </div>
         <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
           <User className="h-4 w-4 mr-2" />
@@ -252,22 +320,31 @@ export default function WorkingHoursPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">Total Staff</CardTitle>
+            <CardTitle className="text-sm font-medium text-blue-700">
+              Total Staff
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900">{staffWorkingHours.length}</div>
+            <div className="text-2xl font-bold text-blue-900">
+              {staffWorkingHours.length}
+            </div>
             <p className="text-xs text-blue-600">Active members</p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">Average Hours</CardTitle>
+            <CardTitle className="text-sm font-medium text-green-700">
+              Average Hours
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-900">
               {Math.round(
-                staffWorkingHours.reduce((acc, staff) => acc + staff.totalHours, 0) / staffWorkingHours.length,
+                staffWorkingHours.reduce(
+                  (acc, staff) => acc + staff.totalHours,
+                  0
+                ) / staffWorkingHours.length
               )}
               h
             </div>
@@ -277,11 +354,17 @@ export default function WorkingHoursPage() {
 
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700">Total Hours</CardTitle>
+            <CardTitle className="text-sm font-medium text-purple-700">
+              Total Hours
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-900">
-              {staffWorkingHours.reduce((acc, staff) => acc + staff.totalHours, 0)}h
+              {staffWorkingHours.reduce(
+                (acc, staff) => acc + staff.totalHours,
+                0
+              )}
+              h
             </div>
             <p className="text-xs text-purple-600">This week</p>
           </CardContent>
@@ -295,5 +378,5 @@ export default function WorkingHoursPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }

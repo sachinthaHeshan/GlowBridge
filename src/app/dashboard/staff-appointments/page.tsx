@@ -1,11 +1,29 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, Clock, CheckCircle, PlayCircle } from "lucide-react"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Calendar, Clock, CheckCircle, PlayCircle } from "lucide-react";
+
+interface Appointment {
+  id: number;
+  customerName: string;
+  customerAvatar: string;
+  service: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  duration: string;
+  staffMember: string;
+}
 
 const appointmentsData = {
   inProgress: [
@@ -113,34 +131,34 @@ const appointmentsData = {
       staffMember: "Maria Garcia",
     },
   ],
-}
+};
 
-function AppointmentCard({ appointment }: { appointment: any }) {
+function AppointmentCard({ appointment }: { appointment: Appointment }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "In Progress":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "Confirmed":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-green-100 text-green-800 border-green-200";
       case "Completed":
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-gray-100 text-gray-800 border-gray-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "In Progress":
-        return <PlayCircle className="h-4 w-4" />
+        return <PlayCircle className="h-4 w-4" />;
       case "Confirmed":
-        return <Calendar className="h-4 w-4" />
+        return <Calendar className="h-4 w-4" />;
       case "Completed":
-        return <CheckCircle className="h-4 w-4" />
+        return <CheckCircle className="h-4 w-4" />;
       default:
-        return <Calendar className="h-4 w-4" />
+        return <Calendar className="h-4 w-4" />;
     }
-  }
+  };
 
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
@@ -148,7 +166,10 @@ function AppointmentCard({ appointment }: { appointment: any }) {
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={appointment.customerAvatar || "/placeholder.svg"} alt={appointment.customerName} />
+              <AvatarImage
+                src={appointment.customerAvatar || "/placeholder.svg"}
+                alt={appointment.customerName}
+              />
               <AvatarFallback>
                 {appointment.customerName
                   .split(" ")
@@ -157,7 +178,9 @@ function AppointmentCard({ appointment }: { appointment: any }) {
               </AvatarFallback>
             </Avatar>
             <div className="space-y-1">
-              <h3 className="font-semibold text-gray-900">{appointment.customerName}</h3>
+              <h3 className="font-semibold text-gray-900">
+                {appointment.customerName}
+              </h3>
               <p className="text-sm text-gray-600">{appointment.service}</p>
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
@@ -173,25 +196,33 @@ function AppointmentCard({ appointment }: { appointment: any }) {
               {getStatusIcon(appointment.status)}
               {appointment.status}
             </Badge>
-            <span className="text-xs text-gray-500">{appointment.duration}</span>
+            <span className="text-xs text-gray-500">
+              {appointment.duration}
+            </span>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default function StaffAppointmentsPage() {
-  const [activeTab, setActiveTab] = useState("in-progress")
+  const [activeTab, setActiveTab] = useState("in-progress");
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Staff Appointments</h1>
-        <p className="text-gray-600 mt-2">Manage and view all staff appointments across the salon</p>
+        <p className="text-gray-600 mt-2">
+          Manage and view all staff appointments across the salon
+        </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
           <TabsTrigger value="in-progress" className="flex items-center gap-2">
             <PlayCircle className="h-4 w-4" />
@@ -214,15 +245,22 @@ export default function StaffAppointmentsPage() {
                 <PlayCircle className="h-5 w-5 text-blue-600" />
                 In Progress Appointments
               </CardTitle>
-              <CardDescription>Currently active appointments across all staff members</CardDescription>
+              <CardDescription>
+                Currently active appointments across all staff members
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {appointmentsData.inProgress.length > 0 ? (
                 appointmentsData.inProgress.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                  />
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-8">No appointments in progress</p>
+                <p className="text-gray-500 text-center py-8">
+                  No appointments in progress
+                </p>
               )}
             </CardContent>
           </Card>
@@ -235,15 +273,22 @@ export default function StaffAppointmentsPage() {
                 <Calendar className="h-5 w-5 text-green-600" />
                 Upcoming Appointments
               </CardTitle>
-              <CardDescription>Scheduled appointments for today and upcoming days</CardDescription>
+              <CardDescription>
+                Scheduled appointments for today and upcoming days
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {appointmentsData.upcoming.length > 0 ? (
                 appointmentsData.upcoming.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                  />
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-8">No upcoming appointments</p>
+                <p className="text-gray-500 text-center py-8">
+                  No upcoming appointments
+                </p>
               )}
             </CardContent>
           </Card>
@@ -261,15 +306,20 @@ export default function StaffAppointmentsPage() {
             <CardContent className="space-y-4">
               {appointmentsData.past.length > 0 ? (
                 appointmentsData.past.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                  />
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-8">No past appointments</p>
+                <p className="text-gray-500 text-center py-8">
+                  No past appointments
+                </p>
               )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

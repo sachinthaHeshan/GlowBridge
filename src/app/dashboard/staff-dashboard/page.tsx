@@ -1,14 +1,40 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, Clock, CheckCircle, PlayCircle, Eye, Square, Play } from "lucide-react"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Calendar,
+  Clock,
+  CheckCircle,
+  PlayCircle,
+  Eye,
+  Square,
+  Play,
+} from "lucide-react";
 
-const currentStaff = "Emma Wilson"
+interface Appointment {
+  id: number;
+  customerName: string;
+  customerAvatar: string;
+  service: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  duration: string;
+  staffMember: string;
+}
+
+const currentStaff = "Emma Wilson";
 
 const appointmentsData = {
   inProgress: [
@@ -61,34 +87,34 @@ const appointmentsData = {
       staffMember: "Emma Wilson",
     },
   ],
-}
+};
 
-function AppointmentCard({ appointment }: { appointment: any }) {
+function AppointmentCard({ appointment }: { appointment: Appointment }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "In Progress":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "Confirmed":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-green-100 text-green-800 border-green-200";
       case "Completed":
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-gray-100 text-gray-800 border-gray-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "In Progress":
-        return <PlayCircle className="h-4 w-4" />
+        return <PlayCircle className="h-4 w-4" />;
       case "Confirmed":
-        return <Calendar className="h-4 w-4" />
+        return <Calendar className="h-4 w-4" />;
       case "Completed":
-        return <CheckCircle className="h-4 w-4" />
+        return <CheckCircle className="h-4 w-4" />;
       default:
-        return <Calendar className="h-4 w-4" />
+        return <Calendar className="h-4 w-4" />;
     }
-  }
+  };
 
   const renderActionButtons = (status: string) => {
     switch (status) {
@@ -104,7 +130,7 @@ function AppointmentCard({ appointment }: { appointment: any }) {
               View Details
             </Button>
           </div>
-        )
+        );
       case "Confirmed":
         return (
           <div className="flex gap-2 mt-3">
@@ -116,12 +142,16 @@ function AppointmentCard({ appointment }: { appointment: any }) {
               <Eye className="h-4 w-4 mr-1" />
               View Details
             </Button>
-            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 bg-transparent">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-600 hover:text-red-700 bg-transparent"
+            >
               <Square className="h-4 w-4 mr-1" />
               Cancel
             </Button>
           </div>
-        )
+        );
       case "Completed":
         return (
           <div className="flex gap-2 mt-3">
@@ -130,11 +160,11 @@ function AppointmentCard({ appointment }: { appointment: any }) {
               View Details
             </Button>
           </div>
-        )
+        );
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <Card className="hover:shadow-md transition-shadow duration-200">
@@ -142,7 +172,10 @@ function AppointmentCard({ appointment }: { appointment: any }) {
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={appointment.customerAvatar || "/placeholder.svg"} alt={appointment.customerName} />
+              <AvatarImage
+                src={appointment.customerAvatar || "/placeholder.svg"}
+                alt={appointment.customerName}
+              />
               <AvatarFallback>
                 {appointment.customerName
                   .split(" ")
@@ -151,7 +184,9 @@ function AppointmentCard({ appointment }: { appointment: any }) {
               </AvatarFallback>
             </Avatar>
             <div className="space-y-1">
-              <h3 className="font-semibold text-gray-900">{appointment.customerName}</h3>
+              <h3 className="font-semibold text-gray-900">
+                {appointment.customerName}
+              </h3>
               <p className="text-sm text-gray-600">{appointment.service}</p>
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
@@ -172,26 +207,38 @@ function AppointmentCard({ appointment }: { appointment: any }) {
         {renderActionButtons(appointment.status)}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default function StaffDashboardPage() {
-  const [activeTab, setActiveTab] = useState("in-progress")
+  const [activeTab, setActiveTab] = useState("in-progress");
 
   const filteredAppointments = {
-    inProgress: appointmentsData.inProgress.filter((apt) => apt.staffMember === currentStaff),
-    upcoming: appointmentsData.upcoming.filter((apt) => apt.staffMember === currentStaff),
-    past: appointmentsData.past.filter((apt) => apt.staffMember === currentStaff),
-  }
+    inProgress: appointmentsData.inProgress.filter(
+      (apt) => apt.staffMember === currentStaff
+    ),
+    upcoming: appointmentsData.upcoming.filter(
+      (apt) => apt.staffMember === currentStaff
+    ),
+    past: appointmentsData.past.filter(
+      (apt) => apt.staffMember === currentStaff
+    ),
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">My Appointments</h1>
-        <p className="text-gray-600 mt-2">Welcome back, {currentStaff}! Manage your appointments for today.</p>
+        <p className="text-gray-600 mt-2">
+          Welcome back, {currentStaff}! Manage your appointments for today.
+        </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
           <TabsTrigger value="in-progress" className="flex items-center gap-2">
             <PlayCircle className="h-4 w-4" />
@@ -214,15 +261,22 @@ export default function StaffDashboardPage() {
                 <PlayCircle className="h-5 w-5 text-blue-600" />
                 In Progress Appointments
               </CardTitle>
-              <CardDescription>Your currently active appointments</CardDescription>
+              <CardDescription>
+                Your currently active appointments
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {filteredAppointments.inProgress.length > 0 ? (
                 filteredAppointments.inProgress.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                  />
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-8">No appointments in progress</p>
+                <p className="text-gray-500 text-center py-8">
+                  No appointments in progress
+                </p>
               )}
             </CardContent>
           </Card>
@@ -235,15 +289,22 @@ export default function StaffDashboardPage() {
                 <Calendar className="h-5 w-5 text-green-600" />
                 Upcoming Appointments
               </CardTitle>
-              <CardDescription>Your scheduled appointments for today and upcoming days</CardDescription>
+              <CardDescription>
+                Your scheduled appointments for today and upcoming days
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {filteredAppointments.upcoming.length > 0 ? (
                 filteredAppointments.upcoming.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                  />
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-8">No upcoming appointments</p>
+                <p className="text-gray-500 text-center py-8">
+                  No upcoming appointments
+                </p>
               )}
             </CardContent>
           </Card>
@@ -256,20 +317,27 @@ export default function StaffDashboardPage() {
                 <CheckCircle className="h-5 w-5 text-gray-600" />
                 Past Appointments
               </CardTitle>
-              <CardDescription>Your completed appointments history</CardDescription>
+              <CardDescription>
+                Your completed appointments history
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {filteredAppointments.past.length > 0 ? (
                 filteredAppointments.past.map((appointment) => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                  />
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-8">No past appointments</p>
+                <p className="text-gray-500 text-center py-8">
+                  No past appointments
+                </p>
               )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
