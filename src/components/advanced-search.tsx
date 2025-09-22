@@ -1,74 +1,103 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Slider } from "@/components/ui/slider"
-import { Search, Filter, X, SlidersHorizontal } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Search, Filter, X, SlidersHorizontal } from "lucide-react";
 
-interface AdvancedSearchProps {
-  onSearch: (filters: any) => void
-  onReset: () => void
-  type: "categories" | "services"
+interface SearchFilters {
+  searchTerm: string;
+  category: string;
+  status: string;
+  priceRange: [number, number];
+  duration: string;
+  isPrivate: boolean | null;
+  sortBy: string;
+  sortOrder: string;
 }
 
-export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSearchProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+interface AdvancedSearchProps {
+  onSearch: (filters: SearchFilters) => void;
+  onReset: () => void;
+  type: "categories" | "services" | "packages";
+}
+
+export default function AdvancedSearch({
+  onSearch,
+  onReset,
+  type,
+}: AdvancedSearchProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
     searchTerm: "",
     category: "",
     status: "",
-    priceRange: [0, 500],
+    priceRange: [0, 500] as [number, number],
     duration: "",
     isPrivate: null as boolean | null,
     sortBy: "name",
     sortOrder: "asc",
-  })
+  });
 
-  const categories = ["Hair Services", "Nail Services", "Spa Services", "Beauty Services"]
-  const durations = ["30", "45", "60", "90", "120", "180"]
+  const categories = [
+    "Hair Services",
+    "Nail Services",
+    "Spa Services",
+    "Beauty Services",
+  ];
+  const durations = ["30", "45", "60", "90", "120", "180"];
   const sortOptions = [
     { value: "name", label: "Name" },
     { value: "price", label: "Price" },
     { value: "duration", label: "Duration" },
     { value: "created", label: "Date Created" },
-  ]
+  ];
 
-  const handleFilterChange = (key: string, value: any) => {
-    const newFilters = { ...filters, [key]: value }
-    setFilters(newFilters)
-    onSearch(newFilters)
-  }
+  const handleFilterChange = (
+    key: keyof SearchFilters,
+    value: string | number | boolean | null | [number, number]
+  ) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    onSearch(newFilters);
+  };
 
   const handleReset = () => {
     const resetFilters = {
       searchTerm: "",
       category: "",
       status: "",
-      priceRange: [0, 500],
+      priceRange: [0, 500] as [number, number],
       duration: "",
       isPrivate: null,
       sortBy: "name",
       sortOrder: "asc",
-    }
-    setFilters(resetFilters)
-    onReset()
-  }
+    };
+    setFilters(resetFilters);
+    onReset();
+  };
 
   const getActiveFiltersCount = () => {
-    let count = 0
-    if (filters.searchTerm) count++
-    if (filters.category) count++
-    if (filters.status) count++
-    if (filters.priceRange[0] > 0 || filters.priceRange[1] < 500) count++
-    if (filters.duration) count++
-    if (filters.isPrivate !== null) count++
-    return count
-  }
+    let count = 0;
+    if (filters.searchTerm) count++;
+    if (filters.category) count++;
+    if (filters.status) count++;
+    if (filters.priceRange[0] > 0 || filters.priceRange[1] < 500) count++;
+    if (filters.duration) count++;
+    if (filters.isPrivate !== null) count++;
+    return count;
+  };
 
   return (
     <Card className="bg-white/80 backdrop-blur-sm border-border/50">
@@ -126,7 +155,12 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
               {/* Category Filter */}
               <div>
                 <Label className="text-sm font-medium">Category</Label>
-                <Select value={filters.category} onValueChange={(value) => handleFilterChange("category", value)}>
+                <Select
+                  value={filters.category}
+                  onValueChange={(value) =>
+                    handleFilterChange("category", value)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All categories" />
                   </SelectTrigger>
@@ -144,7 +178,10 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
               {/* Status Filter */}
               <div>
                 <Label className="text-sm font-medium">Status</Label>
-                <Select value={filters.status} onValueChange={(value) => handleFilterChange("status", value)}>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) => handleFilterChange("status", value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
@@ -161,7 +198,12 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
               <div>
                 <Label className="text-sm font-medium">Sort By</Label>
                 <div className="flex gap-2">
-                  <Select value={filters.sortBy} onValueChange={(value) => handleFilterChange("sortBy", value)}>
+                  <Select
+                    value={filters.sortBy}
+                    onValueChange={(value) =>
+                      handleFilterChange("sortBy", value)
+                    }
+                  >
                     <SelectTrigger className="flex-1">
                       <SelectValue />
                     </SelectTrigger>
@@ -173,7 +215,12 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select value={filters.sortOrder} onValueChange={(value) => handleFilterChange("sortOrder", value)}>
+                  <Select
+                    value={filters.sortOrder}
+                    onValueChange={(value) =>
+                      handleFilterChange("sortOrder", value)
+                    }
+                  >
                     <SelectTrigger className="w-20">
                       <SelectValue />
                     </SelectTrigger>
@@ -186,18 +233,24 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
               </div>
             </div>
 
-            {/* Service-specific filters */}
-            {type === "services" && (
+            {/* Service and Package-specific filters */}
+            {(type === "services" || type === "packages") && (
               <div className="space-y-4">
                 {/* Price Range */}
                 <div>
                   <Label className="text-sm font-medium">
-                    Price Range: ${filters.priceRange[0]} - ${filters.priceRange[1]}
+                    Price Range: ${filters.priceRange[0]} - $
+                    {filters.priceRange[1]}
                   </Label>
                   <div className="px-2 py-4">
                     <Slider
                       value={filters.priceRange}
-                      onValueChange={(value) => handleFilterChange("priceRange", value)}
+                      onValueChange={(value) =>
+                        handleFilterChange(
+                          "priceRange",
+                          value as [number, number]
+                        )
+                      }
                       max={500}
                       min={0}
                       step={5}
@@ -210,7 +263,12 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
                   {/* Duration Filter */}
                   <div>
                     <Label className="text-sm font-medium">Duration</Label>
-                    <Select value={filters.duration} onValueChange={(value) => handleFilterChange("duration", value)}>
+                    <Select
+                      value={filters.duration}
+                      onValueChange={(value) =>
+                        handleFilterChange("duration", value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Any duration" />
                       </SelectTrigger>
@@ -229,9 +287,16 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
                   <div>
                     <Label className="text-sm font-medium">Service Type</Label>
                     <Select
-                      value={filters.isPrivate === null ? "all" : filters.isPrivate.toString()}
+                      value={
+                        filters.isPrivate === null
+                          ? "all"
+                          : filters.isPrivate.toString()
+                      }
                       onValueChange={(value) =>
-                        handleFilterChange("isPrivate", value === "all" ? null : value === "true")
+                        handleFilterChange(
+                          "isPrivate",
+                          value === "all" ? null : value === "true"
+                        )
                       }
                     >
                       <SelectTrigger>
@@ -274,7 +339,7 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
           <div className="flex flex-wrap gap-2 pt-2 border-t border-border/50">
             {filters.searchTerm && (
               <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                Search: "{filters.searchTerm}"
+                Search: &quot;{filters.searchTerm}&quot;
                 <Button
                   variant="ghost"
                   size="sm"
@@ -286,7 +351,10 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
               </Badge>
             )}
             {filters.category && (
-              <Badge variant="secondary" className="bg-green-100 text-green-700">
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-700"
+              >
                 Category: {filters.category}
                 <Button
                   variant="ghost"
@@ -299,7 +367,10 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
               </Badge>
             )}
             {filters.status && (
-              <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+              <Badge
+                variant="secondary"
+                className="bg-purple-100 text-purple-700"
+              >
                 Status: {filters.status}
                 <Button
                   variant="ghost"
@@ -311,48 +382,65 @@ export default function AdvancedSearch({ onSearch, onReset, type }: AdvancedSear
                 </Button>
               </Badge>
             )}
-            {type === "services" && (filters.priceRange[0] > 0 || filters.priceRange[1] < 500) && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-700">
-                Price: ${filters.priceRange[0]}-${filters.priceRange[1]}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="ml-1 h-4 w-4 p-0"
-                  onClick={() => handleFilterChange("priceRange", [0, 500])}
+            {(type === "services" || type === "packages") &&
+              (filters.priceRange[0] > 0 || filters.priceRange[1] < 500) && (
+                <Badge
+                  variant="secondary"
+                  className="bg-orange-100 text-orange-700"
                 >
-                  <X className="w-3 h-3" />
-                </Button>
-              </Badge>
-            )}
-            {type === "services" && filters.duration && (
-              <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
-                Duration: {filters.duration}m
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="ml-1 h-4 w-4 p-0"
-                  onClick={() => handleFilterChange("duration", "")}
+                  Price: ${filters.priceRange[0]}-${filters.priceRange[1]}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-1 h-4 w-4 p-0"
+                    onClick={() =>
+                      handleFilterChange("priceRange", [0, 500] as [
+                        number,
+                        number
+                      ])
+                    }
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </Badge>
+              )}
+            {(type === "services" || type === "packages") &&
+              filters.duration && (
+                <Badge
+                  variant="secondary"
+                  className="bg-indigo-100 text-indigo-700"
                 >
-                  <X className="w-3 h-3" />
-                </Button>
-              </Badge>
-            )}
-            {type === "services" && filters.isPrivate !== null && (
-              <Badge variant="secondary" className="bg-pink-100 text-pink-700">
-                Type: {filters.isPrivate ? "Private" : "Public"}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="ml-1 h-4 w-4 p-0"
-                  onClick={() => handleFilterChange("isPrivate", null)}
+                  Duration: {filters.duration}m
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-1 h-4 w-4 p-0"
+                    onClick={() => handleFilterChange("duration", "")}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </Badge>
+              )}
+            {(type === "services" || type === "packages") &&
+              filters.isPrivate !== null && (
+                <Badge
+                  variant="secondary"
+                  className="bg-pink-100 text-pink-700"
                 >
-                  <X className="w-3 h-3" />
-                </Button>
-              </Badge>
-            )}
+                  Type: {filters.isPrivate ? "Private" : "Public"}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-1 h-4 w-4 p-0"
+                    onClick={() => handleFilterChange("isPrivate", null)}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </Badge>
+              )}
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

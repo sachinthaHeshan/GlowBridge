@@ -1,14 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Edit, Trash2, Clock, DollarSign, Package } from "lucide-react"
-import AdvancedSearch from "@/components/advanced-search"
-import ServiceForm from "@/components/service-form"
-import ConfirmationModal from "@/components/confirmation-modal"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Plus, Edit, Trash2, Clock, DollarSign, Package } from "lucide-react";
+import AdvancedSearch from "@/components/advanced-search";
+import ServiceForm from "@/components/service-form";
+import ConfirmationModal from "@/components/confirmation-modal";
 
 // Mock data for services
 const mockServices = [
@@ -72,88 +78,129 @@ const mockServices = [
     isPrivate: true,
     status: "active",
   },
-]
+];
 
 export default function ServicesPage() {
-  const [services, setServices] = useState(mockServices)
-  const [filteredServices, setFilteredServices] = useState(mockServices)
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingService, setEditingService] = useState(null)
-  const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, serviceId: null })
+  const [services, setServices] = useState(mockServices);
+  const [filteredServices, setFilteredServices] = useState(mockServices);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingService, setEditingService] = useState<
+    (typeof mockServices)[0] | null
+  >(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    serviceId: number | null;
+  }>({ isOpen: false, serviceId: null });
 
-  const handleSearch = (filters) => {
-    let filtered = [...services]
+  const handleSearch = (filters: {
+    searchTerm: string;
+    category: string;
+    status: string;
+    priceRange: [number, number];
+    duration: string;
+    isPrivate: boolean | null;
+    sortBy: string;
+    sortOrder: string;
+  }) => {
+    let filtered = [...services];
 
     // Search term filter
     if (filters.searchTerm) {
       filtered = filtered.filter(
         (service) =>
-          service.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-          service.description.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-          service.category.toLowerCase().includes(filters.searchTerm.toLowerCase()),
-      )
+          service.name
+            .toLowerCase()
+            .includes(filters.searchTerm.toLowerCase()) ||
+          service.description
+            .toLowerCase()
+            .includes(filters.searchTerm.toLowerCase()) ||
+          service.category
+            .toLowerCase()
+            .includes(filters.searchTerm.toLowerCase())
+      );
     }
 
     // Category filter
     if (filters.category) {
-      filtered = filtered.filter((service) => service.category === filters.category)
+      filtered = filtered.filter(
+        (service) => service.category === filters.category
+      );
     }
 
     // Status filter
     if (filters.status) {
-      filtered = filtered.filter((service) => service.status === filters.status)
+      filtered = filtered.filter(
+        (service) => service.status === filters.status
+      );
     }
 
     // Price range filter
     if (filters.priceRange[0] > 0 || filters.priceRange[1] < 500) {
       filtered = filtered.filter(
-        (service) => service.finalPrice >= filters.priceRange[0] && service.finalPrice <= filters.priceRange[1],
-      )
+        (service) =>
+          service.finalPrice >= filters.priceRange[0] &&
+          service.finalPrice <= filters.priceRange[1]
+      );
     }
 
     // Duration filter
     if (filters.duration) {
-      filtered = filtered.filter((service) => service.duration === filters.duration)
+      filtered = filtered.filter(
+        (service) => service.duration === filters.duration
+      );
     }
 
     // Privacy filter
     if (filters.isPrivate !== null) {
-      filtered = filtered.filter((service) => service.isPrivate === filters.isPrivate)
+      filtered = filtered.filter(
+        (service) => service.isPrivate === filters.isPrivate
+      );
     }
 
     // Sort
     filtered.sort((a, b) => {
-      let aValue = a[filters.sortBy]
-      let bValue = b[filters.sortBy]
+      let aValue: string | number;
+      let bValue: string | number;
 
       if (filters.sortBy === "price") {
-        aValue = a.finalPrice
-        bValue = b.finalPrice
+        aValue = a.finalPrice;
+        bValue = b.finalPrice;
       } else if (filters.sortBy === "duration") {
-        aValue = Number.parseInt(a.duration)
-        bValue = Number.parseInt(b.duration)
-      }
-
-      if (typeof aValue === "string") {
-        aValue = aValue.toLowerCase()
-        bValue = bValue.toLowerCase()
+        aValue = Number.parseInt(a.duration);
+        bValue = Number.parseInt(b.duration);
+      } else if (filters.sortBy === "name") {
+        aValue = a.name.toLowerCase();
+        bValue = b.name.toLowerCase();
+      } else {
+        // Default to name sorting for unknown sortBy values
+        aValue = a.name.toLowerCase();
+        bValue = b.name.toLowerCase();
       }
 
       if (filters.sortOrder === "desc") {
-        return aValue < bValue ? 1 : -1
+        return aValue < bValue ? 1 : -1;
       }
-      return aValue > bValue ? 1 : -1
-    })
+      return aValue > bValue ? 1 : -1;
+    });
 
-    setFilteredServices(filtered)
-  }
+    setFilteredServices(filtered);
+  };
 
   const handleResetSearch = () => {
-    setFilteredServices(services)
-  }
+    setFilteredServices(services);
+  };
 
-  const handleAddService = (formData) => {
+  const handleAddService = (formData: {
+    name: string;
+    description: string;
+    category: string;
+    duration: string;
+    price: string;
+    discount: string;
+    isPrivate: boolean;
+    finalPrice?: number;
+  }) => {
     const newService = {
       id: Date.now(),
       name: formData.name,
@@ -162,23 +209,34 @@ export default function ServicesPage() {
       duration: formData.duration,
       price: Number.parseFloat(formData.price),
       discount: Number.parseFloat(formData.discount) || 0,
-      finalPrice: formData.finalPrice,
+      finalPrice: formData.finalPrice || 0,
       isPrivate: formData.isPrivate,
       status: "active",
-    }
+    };
 
-    const updatedServices = [...services, newService]
-    setServices(updatedServices)
-    setFilteredServices(updatedServices)
-    setIsAddDialogOpen(false)
-  }
+    const updatedServices = [...services, newService];
+    setServices(updatedServices);
+    setFilteredServices(updatedServices);
+    setIsAddDialogOpen(false);
+  };
 
-  const handleEditService = (service) => {
-    setEditingService(service)
-    setIsEditDialogOpen(true)
-  }
+  const handleEditService = (service: (typeof mockServices)[0]) => {
+    setEditingService(service);
+    setIsEditDialogOpen(true);
+  };
 
-  const handleUpdateService = (formData) => {
+  const handleUpdateService = (formData: {
+    name: string;
+    description: string;
+    category: string;
+    duration: string;
+    price: string;
+    discount: string;
+    isPrivate: boolean;
+    finalPrice?: number;
+  }) => {
+    if (!editingService) return;
+
     const updatedService = {
       ...editingService,
       name: formData.name,
@@ -187,29 +245,33 @@ export default function ServicesPage() {
       duration: formData.duration,
       price: Number.parseFloat(formData.price),
       discount: Number.parseFloat(formData.discount) || 0,
-      finalPrice: formData.finalPrice,
+      finalPrice: formData.finalPrice || 0,
       isPrivate: formData.isPrivate,
-    }
+    };
 
-    const updatedServices = services.map((service) => (service.id === editingService.id ? updatedService : service))
-    setServices(updatedServices)
-    setFilteredServices(updatedServices)
-    setIsEditDialogOpen(false)
-    setEditingService(null)
-  }
+    const updatedServices = services.map((service) =>
+      service.id === editingService.id ? updatedService : service
+    );
+    setServices(updatedServices);
+    setFilteredServices(updatedServices);
+    setIsEditDialogOpen(false);
+    setEditingService(null);
+  };
 
-  const handleDeleteService = (id) => {
-    setDeleteConfirmation({ isOpen: true, serviceId: id })
-  }
+  const handleDeleteService = (id: number) => {
+    setDeleteConfirmation({ isOpen: true, serviceId: id });
+  };
 
   const confirmDeleteService = () => {
     if (deleteConfirmation.serviceId) {
-      const updatedServices = services.filter((service) => service.id !== deleteConfirmation.serviceId)
-      setServices(updatedServices)
-      setFilteredServices(updatedServices)
+      const updatedServices = services.filter(
+        (service) => service.id !== deleteConfirmation.serviceId
+      );
+      setServices(updatedServices);
+      setFilteredServices(updatedServices);
     }
-    setDeleteConfirmation({ isOpen: false, serviceId: null })
-  }
+    setDeleteConfirmation({ isOpen: false, serviceId: null });
+  };
 
   return (
     <div className="space-y-6">
@@ -219,7 +281,9 @@ export default function ServicesPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
             Service Management
           </h1>
-          <p className="text-muted-foreground mt-2">Manage your services, pricing, and availability</p>
+          <p className="text-muted-foreground mt-2">
+            Manage your services, pricing, and availability
+          </p>
         </div>
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -233,13 +297,20 @@ export default function ServicesPage() {
             <DialogHeader>
               <DialogTitle>Add New Service</DialogTitle>
             </DialogHeader>
-            <ServiceForm onSubmit={handleAddService} onCancel={() => setIsAddDialogOpen(false)} />
+            <ServiceForm
+              onSubmit={handleAddService}
+              onCancel={() => setIsAddDialogOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
 
       {/* Advanced Search */}
-      <AdvancedSearch onSearch={handleSearch} onReset={handleResetSearch} type="services" />
+      <AdvancedSearch
+        onSearch={handleSearch}
+        onReset={handleResetSearch}
+        type="services"
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -250,9 +321,15 @@ export default function ServicesPage() {
                 <Package className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-green-700">Total Services</p>
-                <p className="text-2xl font-bold text-green-800">{services.length}</p>
-                <p className="text-xs text-green-600">Showing {filteredServices.length}</p>
+                <p className="text-sm font-medium text-green-700">
+                  Total Services
+                </p>
+                <p className="text-2xl font-bold text-green-800">
+                  {services.length}
+                </p>
+                <p className="text-xs text-green-600">
+                  Showing {filteredServices.length}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -268,9 +345,10 @@ export default function ServicesPage() {
                 <p className="text-sm font-medium text-blue-700">Avg. Price</p>
                 <p className="text-2xl font-bold text-blue-800">
                   $
-                  {(filteredServices.reduce((sum, s) => sum + s.finalPrice, 0) / filteredServices.length || 0).toFixed(
-                    0,
-                  )}
+                  {(
+                    filteredServices.reduce((sum, s) => sum + s.finalPrice, 0) /
+                      filteredServices.length || 0
+                  ).toFixed(0)}
                 </p>
               </div>
             </div>
@@ -284,11 +362,15 @@ export default function ServicesPage() {
                 <Clock className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-purple-700">Avg. Duration</p>
+                <p className="text-sm font-medium text-purple-700">
+                  Avg. Duration
+                </p>
                 <p className="text-2xl font-bold text-purple-800">
                   {Math.round(
-                    filteredServices.reduce((sum, s) => sum + Number.parseInt(s.duration), 0) /
-                      filteredServices.length || 0,
+                    filteredServices.reduce(
+                      (sum, s) => sum + Number.parseInt(s.duration),
+                      0
+                    ) / filteredServices.length || 0
                   )}
                   m
                 </p>
@@ -304,7 +386,9 @@ export default function ServicesPage() {
                 <Package className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-orange-700">Private Services</p>
+                <p className="text-sm font-medium text-orange-700">
+                  Private Services
+                </p>
                 <p className="text-2xl font-bold text-orange-800">
                   {filteredServices.filter((s) => s.isPrivate).length}
                 </p>
@@ -332,26 +416,40 @@ export default function ServicesPage() {
                   </Badge>
                 </div>
                 <div className="flex gap-1">
-                  {service.isPrivate && <Badge className="bg-purple-500 text-white text-xs">Private</Badge>}
-                  <Badge className="bg-green-500 text-white text-xs">{service.status}</Badge>
+                  {service.isPrivate && (
+                    <Badge className="bg-purple-500 text-white text-xs">
+                      Private
+                    </Badge>
+                  )}
+                  <Badge className="bg-green-500 text-white text-xs">
+                    {service.status}
+                  </Badge>
                 </div>
               </div>
             </CardHeader>
 
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">{service.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {service.description}
+              </p>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Clock className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm font-medium">{service.duration}m</span>
+                  <span className="text-sm font-medium">
+                    {service.duration}m
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <DollarSign className="w-4 h-4 text-green-500" />
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold text-green-600">${service.finalPrice.toFixed(2)}</span>
+                    <span className="text-sm font-bold text-green-600">
+                      ${service.finalPrice.toFixed(2)}
+                    </span>
                     {service.discount > 0 && (
-                      <span className="text-xs text-muted-foreground line-through">${service.price.toFixed(2)}</span>
+                      <span className="text-xs text-muted-foreground line-through">
+                        ${service.price.toFixed(2)}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -360,8 +458,12 @@ export default function ServicesPage() {
               {service.discount > 0 && (
                 <div className="p-2 bg-red-50 rounded-lg border border-red-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-red-700">Discount Applied</span>
-                    <span className="text-sm font-bold text-red-600">{service.discount}% OFF</span>
+                    <span className="text-xs font-medium text-red-700">
+                      Discount Applied
+                    </span>
+                    <span className="text-sm font-bold text-red-600">
+                      {service.discount}% OFF
+                    </span>
                   </div>
                 </div>
               )}
@@ -394,8 +496,12 @@ export default function ServicesPage() {
       {filteredServices.length === 0 && (
         <Card className="p-12 text-center">
           <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-muted-foreground mb-2">No services found</h3>
-          <p className="text-sm text-muted-foreground">Try adjusting your search filters or create a new service.</p>
+          <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+            No services found
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Try adjusting your search filters or create a new service.
+          </p>
         </Card>
       )}
 
@@ -418,8 +524,8 @@ export default function ServicesPage() {
               }}
               onSubmit={handleUpdateService}
               onCancel={() => {
-                setIsEditDialogOpen(false)
-                setEditingService(null)
+                setIsEditDialogOpen(false);
+                setEditingService(null);
               }}
               isEditing={true}
             />
@@ -430,7 +536,9 @@ export default function ServicesPage() {
       {/* Delete Confirmation */}
       <ConfirmationModal
         isOpen={deleteConfirmation.isOpen}
-        onClose={() => setDeleteConfirmation({ isOpen: false, serviceId: null })}
+        onClose={() =>
+          setDeleteConfirmation({ isOpen: false, serviceId: null })
+        }
         onConfirm={confirmDeleteService}
         title="Delete Service"
         description="Are you sure you want to delete this service? This action cannot be undone."
@@ -438,5 +546,5 @@ export default function ServicesPage() {
         confirmText="Delete Service"
       />
     </div>
-  )
+  );
 }
