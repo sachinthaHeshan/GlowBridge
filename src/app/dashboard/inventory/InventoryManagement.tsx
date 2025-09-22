@@ -38,24 +38,30 @@ import { Plus, Edit, Trash2, Package } from "lucide-react";
 
 interface InventoryItem {
   id: string;
+  salon_id: string;
   name: string;
-  category: "hair-care" | "skin-care" | "tools" | "accessories";
-  quantity: number;
+  description: string;
   price: number;
-  status: "in-stock" | "low-stock" | "out-of-stock";
-  lastUpdated: string;
-
+  available_quantity: number;
+  is_public: boolean;
+  discount: number;
+  image?: string;
 }
 
 export function InventoryManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
+  const [availability, setAvailability] = useState<"all" | "in-stock" | "out-of-stock">("all");
   const [formData, setFormData] = useState({
     name: "",
-    category: "hair-care" as "hair-care" | "skin-care" | "tools" | "accessories",
-    quantity: 0,
+    description: "",
     price: 0,
-    status: "in-stock" as "in-stock" | "low-stock" | "out-of-stock",
+    available_quantity: 0,
+    is_public: true,
+    discount: 0,
+    image: "",
   });
 
   // Mock data
@@ -64,59 +70,79 @@ export function InventoryManagement() {
   const [items, setItems] = useState<InventoryItem[]>([
     {
       id: "1",
+      salon_id: "1",
       name: "Professional Hair Shampoo",
-      category: "hair-care",
-      quantity: 50,
+      description: "Premium quality hair shampoo for professional use",
       price: 24.99,
-      status: "in-stock",
-      lastUpdated: "2024-03-15",
+      available_quantity: 50,
+      is_public: true,
+      discount: 0,
     },
     {
       id: "2",
+      salon_id: "1",
       name: "Hair Treatment Mask",
-      category: "hair-care",
-      quantity: 35,
+      description: "Deep conditioning hair treatment mask",
       price: 34.99,
-      status: "in-stock",
-      lastUpdated: "2024-03-14",
+      available_quantity: 35,
+      is_public: true,
+      discount: 10,
     },
     {
       id: "3",
+      salon_id: "1",
       name: "Professional Hair Dryer",
-      category: "tools",
-      quantity: 5,
+      description: "High-performance professional hair dryer",
       price: 199.99,
-      status: "low-stock",
-      lastUpdated: "2024-03-10",
+      available_quantity: 5,
+      is_public: false,
+      discount: 0,
     },
     {
       id: "4",
+      salon_id: "1",
       name: "Facial Cleanser",
-      category: "skin-care",
-      quantity: 0,
+      description: "Gentle facial cleanser for all skin types",
       price: 29.99,
-      status: "out-of-stock",
-      lastUpdated: "2024-03-01",
+      available_quantity: 0,
+      is_public: true,
+      discount: 15,
     },
     {
       id: "5",
+      salon_id: "1",
       name: "Hair Clips Set",
-      category: "accessories",
-      quantity: 100,
+      description: "Professional salon-grade hair clips set",
       price: 12.99,
-      status: "in-stock",
-      lastUpdated: "2024-03-12",
+      available_quantity: 100,
+      is_public: true,
+      discount: 0,
     },
   ]);
+
+  // Filter items based on search and filters
+  const filteredItems = items.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesPrice = item.price >= priceRange.min && item.price <= priceRange.max;
+    const matchesAvailability = 
+      availability === "all" ? true :
+      availability === "in-stock" ? item.available_quantity > 0 :
+      item.available_quantity === 0;
+    
+    return matchesSearch && matchesPrice && matchesAvailability;
+  });
 
   const handleAddItem = () => {
     setEditingItem(null);
     setFormData({
       name: "",
-      category: "hair-care",
-      quantity: 0,
+      description: "",
       price: 0,
-      status: "in-stock",
+      available_quantity: 0,
+      is_public: true,
+      discount: 0,
+      image: "",
     });
     setIsDialogOpen(true);
   };
@@ -125,10 +151,12 @@ export function InventoryManagement() {
     setEditingItem(item);
     setFormData({
       name: item.name,
-      category: item.category,
-      quantity: item.quantity,
+      description: item.description,
       price: item.price,
-      status: item.status,
+      available_quantity: item.available_quantity,
+      is_public: item.is_public,
+      discount: item.discount,
+      image: item.image || "",
     });
     setIsDialogOpen(true);
   };
@@ -141,7 +169,7 @@ export function InventoryManagement() {
             ? {
                 ...item,
                 ...formData,
-                lastUpdated: new Date().toISOString().split("T")[0],
+                salon_id: item.salon_id,
               }
             : item
         )
@@ -149,9 +177,8 @@ export function InventoryManagement() {
     } else {
       const newItem: InventoryItem = {
         id: Date.now().toString(),
+        salon_id: "1", // Current salon ID
         ...formData,
-        lastUpdated: new Date().toISOString().split("T")[0],
-
       };
       setItems([...items, newItem]);
     }
@@ -162,25 +189,12 @@ export function InventoryManagement() {
     setItems(items.filter((item) => item.id !== id));
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "in-stock":
-        return "default";
-      case "low-stock":
-        return "secondary";
-      case "out-of-stock":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
-
   // Inventory management view
   return (
     <div className="space-y-6">
       {/* Header with back button */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Inventory Management
@@ -189,11 +203,59 @@ export function InventoryManagement() {
               Manage inventory for this salon location
             </p>
           </div>
+          <Button onClick={handleAddItem} className="bg-primary hover:bg-primary/90">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Item
+          </Button>
         </div>
-        <Button onClick={handleAddItem} className="bg-primary hover:bg-primary/90">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Item
-        </Button>
+
+        {/* Search and Filters */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="md:col-span-2">
+            <Input
+              placeholder="Search by name or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <Select
+            value={availability}
+            onValueChange={(value: "all" | "in-stock" | "out-of-stock") =>
+              setAvailability(value)
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by availability" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Items</SelectItem>
+              <SelectItem value="in-stock">In Stock</SelectItem>
+              <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              placeholder="Min price"
+              value={priceRange.min}
+              onChange={(e) =>
+                setPriceRange({ ...priceRange, min: Number(e.target.value) || 0 })
+              }
+              className="w-24"
+            />
+            <span>-</span>
+            <Input
+              type="number"
+              placeholder="Max price"
+              value={priceRange.max}
+              onChange={(e) =>
+                setPriceRange({ ...priceRange, max: Number(e.target.value) || 0 })
+              }
+              className="w-24"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -201,7 +263,7 @@ export function InventoryManagement() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Items
+              Total Products
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -211,24 +273,12 @@ export function InventoryManagement() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              In Stock
+              Available Products
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">
-              {items.filter((i) => i.status === "in-stock").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Low Stock
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-500">
-              {items.filter((i) => i.status === "low-stock").length}
+              {items.filter((i) => i.available_quantity > 0).length}
             </div>
           </CardContent>
         </Card>
@@ -240,7 +290,19 @@ export function InventoryManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-500">
-              {items.filter((i) => i.status === "out-of-stock").length}
+              {items.filter((i) => i.available_quantity === 0).length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              On Discount
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-500">
+              {items.filter((i) => i.discount > 0).length}
             </div>
           </CardContent>
         </Card>
@@ -259,37 +321,53 @@ export function InventoryManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>Item</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Price</TableHead>
-                <TableHead>Quantity</TableHead>
+                <TableHead>Available</TableHead>
+                <TableHead>Discount</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Last Updated</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Package className="h-4 w-4 text-primary" />
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Package className="h-4 w-4 text-primary" />
+                        )}
                       </div>
                       <div className="font-medium">{item.name}</div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{item.category}</Badge>
+                    <div className="max-w-[200px] truncate">
+                      {item.description}
+                    </div>
                   </TableCell>
                   <TableCell>${item.price.toFixed(2)}</TableCell>
-                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>{item.available_quantity}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusBadgeVariant(item.status)}>
-                      {item.status}
-                    </Badge>
+                    {item.discount > 0 ? (
+                      <Badge variant="secondary">{item.discount}% OFF</Badge>
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
                   <TableCell>
-                    {new Date(item.lastUpdated).toLocaleDateString()}
+                    <Badge 
+                      variant={item.is_public ? "default" : "secondary"}
+                    >
+                      {item.is_public ? "Public" : "Private"}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
@@ -343,37 +421,14 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value: "hair-care" | "skin-care" | "tools" | "accessories") =>
-                  setFormData({ ...formData, category: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hair-care">Hair Care</SelectItem>
-                  <SelectItem value="skin-care">Skin Care</SelectItem>
-                  <SelectItem value="tools">Tools</SelectItem>
-                  <SelectItem value="accessories">Accessories</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="description">Description</Label>
               <Input
-                id="quantity"
-                type="number"
-                value={formData.quantity}
+                id="description"
+                value={formData.description}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    quantity: parseInt(e.target.value) || 0,
-                  })
+                  setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Enter quantity"
+                placeholder="Enter item description"
               />
             </div>
             <div className="grid gap-2">
@@ -392,22 +447,83 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="available_quantity">Available Quantity</Label>
+              <Input
+                id="available_quantity"
+                type="number"
+                value={formData.available_quantity}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    available_quantity: parseInt(e.target.value) || 0,
+                  })
+                }
+                placeholder="Enter available quantity"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="discount">Discount (%)</Label>
+              <Input
+                id="discount"
+                type="number"
+                value={formData.discount}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    discount: parseInt(e.target.value) || 0,
+                  })
+                }
+                placeholder="Enter discount percentage"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="is_public">Visibility</Label>
               <Select
-                value={formData.status}
-                onValueChange={(value: "in-stock" | "low-stock" | "out-of-stock") =>
-                  setFormData({ ...formData, status: value })
+                value={formData.is_public ? "public" : "private"}
+                onValueChange={(value: "public" | "private") =>
+                  setFormData({ ...formData, is_public: value === "public" })
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Select visibility" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="in-stock">In Stock</SelectItem>
-                  <SelectItem value="low-stock">Low Stock</SelectItem>
-                  <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="image">Product Image</Label>
+              <div className="flex items-center gap-4">
+                {formData.image && (
+                  <div className="h-16 w-16 rounded-lg border overflow-hidden">
+                    <img
+                      src={formData.image}
+                      alt="Product preview"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData({
+                          ...formData,
+                          image: reader.result as string,
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
           <div className="flex justify-end space-x-2">
