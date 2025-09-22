@@ -1,3 +1,8 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,8 +22,31 @@ import {
   Clock,
   CreditCard,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function SalonLandingPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <div className="w-8 h-8 bg-white rounded-lg"></div>
+          </div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -49,9 +77,11 @@ export default function SalonLandingPage() {
             >
               Reviews
             </a>
-            <Button variant="outline" size="sm">
-              Sign In
-            </Button>
+            <Link href="/login">
+              <Button variant="outline" size="sm">
+                Sign In
+              </Button>
+            </Link>
           </nav>
         </div>
       </header>
@@ -74,12 +104,14 @@ export default function SalonLandingPage() {
               beauty professionals.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="text-lg px-8 py-6 bg-primary hover:bg-primary/90"
-              >
-                Start Your Free Trial
-              </Button>
+              <Link href="/signup">
+                <Button
+                  size="lg"
+                  className="text-lg px-8 py-6 bg-primary hover:bg-primary/90"
+                >
+                  Start Your Free Trial
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 size="lg"
