@@ -41,17 +41,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    // Check if we're on the client side and Firebase is available
+    if (typeof window === "undefined") {
       setLoading(false);
-    });
+      return;
+    }
 
-    return unsubscribe;
+    try {
+      const firebaseAuth = auth();
+      const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+        setUser(user);
+        setLoading(false);
+      });
+
+      return unsubscribe;
+    } catch (error) {
+      console.warn("Firebase not configured:", error);
+      setLoading(false);
+      return;
+    }
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const firebaseAuth = auth();
+      await signInWithEmailAndPassword(firebaseAuth, email, password);
       toast.success("Welcome back!");
     } catch (error: unknown) {
       const errorMessage =
@@ -69,8 +83,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     displayName: string
   ) => {
     try {
+      const firebaseAuth = auth();
       const { user } = await createUserWithEmailAndPassword(
-        auth,
+        firebaseAuth,
         email,
         password
       );
@@ -88,7 +103,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      await signOut(auth);
+      const firebaseAuth = auth();
+      await signOut(firebaseAuth);
       toast.success("Logged out successfully");
     } catch (error) {
       toast.error("Failed to logout");
@@ -98,7 +114,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      await sendPasswordResetEmail(auth, email);
+      const firebaseAuth = auth();
+      await sendPasswordResetEmail(firebaseAuth, email);
       toast.success("Password reset email sent!");
     } catch (error: unknown) {
       const errorMessage =
