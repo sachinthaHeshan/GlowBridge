@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
 import { useShoppingCart } from "@/components/shopping/ShoppingProvider";
 
 interface PaymentFormData {
@@ -27,7 +26,7 @@ interface PaymentStep {
   id: number;
   title: string;
   description: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 interface PaymentResult {
@@ -223,7 +222,7 @@ export default function PaymentPage() {
           router.push("/shopping");
         }, 3000);
       }
-    } catch (error) {
+    } catch {
       setPaymentResult({
         success: false,
         message: "An error occurred while processing your payment. Please try again."
@@ -252,7 +251,7 @@ export default function PaymentPage() {
                 <p className="text-sm text-destructive mt-1">{errors.email}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                We'll send your order confirmation to this email
+                We&apos;ll send your order confirmation to this email
               </p>
             </div>
           </div>
