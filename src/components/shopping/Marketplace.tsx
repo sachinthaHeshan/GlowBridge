@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useShoppingCart } from "./ShoppingProvider";
 import Link from "next/link";
@@ -117,10 +116,10 @@ export default function Marketplace() {
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<number[]>([]);
 
-  const { addToCart, cartItems, cartCount, setIsCartOpen } = useShoppingCart();
+  const { addToCart, cartCount, setIsCartOpen } = useShoppingCart();
 
   const filteredProducts = useMemo(() => {
-    let filtered = mockProducts.filter((product) => {
+    const filtered = mockProducts.filter((product) => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           product.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
@@ -130,21 +129,22 @@ export default function Marketplace() {
     });
 
     // Sort products
+    const sortedFiltered = [...filtered];
     switch (sortBy) {
       case "price-low":
-        filtered.sort((a, b) => a.price - b.price);
+        sortedFiltered.sort((a, b) => a.price - b.price);
         break;
       case "price-high":
-        filtered.sort((a, b) => b.price - a.price);
+        sortedFiltered.sort((a, b) => b.price - a.price);
         break;
       case "rating":
-        filtered.sort((a, b) => b.rating - a.rating);
+        sortedFiltered.sort((a, b) => b.rating - a.rating);
         break;
       default:
         break;
     }
 
-    return filtered;
+    return sortedFiltered;
   }, [searchQuery, selectedCategory, sortBy, priceRange]);
 
   const handleAddToCart = (product: Product) => {
