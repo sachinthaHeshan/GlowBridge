@@ -9,21 +9,21 @@ import { useShoppingCart } from "./ShoppingProvider";
 import { useRouter } from "next/navigation";
 
 export default function CartSidebar() {
-  const { 
-    cartItems, 
-    cartCount, 
-    cartTotal, 
-    isCartOpen, 
-    setIsCartOpen, 
-    updateQuantity, 
-    removeFromCart 
+  const {
+    cartItems,
+    cartCount,
+    cartTotal,
+    isCartOpen,
+    setIsCartOpen,
+    updateQuantity,
+    removeFromCart,
   } = useShoppingCart();
-  
+
   const router = useRouter();
 
   const handleProceedToPayment = () => {
     setIsCartOpen(false);
-    router.push("/shopping/payment");
+    router.push("/payment");
   };
 
   if (!isCartOpen) return null;
@@ -31,11 +31,11 @@ export default function CartSidebar() {
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-background/50 backdrop-blur-sm z-40"
         onClick={() => setIsCartOpen(false)}
       />
-      
+
       {/* Sidebar */}
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border z-50 shadow-lg">
         <div className="flex flex-col h-full">
@@ -72,10 +72,7 @@ export default function CartSidebar() {
                 <p className="text-muted-foreground mb-4">
                   Add some products to get started
                 </p>
-                <Button 
-                  onClick={() => setIsCartOpen(false)}
-                  variant="outline"
-                >
+                <Button onClick={() => setIsCartOpen(false)} variant="outline">
                   Continue Shopping
                 </Button>
               </div>
@@ -88,7 +85,9 @@ export default function CartSidebar() {
                         {/* Product Image */}
                         <div className="flex-shrink-0">
                           <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground">IMG</span>
+                            <span className="text-xs text-muted-foreground">
+                              IMG
+                            </span>
                           </div>
                         </div>
 
@@ -108,7 +107,9 @@ export default function CartSidebar() {
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                onClick={() =>
+                                  updateQuantity(item.id, item.quantity - 1)
+                                }
                               >
                                 <Minus className="h-3 w-3" />
                               </Button>
@@ -119,7 +120,9 @@ export default function CartSidebar() {
                                 variant="outline"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                onClick={() =>
+                                  updateQuantity(item.id, item.quantity + 1)
+                                }
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -162,7 +165,9 @@ export default function CartSidebar() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal:</span>
-                  <span className="text-foreground">${cartTotal.toFixed(2)}</span>
+                  <span className="text-foreground">
+                    ${cartTotal.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping:</span>
@@ -170,19 +175,23 @@ export default function CartSidebar() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax:</span>
-                  <span className="text-foreground">${(cartTotal * 0.1).toFixed(2)}</span>
+                  <span className="text-foreground">
+                    ${(cartTotal * 0.1).toFixed(2)}
+                  </span>
                 </div>
                 <div className="border-t border-border pt-2">
                   <div className="flex justify-between font-semibold">
                     <span className="text-foreground">Total:</span>
-                    <span className="text-primary">${(cartTotal * 1.1).toFixed(2)}</span>
+                    <span className="text-primary">
+                      ${(cartTotal * 1.1).toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="space-y-2">
-                <Button 
+                <Button
                   onClick={handleProceedToPayment}
                   className="w-full"
                   size="lg"
@@ -190,8 +199,8 @@ export default function CartSidebar() {
                   <CreditCard className="h-4 w-4 mr-2" />
                   Proceed to Payment
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setIsCartOpen(false)}
                   className="w-full"
                 >

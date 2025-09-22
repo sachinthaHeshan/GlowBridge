@@ -1,8 +1,16 @@
-import type { Metadata } from "next";
+"use client";
+
+import React from "react";
+import { ShoppingCartProvider } from "@/components/shopping/ShoppingProvider";
+import CartSidebar from "@/components/shopping/CartSidebar";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/contexts/AuthContext";
+import "./globals.css";
+
+interface ShoppingLayoutProps {
+  children: React.ReactNode;
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,24 +22,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "GlowBridge",
-  description:
-    "Transform your salon into a luxury experience with GlowBridge - the premium salon management platform designed for modern beauty professionals.",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function ShoppingLayout({ children }: ShoppingLayoutProps) {
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
+          <ShoppingCartProvider>
+            <div className="min-h-screen bg-background">
+              {children}
+              <CartSidebar />
+            </div>
+          </ShoppingCartProvider>
+
           <Toaster
             position="top-right"
             toastOptions={{
