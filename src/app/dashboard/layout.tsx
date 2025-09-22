@@ -3,7 +3,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Settings, Menu, X, Sparkles,  FolderOpen,Gift } from "lucide-react";
+import { Building2, Users, Settings, Menu, X, Sparkles,  FolderOpen,Gift ,Clock} from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -55,6 +55,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     icon: Gift,
     gradient: "from-orange-500 to-red-600",
   },
+   {
+    name: "working-hours",
+    href: "/dashboard/working-hours",
+    icon: Clock,
+    description: "Staff-working-hoursnpm ",
+  },
+  {
+    name: "staff-dashboard",
+    href: "/dashboard/staff-dashboard",
+    icon: Settings,
+    description: "Staff perspective",
+  },
+  {
+    name: "staff-appointments",
+    href: "/dashboard/staff-appointments",
+    icon: Settings,
+    description: "Salon owner perspective",
+  },
+
 
   ];
 
