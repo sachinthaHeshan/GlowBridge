@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+<<<<<<< HEAD
 import { Plus, Edit, Trash2, Package, Search } from "lucide-react";
 
 interface InventoryItem {
@@ -47,10 +48,33 @@ interface InventoryItem {
   discount: number;
   image?: string;
 }
+=======
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Package,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import {
+  Product,
+  fetchSalonProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  ApiError,
+} from "@/lib/productApi";
+import { showApiErrorToast } from "@/lib/errorToast";
+
+// Use Product interface from productApi
+type InventoryItem = Product;
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
 
 export function InventoryManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+<<<<<<< HEAD
   const [searchTerm, setSearchTerm] = useState("");
   const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
   const [availability, setAvailability] = useState<"all" | "in-stock" | "out-of-stock">("all");
@@ -62,11 +86,57 @@ export function InventoryManagement() {
     is_public: true,
     discount: 0,
     image: "",
+=======
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Default salon ID - in a real app, this would come from user context or route params
+  const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55"; // You may want to get this from props or context
+
+  const [formData, setFormData] = useState({
+    name: "",
+    category: "hair-care" as
+      | "hair-care"
+      | "skin-care"
+      | "tools"
+      | "accessories",
+    quantity: 0,
+    price: 0,
+    status: "in-stock" as "in-stock" | "low-stock" | "out-of-stock",
+    description: "",
+    isPublic: true,
+    discount: 0,
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
   });
 
-  // Mock data
-  // Mock data for items
+  // Fetch products on component mount
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const products = await fetchSalonProducts(salonId);
+        setItems(products);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+        if (error instanceof ApiError) {
+          setError(error.message);
+          showApiErrorToast(error, "Failed to load products");
+        } else {
+          setError("Failed to load products");
+          showApiErrorToast(
+            new Error("Failed to load products"),
+            "Failed to load products"
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
+<<<<<<< HEAD
   const [items, setItems] = useState<InventoryItem[]>([
     {
       id: "1",
@@ -119,6 +189,10 @@ export function InventoryManagement() {
       discount: 0,
     },
   ]);
+=======
+    loadProducts();
+  }, [salonId]);
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
 
   // Filter items based on search and filters
   const filteredItems = items.filter((item) => {
@@ -139,10 +213,17 @@ export function InventoryManagement() {
       name: "",
       description: "",
       price: 0,
+<<<<<<< HEAD
       available_quantity: 0,
       is_public: true,
       discount: 0,
       image: "",
+=======
+      status: "in-stock",
+      description: "",
+      isPublic: true,
+      discount: 0,
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
     });
     setIsDialogOpen(true);
   };
@@ -153,14 +234,22 @@ export function InventoryManagement() {
       name: item.name,
       description: item.description,
       price: item.price,
+<<<<<<< HEAD
       available_quantity: item.available_quantity,
       is_public: item.is_public,
       discount: item.discount,
       image: item.image || "",
+=======
+      status: item.status,
+      description: item.description || "",
+      isPublic: item.isPublic,
+      discount: item.discount,
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
     });
     setIsDialogOpen(true);
   };
 
+<<<<<<< HEAD
   const handleSaveItem = () => {
     if (editingItem) {
       setItems(
@@ -181,14 +270,158 @@ export function InventoryManagement() {
         ...formData,
       };
       setItems([...items, newItem]);
+=======
+  const handleSaveItem = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+
+      if (editingItem) {
+        // Update existing item
+        const updatedItem = await updateProduct(editingItem.id, {
+          name: formData.name,
+          category: formData.category,
+          quantity: formData.quantity,
+          price: formData.price,
+          description: formData.description,
+          isPublic: formData.isPublic,
+          discount: formData.discount,
+        });
+
+        setItems(
+          items.map((item) => (item.id === editingItem.id ? updatedItem : item))
+        );
+      } else {
+        // Create new item
+        const newItem = await createProduct({
+          name: formData.name,
+          category: formData.category,
+          quantity: formData.quantity,
+          price: formData.price,
+          status: formData.status,
+          salonId: salonId,
+          description: formData.description,
+          isPublic: formData.isPublic,
+          discount: formData.discount,
+        });
+
+        setItems([...items, newItem]);
+      }
+
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to save product:", error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+        showApiErrorToast(
+          error,
+          editingItem ? "Failed to update product" : "Failed to create product"
+        );
+      } else {
+        setError("Failed to save product");
+        showApiErrorToast(
+          new Error("Failed to save product"),
+          "Failed to save product"
+        );
+      }
+    } finally {
+      setSaving(false);
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
     }
-    setIsDialogOpen(false);
   };
 
-  const handleDeleteItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
+  const handleDeleteItem = async (id: string) => {
+    try {
+      setError(null);
+      await deleteProduct(id);
+      setItems(items.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+        showApiErrorToast(error, "Failed to delete product");
+      } else {
+        setError("Failed to delete product");
+        showApiErrorToast(
+          new Error("Failed to delete product"),
+          "Failed to delete product"
+        );
+      }
+    }
   };
 
+<<<<<<< HEAD
+=======
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "in-stock":
+        return "default";
+      case "low-stock":
+        return "secondary";
+      case "out-of-stock":
+        return "destructive";
+      default:
+        return "secondary";
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Inventory Management
+              </h1>
+              <p className="text-muted-foreground">
+                Manage inventory for this salon location
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-lg">Loading products...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && items.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Inventory Management
+              </h1>
+              <p className="text-muted-foreground">
+                Manage inventory for this salon location
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              Failed to load products
+            </h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
   // Inventory management view
   return (
     <div className="space-y-6">
@@ -208,6 +441,7 @@ export function InventoryManagement() {
             Add Item
           </Button>
         </div>
+<<<<<<< HEAD
 
         {/* Search and Filters Card */}
         <Card>
@@ -277,6 +511,16 @@ export function InventoryManagement() {
             </div>
           </CardContent>
         </Card>
+=======
+        <Button
+          onClick={handleAddItem}
+          className="bg-primary hover:bg-primary/90"
+          disabled={saving}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Item
+        </Button>
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
       </div>
 
       {/* Stats Cards */}
@@ -333,9 +577,7 @@ export function InventoryManagement() {
       <Card>
         <CardHeader>
           <CardTitle>Inventory Items</CardTitle>
-          <CardDescription>
-            Manage your products and supplies
-          </CardDescription>
+          <CardDescription>Manage your products and supplies</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -442,7 +684,30 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
+<<<<<<< HEAD
               <Label htmlFor="description">Description</Label>
+=======
+              <Label htmlFor="category">Category</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(
+                  value: "hair-care" | "skin-care" | "tools" | "accessories"
+                ) => setFormData({ ...formData, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hair-care">Hair Care</SelectItem>
+                  <SelectItem value="skin-care">Skin Care</SelectItem>
+                  <SelectItem value="tools">Tools</SelectItem>
+                  <SelectItem value="accessories">Accessories</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="quantity">Quantity</Label>
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
               <Input
                 id="description"
                 value={formData.description}
@@ -468,6 +733,7 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
+<<<<<<< HEAD
               <Label htmlFor="available_quantity">Available Quantity</Label>
               <Input
                 id="available_quantity"
@@ -480,6 +746,16 @@ export function InventoryManagement() {
                   })
                 }
                 placeholder="Enter available quantity"
+=======
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="Enter product description"
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
               />
             </div>
             <div className="grid gap-2">
@@ -487,6 +763,11 @@ export function InventoryManagement() {
               <Input
                 id="discount"
                 type="number"
+<<<<<<< HEAD
+=======
+                min="0"
+                max="100"
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
                 value={formData.discount}
                 onChange={(e) =>
                   setFormData({
@@ -498,12 +779,38 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
+<<<<<<< HEAD
               <Label htmlFor="is_public">Visibility</Label>
               <Select
                 value={formData.is_public ? "public" : "private"}
                 onValueChange={(value: "public" | "private") =>
                   setFormData({ ...formData, is_public: value === "public" })
                 }
+=======
+              <Label htmlFor="isPublic">Visibility</Label>
+              <Select
+                value={formData.isPublic ? "public" : "private"}
+                onValueChange={(value: "public" | "private") =>
+                  setFormData({ ...formData, isPublic: value === "public" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select visibility" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(
+                  value: "in-stock" | "low-stock" | "out-of-stock"
+                ) => setFormData({ ...formData, status: value })}
+>>>>>>> fa1d4ae0387666239463e8b259eb8f6142629d24
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select visibility" />
@@ -548,11 +855,22 @@ export function InventoryManagement() {
             </div>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveItem}>
-              {editingItem ? "Update" : "Create"} Item
+            <Button onClick={handleSaveItem} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {editingItem ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                <>{editingItem ? "Update" : "Create"} Item</>
+              )}
             </Button>
           </div>
         </DialogContent>
