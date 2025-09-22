@@ -34,7 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search } from "lucide-react";
 
 interface InventoryItem {
   id: string;
@@ -193,7 +193,7 @@ export function InventoryManagement() {
   return (
     <div className="space-y-6">
       {/* Header with back button */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
@@ -209,53 +209,74 @@ export function InventoryManagement() {
           </Button>
         </div>
 
-        {/* Search and Filters */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="md:col-span-2">
-            <Input
-              placeholder="Search by name or description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <Select
-            value={availability}
-            onValueChange={(value: "all" | "in-stock" | "out-of-stock") =>
-              setAvailability(value)
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by availability" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Items</SelectItem>
-              <SelectItem value="in-stock">In Stock</SelectItem>
-              <SelectItem value="out-of-stock">Out of Stock</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              placeholder="Min price"
-              value={priceRange.min}
-              onChange={(e) =>
-                setPriceRange({ ...priceRange, min: Number(e.target.value) || 0 })
-              }
-              className="w-24"
-            />
-            <span>-</span>
-            <Input
-              type="number"
-              placeholder="Max price"
-              value={priceRange.max}
-              onChange={(e) =>
-                setPriceRange({ ...priceRange, max: Number(e.target.value) || 0 })
-              }
-              className="w-24"
-            />
-          </div>
-        </div>
+        {/* Search and Filters Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Search & Filters</CardTitle>
+            <CardDescription>
+              Find and filter inventory items
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4">
+              {/* Search Bar */}
+              <div className="flex items-center space-x-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or description..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+              
+              {/* Filters */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Availability</Label>
+                  <Select
+                    value={availability}
+                    onValueChange={(value: "all" | "in-stock" | "out-of-stock") =>
+                      setAvailability(value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by availability" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Items</SelectItem>
+                      <SelectItem value="in-stock">In Stock</SelectItem>
+                      <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Price Range</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={priceRange.min}
+                      onChange={(e) =>
+                        setPriceRange({ ...priceRange, min: Number(e.target.value) || 0 })
+                      }
+                    />
+                    <span className="text-muted-foreground">to</span>
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={priceRange.max}
+                      onChange={(e) =>
+                        setPriceRange({ ...priceRange, max: Number(e.target.value) || 0 })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Stats Cards */}
