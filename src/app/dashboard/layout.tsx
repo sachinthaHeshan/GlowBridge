@@ -3,7 +3,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Settings, Menu, X, Sparkles } from "lucide-react";
+import { Building2, Users, Settings, Menu, X, Sparkles,  FolderOpen,Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,6 +24,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       description: "Manage all salons",
     },
     {
+      href: "/dashboard/inventory",
+      name: "Inventory Management",
+      icon: Building2,
+      description: "Manage all inventory",
+    },
+    {
       href: "/dashboard/users",
       name: "User Management",
       icon: Users,
@@ -35,6 +41,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       icon: Settings,
       description: "System settings",
     },
+
+     {
+    name: "Categories",
+    href: "/dashboard/categories",
+    icon: FolderOpen,
+    gradient: "from-green-500 to-teal-600",
+  },
+
+  {
+    name: "Packages",
+    href: "/dashboard/packages",
+    icon: Gift,
+    gradient: "from-orange-500 to-red-600",
+  },
+
   ];
 
   return (
