@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, Filter, ShoppingCart, Star, Heart, ArrowLeft } from "lucide-react";
+import { Search, Filter, ShoppingCart, Star, Heart, ArrowLeft, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -171,10 +171,20 @@ export default function Marketplace() {
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Main Site</span>
-            </Link>
+            <div className="flex items-center space-x-6">
+              {/* Brand Logo */}
+              <div className="flex items-center space-x-2">
+                <Scissors className="h-6 w-6 text-primary" />
+                <span className="text-xl font-bold font-heading text-foreground">
+                  Glow<span className="text-primary">Bridge</span>
+                </span>
+              </div>
+              {/* Back Link */}
+              <Link href="/" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Main Site</span>
+              </Link>
+            </div>
             <div className="flex items-center space-x-4">
               <Button
                 variant="outline"
