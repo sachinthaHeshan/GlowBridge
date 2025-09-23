@@ -66,55 +66,58 @@ export default function CategoryServicesPage() {
   const limit = 10;
 
   // Load category and services from API
-  const loadCategoryAndServices = async (page: number = 1, search?: string) => {
-    try {
-      setLoading(true);
+  const loadCategoryAndServices = useCallback(
+    async (page: number = 1, search?: string) => {
+      try {
+        setLoading(true);
 
-      // Load category details
-      const categoryData = await fetchCategoryById(categoryId);
-      setCategory(categoryData);
+        // Load category details
+        const categoryData = await fetchCategoryById(categoryId);
+        setCategory(categoryData);
 
-      // Load services for this category with search
-      const servicesData = await fetchServicesByCategory(categoryId);
+        // Load services for this category with search
+        const servicesData = await fetchServicesByCategory(categoryId);
 
-      // Apply search filter if provided
-      let filteredData = servicesData;
-      if (search) {
-        filteredData = servicesData.filter(
-          (service) =>
-            service.name.toLowerCase().includes(search.toLowerCase()) ||
-            service.description.toLowerCase().includes(search.toLowerCase())
-        );
+        // Apply search filter if provided
+        let filteredData = servicesData;
+        if (search) {
+          filteredData = servicesData.filter(
+            (service) =>
+              service.name.toLowerCase().includes(search.toLowerCase()) ||
+              service.description.toLowerCase().includes(search.toLowerCase())
+          );
+        }
+
+        // Simple pagination simulation (API doesn't support pagination for services by category yet)
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedServices = filteredData.slice(startIndex, endIndex);
+
+        setServices(servicesData);
+        setFilteredServices(paginatedServices);
+        setTotal(filteredData.length);
+        setCurrentPage(page);
+        setTotalPages(Math.ceil(filteredData.length / limit));
+      } catch (error) {
+        console.error("Failed to load category and services:", error);
+        showApiErrorToast(error, "Failed to load data");
+      } finally {
+        setLoading(false);
       }
-
-      // Simple pagination simulation (API doesn't support pagination for services by category yet)
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedServices = filteredData.slice(startIndex, endIndex);
-
-      setServices(servicesData);
-      setFilteredServices(paginatedServices);
-      setTotal(filteredData.length);
-      setCurrentPage(page);
-      setTotalPages(Math.ceil(filteredData.length / limit));
-    } catch (error) {
-      console.error("Failed to load category and services:", error);
-      showApiErrorToast(error, "Failed to load data");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [categoryId, limit]
+  );
 
   // Load initial data
   useEffect(() => {
     loadCategoryAndServices(1);
-  }, [categoryId]);
+  }, [categoryId, loadCategoryAndServices]);
 
   // Handle search
   const handleSearch = useCallback(() => {
     setCurrentPage(1);
     loadCategoryAndServices(1, searchTerm || undefined);
-  }, [searchTerm, categoryId]);
+  }, [searchTerm, loadCategoryAndServices]);
 
   const handleClearSearch = () => {
     setSearchTerm("");

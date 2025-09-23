@@ -17,7 +17,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, DollarSign, Calculator } from "lucide-react";
+import { Clock, DollarSign, Calculator, Loader2 } from "lucide-react";
 
 interface ServiceData {
   name: string;
@@ -44,6 +44,7 @@ interface ServiceFormProps {
   onCancel: () => void;
   isEditing?: boolean;
   prefilledCategory?: string; // Added prefilled category prop
+  isLoading?: boolean; // Added loading state prop
 }
 
 const categories = [
@@ -60,6 +61,7 @@ export default function ServiceForm({
   onCancel,
   isEditing = false,
   prefilledCategory,
+  isLoading = false,
 }: ServiceFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
@@ -436,9 +438,19 @@ export default function ServiceForm({
         </Button>
         <Button
           type="submit"
-          className="flex-1 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white"
+          disabled={isLoading}
+          className="flex-1 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white disabled:opacity-50"
         >
-          {isEditing ? "Update Service" : "Create Service"}
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {isEditing ? "Updating..." : "Creating..."}
+            </>
+          ) : isEditing ? (
+            "Update Service"
+          ) : (
+            "Create Service"
+          )}
         </Button>
       </div>
     </form>
