@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,249 +17,143 @@ import {
   Edit,
   Trash2,
   Gift,
-  Package,
+  Package as PackageIcon,
   DollarSign,
   Users,
 } from "lucide-react";
-import AdvancedSearch from "@/components/advanced-search";
 import PackageForm from "@/components/package-form";
 import ConfirmationModal from "@/components/confirmation-modal";
+import {
+  Package,
+  fetchAllPackages,
+  createPackage,
+  updatePackage,
+  deletePackage,
+  ApiError,
+} from "@/lib/packageApi";
+import { showApiErrorToast } from "@/lib/errorToast";
+import { Loader2 } from "lucide-react";
 
-// Mock data for packages
-const mockPackages = [
-  {
-    id: 1,
-    name: "Bridal Beauty Package",
-    description: "Complete bridal package with hair, makeup, and nail services",
-    image: "/bridal-package.jpg",
-    services: [
-      "Premium Haircut",
-      "Hair Styling",
-      "Bridal Makeup",
-      "Luxury Manicure",
-    ],
-    serviceCount: 4,
-    totalPrice: 400,
-    discount: 20,
-    finalPrice: 320,
-    isPrivate: true,
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Spa Relaxation Package",
-    description: "Ultimate relaxation with massage, facial, and aromatherapy",
-    image: "/spa-package.jpg",
-    services: [
-      "Deep Tissue Massage",
-      "Facial Treatment",
-      "Aromatherapy",
-      "Body Treatment",
-    ],
-    serviceCount: 4,
-    totalPrice: 350,
-    discount: 15,
-    finalPrice: 297.5,
-    isPrivate: false,
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Hair Transformation Package",
-    description: "Complete hair makeover with cut, color, and styling",
-    image: "/hair-package.jpg",
-    services: [
-      "Premium Haircut",
-      "Hair Coloring",
-      "Hair Styling",
-      "Hair Treatment",
-    ],
-    serviceCount: 4,
-    totalPrice: 320,
-    discount: 25,
-    finalPrice: 240,
-    isPrivate: false,
-    status: "active",
-  },
-];
+// Types for package operations
+interface PackageFormData {
+  name: string;
+  description: string;
+  selectedServices: string[];
+  discount: string;
+  isPrivate: boolean;
+  totalPrice?: number;
+  finalPrice?: number;
+}
 
 export default function PackagesPage() {
-  const [packages, setPackages] = useState(mockPackages);
-  const [filteredPackages, setFilteredPackages] = useState(mockPackages);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingPackage, setEditingPackage] = useState<
-    (typeof mockPackages)[0] | null
-  >(null);
+  const [editingPackage, setEditingPackage] = useState<Package | null>(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
-    packageId: number | null;
+    packageId: string | null;
   }>({ isOpen: false, packageId: null });
 
-  const handleSearch = (filters: {
-    searchTerm: string;
-    category: string;
-    status: string;
-    priceRange: [number, number];
-    duration: string;
-    isPrivate: boolean | null;
-    sortBy: string;
-    sortOrder: string;
-  }) => {
-    let filtered = [...packages];
+  // Load packages on component mount
+  useEffect(() => {
+    loadPackages();
+  }, []);
 
-    if (filters.searchTerm) {
-      filtered = filtered.filter(
-        (pkg) =>
-          pkg.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-          pkg.description
-            .toLowerCase()
-            .includes(filters.searchTerm.toLowerCase()) ||
-          pkg.services.some((service) =>
-            service.toLowerCase().includes(filters.searchTerm.toLowerCase())
-          )
-      );
+  const loadPackages = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const packagesData = await fetchAllPackages();
+      setPackages(packagesData);
+    } catch (err) {
+      const errorMessage =
+        err instanceof ApiError ? err.message : "Failed to load packages";
+      setError(errorMessage);
+      showApiErrorToast(err as ApiError, "Failed to load packages");
+    } finally {
+      setLoading(false);
     }
-
-    if (filters.status) {
-      filtered = filtered.filter((pkg) => pkg.status === filters.status);
-    }
-
-    if (
-      filters.priceRange &&
-      (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000)
-    ) {
-      filtered = filtered.filter(
-        (pkg) =>
-          pkg.finalPrice >= filters.priceRange[0] &&
-          pkg.finalPrice <= filters.priceRange[1]
-      );
-    }
-
-    if (filters.isPrivate !== null) {
-      filtered = filtered.filter((pkg) => pkg.isPrivate === filters.isPrivate);
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      if (filters.sortBy === "price") {
-        aValue = a.finalPrice;
-        bValue = b.finalPrice;
-      } else if (filters.sortBy === "serviceCount") {
-        aValue = a.serviceCount;
-        bValue = b.serviceCount;
-      } else if (filters.sortBy === "name") {
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-      } else {
-        // Default to name sorting for unknown sortBy values
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-      }
-
-      if (filters.sortOrder === "desc") {
-        return aValue < bValue ? 1 : -1;
-      }
-      return aValue > bValue ? 1 : -1;
-    });
-
-    setFilteredPackages(filtered);
   };
 
-  const handleResetSearch = () => {
-    setFilteredPackages(packages);
+  const handleAddPackage = async (formData: PackageFormData) => {
+    try {
+      setCreateLoading(true);
+      const newPackage = await createPackage({
+        name: formData.name,
+        description: formData.description,
+        selectedServices: formData.selectedServices,
+        isPrivate: formData.isPrivate,
+        discount: formData.discount,
+      });
+
+      setPackages((prev) => [...prev, newPackage]);
+      setIsAddDialogOpen(false);
+    } catch (err) {
+      showApiErrorToast(err as ApiError, "Failed to create package");
+    } finally {
+      setCreateLoading(false);
+    }
   };
 
-  const handleAddPackage = (formData: {
-    name: string;
-    description: string;
-    selectedServices: string[];
-    image: string;
-    discount: string;
-    isPrivate: boolean;
-    totalPrice?: number;
-    finalPrice?: number;
-  }) => {
-    const newPackage = {
-      id: Date.now(),
-      name: formData.name,
-      description: formData.description,
-      image: formData.image || "/default-package.jpg",
-      services: formData.selectedServices,
-      serviceCount: formData.selectedServices.length,
-      totalPrice: formData.totalPrice || 0,
-      discount: Number.parseFloat(formData.discount) || 0,
-      finalPrice: formData.finalPrice || 0,
-      isPrivate: formData.isPrivate,
-      status: "active",
-    };
-
-    const updatedPackages = [...packages, newPackage];
-    setPackages(updatedPackages);
-    setFilteredPackages(updatedPackages);
-    setIsAddDialogOpen(false);
-  };
-
-  const handleEditPackage = (pkg: (typeof mockPackages)[0]) => {
+  const handleEditPackage = (pkg: Package) => {
     setEditingPackage(pkg);
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdatePackage = (formData: {
-    name: string;
-    description: string;
-    selectedServices: string[];
-    image: string;
-    discount: string;
-    isPrivate: boolean;
-    totalPrice?: number;
-    finalPrice?: number;
-  }) => {
+  const handleUpdatePackage = async (formData: PackageFormData) => {
     if (!editingPackage) return;
 
-    const updatedPackage = {
-      ...editingPackage,
-      name: formData.name,
-      description: formData.description,
-      image: formData.image || editingPackage.image,
-      services: formData.selectedServices,
-      serviceCount: formData.selectedServices.length,
-      totalPrice: formData.totalPrice || 0,
-      discount: Number.parseFloat(formData.discount) || 0,
-      finalPrice: formData.finalPrice || 0,
-      isPrivate: formData.isPrivate,
-    };
+    try {
+      setUpdateLoading(true);
+      const updatedPackage = await updatePackage(editingPackage.id, {
+        name: formData.name,
+        description: formData.description,
+        selectedServices: formData.selectedServices,
+        isPrivate: formData.isPrivate,
+        discount: formData.discount,
+      });
 
-    const updatedPackages = packages.map((pkg) =>
-      pkg.id === editingPackage.id ? updatedPackage : pkg
-    );
-    setPackages(updatedPackages);
-    setFilteredPackages(updatedPackages);
-    setIsEditDialogOpen(false);
-    setEditingPackage(null);
+      setPackages((prev) =>
+        prev.map((pkg) => (pkg.id === editingPackage.id ? updatedPackage : pkg))
+      );
+      setIsEditDialogOpen(false);
+      setEditingPackage(null);
+    } catch (err) {
+      showApiErrorToast(err as ApiError, "Failed to update package");
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
-  const handleDeletePackage = (id: number) => {
+  const handleDeletePackage = (id: string) => {
     setDeleteConfirmation({ isOpen: true, packageId: id });
   };
 
-  const confirmDeletePackage = () => {
-    if (deleteConfirmation.packageId) {
-      const updatedPackages = packages.filter(
-        (pkg) => pkg.id !== deleteConfirmation.packageId
+  const confirmDeletePackage = async () => {
+    if (!deleteConfirmation.packageId) return;
+
+    try {
+      await deletePackage(deleteConfirmation.packageId);
+      setPackages((prev) =>
+        prev.filter((pkg) => pkg.id !== deleteConfirmation.packageId)
       );
-      setPackages(updatedPackages);
-      setFilteredPackages(updatedPackages);
+      setDeleteConfirmation({ isOpen: false, packageId: null });
+    } catch (err) {
+      showApiErrorToast(err as ApiError, "Failed to delete package");
+      setDeleteConfirmation({ isOpen: false, packageId: null });
     }
-    setDeleteConfirmation({ isOpen: false, packageId: null });
   };
 
   const totalRevenue = packages.reduce((sum, pkg) => sum + pkg.finalPrice, 0);
   const averageDiscount =
-    packages.reduce((sum, pkg) => sum + pkg.discount, 0) / packages.length;
+    packages.length > 0
+      ? packages.reduce((sum, pkg) => sum + pkg.discount, 0) / packages.length
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -288,17 +182,11 @@ export default function PackagesPage() {
             <PackageForm
               onSubmit={handleAddPackage}
               onCancel={() => setIsAddDialogOpen(false)}
+              isSubmitting={createLoading}
             />
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Advanced Search */}
-      <AdvancedSearch
-        onSearch={handleSearch}
-        onReset={handleResetSearch}
-        type="packages"
-      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -316,7 +204,7 @@ export default function PackagesPage() {
                   {packages.length}
                 </p>
                 <p className="text-xs text-blue-600">
-                  Showing {filteredPackages.length}
+                  Showing {packages.length}
                 </p>
               </div>
             </div>
@@ -346,7 +234,7 @@ export default function PackagesPage() {
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                <Package className="w-5 h-5 text-white" />
+                <PackageIcon className="w-5 h-5 text-white" />
               </div>
               <div>
                 <p className="text-sm font-medium text-blue-700">
@@ -354,10 +242,8 @@ export default function PackagesPage() {
                 </p>
                 <p className="text-2xl font-bold text-blue-800">
                   {Math.round(
-                    filteredPackages.reduce(
-                      (sum, p) => sum + p.serviceCount,
-                      0
-                    ) / filteredPackages.length || 0
+                    packages.reduce((sum, p) => sum + p.serviceCount, 0) /
+                      packages.length || 0
                   )}
                 </p>
                 <p className="text-xs text-blue-600">Per package</p>
@@ -386,138 +272,175 @@ export default function PackagesPage() {
         </Card>
       </div>
 
-      {/* Packages Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredPackages.map((pkg) => (
-          <Card
-            key={pkg.id}
-            className="group hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm border-border/50"
+      {/* Loading State */}
+      {loading && (
+        <Card className="p-12 text-center">
+          <Loader2 className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+          <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+            Loading packages...
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Please wait while we fetch your packages.
+          </p>
+        </Card>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <Card className="p-12 text-center border-red-200 bg-red-50">
+          <Gift className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-red-700 mb-2">
+            Failed to load packages
+          </h3>
+          <p className="text-sm text-red-600 mb-4">{error}</p>
+          <Button
+            onClick={loadPackages}
+            variant="outline"
+            className="text-red-600 border-red-300 hover:bg-red-50"
           >
-            <div className="relative overflow-hidden rounded-t-lg">
-              <Image
-                src={pkg.image || "/default-package.jpg"}
-                alt={pkg.name}
-                width={400}
-                height={192}
-                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute top-3 right-3 flex gap-2">
-                {pkg.isPrivate && (
-                  <Badge className="bg-purple-500 text-white text-xs">
-                    Private
+            Try Again
+          </Button>
+        </Card>
+      )}
+
+      {/* Packages Grid */}
+      {!loading && !error && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {packages.map((pkg) => (
+            <Card
+              key={pkg.id}
+              className="group hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm border-border/50"
+            >
+              <div className="relative overflow-hidden rounded-t-lg">
+                <Image
+                  src={pkg.image || "/default-package.jpg"}
+                  alt={pkg.name}
+                  width={400}
+                  height={192}
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute top-3 right-3 flex gap-2">
+                  {pkg.isPrivate && (
+                    <Badge className="bg-purple-500 text-white text-xs">
+                      Private
+                    </Badge>
+                  )}
+                  <Badge className="bg-green-500 text-white text-xs">
+                    {pkg.status}
                   </Badge>
-                )}
-                <Badge className="bg-green-500 text-white text-xs">
-                  {pkg.status}
-                </Badge>
-              </div>
-              <div className="absolute bottom-3 left-3">
-                <Badge className="bg-blue-500 text-white font-semibold">
-                  {pkg.discount}% OFF
-                </Badge>
-              </div>
-            </div>
-
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {pkg.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {pkg.description}
-                  </p>
                 </div>
+                <div className="absolute bottom-3 left-3">
+                  <Badge className="bg-blue-500 text-white font-semibold">
+                    {pkg.discount}% OFF
+                  </Badge>
+                </div>
+              </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Package className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm font-medium text-blue-600">
-                      {pkg.serviceCount} Services
-                    </span>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      {pkg.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {pkg.description}
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="w-4 h-4 text-green-500" />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-green-600">
-                        ${pkg.finalPrice.toFixed(2)}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <PackageIcon className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-medium text-blue-600">
+                        {pkg.serviceCount} Services
                       </span>
-                      <span className="text-xs text-muted-foreground line-through">
-                        ${pkg.totalPrice.toFixed(2)}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="w-4 h-4 text-green-500" />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-green-600">
+                          ${pkg.finalPrice.toFixed(2)}
+                        </span>
+                        <span className="text-xs text-muted-foreground line-through">
+                          ${pkg.totalPrice.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-green-700">
+                        Package Savings
+                      </span>
+                      <span className="text-sm font-bold text-green-600">
+                        ${(pkg.totalPrice - pkg.finalPrice).toFixed(2)}
                       </span>
                     </div>
                   </div>
-                </div>
 
-                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-green-700">
-                      Package Savings
-                    </span>
-                    <span className="text-sm font-bold text-green-600">
-                      ${(pkg.totalPrice - pkg.finalPrice).toFixed(2)}
-                    </span>
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-gray-700">
+                      Included Services:
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {pkg.services
+                        .slice(0, 2)
+                        .map((service: string, index: number) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {service}
+                          </Badge>
+                        ))}
+                      {pkg.services.length > 2 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{pkg.services.length - 2} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditPackage(pkg)}
+                      className="flex-1 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeletePackage(pkg.id)}
+                      className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          ))}
 
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-gray-700">
-                    Included Services:
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {pkg.services.slice(0, 2).map((service, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="text-xs"
-                      >
-                        {service}
-                      </Badge>
-                    ))}
-                    {pkg.services.length > 2 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{pkg.services.length - 2} more
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEditPackage(pkg)}
-                    className="flex-1 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDeletePackage(pkg.id)}
-                    className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* No Results */}
-      {filteredPackages.length === 0 && (
-        <Card className="p-12 text-center">
-          <Gift className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-            No packages found
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Try adjusting your search filters or create a new package.
-          </p>
-        </Card>
+          {/* No Results */}
+          {packages.length === 0 && (
+            <div className="col-span-full">
+              <Card className="p-12 text-center">
+                <Gift className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                  No packages found
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Create your first package to get started.
+                </p>
+              </Card>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Edit Dialog */}
@@ -531,8 +454,7 @@ export default function PackagesPage() {
               initialData={{
                 name: editingPackage.name,
                 description: editingPackage.description,
-                services: editingPackage.services,
-                image: editingPackage.image,
+                services: editingPackage.serviceIds || [],
                 discount: editingPackage.discount.toString(),
                 isPrivate: editingPackage.isPrivate,
               }}
@@ -542,6 +464,7 @@ export default function PackagesPage() {
                 setEditingPackage(null);
               }}
               isEditing={true}
+              isSubmitting={updateLoading}
             />
           )}
         </DialogContent>

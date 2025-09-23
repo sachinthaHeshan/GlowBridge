@@ -11,14 +11,20 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Gift, DollarSign, Calculator, Package, Percent } from "lucide-react";
+import { Gift, DollarSign, Calculator, Package, Loader2 } from "lucide-react";
+import {
+  fetchServicesBySalon,
+  fetchActiveCategories,
+  Service,
+  Category,
+} from "@/lib/categoryApi";
+import { showApiErrorToast } from "@/lib/errorToast";
 
 interface PackageData {
   name: string;
   description: string;
   services: string[];
   selectedServices: string[];
-  image: string;
   discount: string;
   isPrivate: boolean;
   totalPrice?: number;
@@ -30,67 +36,87 @@ interface PackageFormProps {
     name: string;
     description: string;
     services: string[];
-    image: string;
     discount: string;
     isPrivate: boolean;
   };
   onSubmit: (data: PackageData) => void;
   onCancel: () => void;
   isEditing?: boolean;
+  isSubmitting?: boolean;
 }
 
-// Mock available services with prices
-const availableServices = [
-  { id: 1, name: "Premium Haircut", price: 85, category: "Hair Services" },
-  { id: 2, name: "Hair Coloring", price: 150, category: "Hair Services" },
-  { id: 3, name: "Hair Styling", price: 65, category: "Hair Services" },
-  { id: 4, name: "Hair Treatment", price: 120, category: "Hair Services" },
-  { id: 5, name: "Luxury Manicure", price: 65, category: "Nail Services" },
-  { id: 6, name: "Pedicure", price: 55, category: "Nail Services" },
-  { id: 7, name: "Nail Art", price: 45, category: "Nail Services" },
-  { id: 8, name: "Deep Tissue Massage", price: 120, category: "Spa Services" },
-  { id: 9, name: "Facial Treatment", price: 90, category: "Spa Services" },
-  { id: 10, name: "Aromatherapy", price: 80, category: "Spa Services" },
-  { id: 11, name: "Bridal Makeup", price: 200, category: "Beauty Services" },
-  { id: 12, name: "Eyebrow Shaping", price: 35, category: "Beauty Services" },
-];
-
-// Suggested discount ranges based on service count
-const getDiscountSuggestions = (serviceCount: number) => {
-  if (serviceCount >= 4) return { min: 20, max: 30, recommended: 25 };
-  if (serviceCount >= 3) return { min: 15, max: 25, recommended: 20 };
-  if (serviceCount >= 2) return { min: 10, max: 20, recommended: 15 };
-  return { min: 5, max: 15, recommended: 10 };
-};
+// Salon ID constant
+const SALON_ID = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
 
 export default function PackageForm({
   initialData,
   onSubmit,
   onCancel,
   isEditing = false,
+  isSubmitting = false,
 }: PackageFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     description: initialData?.description || "",
     selectedServices: initialData?.services || [],
-    image: initialData?.image || "",
     discount: initialData?.discount || "",
     isPrivate: initialData?.isPrivate || false,
   });
 
+  // Update form data when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        description: initialData.description || "",
+        selectedServices: initialData.services || [],
+        discount: initialData.discount || "",
+        isPrivate: initialData.isPrivate || false,
+      });
+    }
+  }, [initialData]);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [totalPrice, setTotalPrice] = useState(0);
   const [finalPrice, setFinalPrice] = useState(0);
-  const [discountSuggestions, setDiscountSuggestions] = useState({
-    min: 5,
-    max: 15,
-    recommended: 10,
-  });
+  const [availableServices, setAvailableServices] = useState<Service[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch services and categories on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Try to fetch salon-specific services first, fallback to all services
+        let servicesData;
+        try {
+          servicesData = await fetchServicesBySalon(SALON_ID);
+        } catch {
+          // If salon-specific fetch fails, try fetching all services
+          const { fetchServices } = await import("@/lib/categoryApi");
+          const allServicesResponse = await fetchServices(1, 100); // Get first 100 services
+          servicesData = allServicesResponse.services;
+        }
+
+        const categoriesData = await fetchActiveCategories();
+
+        setAvailableServices(servicesData);
+        setCategories(categoriesData.categories);
+      } catch (error) {
+        showApiErrorToast(error, "Failed to load services and categories");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     // Calculate total price based on selected services
     const selectedServiceObjects = availableServices.filter((service) =>
-      formData.selectedServices.includes(service.name)
+      formData.selectedServices.includes(service.id)
     );
     const total = selectedServiceObjects.reduce(
       (sum, service) => sum + service.price,
@@ -98,17 +124,11 @@ export default function PackageForm({
     );
     setTotalPrice(total);
 
-    // Update discount suggestions
-    const suggestions = getDiscountSuggestions(
-      formData.selectedServices.length
-    );
-    setDiscountSuggestions(suggestions);
-
     // Calculate final price
     const discount = Number.parseFloat(formData.discount) || 0;
     const calculated = total - (total * discount) / 100;
     setFinalPrice(calculated);
-  }, [formData.selectedServices, formData.discount]);
+  }, [formData.selectedServices, formData.discount, availableServices]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -121,7 +141,7 @@ export default function PackageForm({
       newErrors.description = "Description is required";
     }
 
-    if (formData.selectedServices.length === 0) {
+    if (!formData.selectedServices || formData.selectedServices.length === 0) {
       newErrors.services = "At least one service must be selected";
     }
 
@@ -155,28 +175,38 @@ export default function PackageForm({
     }
   };
 
-  const handleServiceToggle = (serviceName: string, checked: boolean) => {
+  const handleServiceToggle = (serviceId: string, checked: boolean) => {
     const updatedServices = checked
-      ? [...formData.selectedServices, serviceName]
-      : formData.selectedServices.filter((s) => s !== serviceName);
+      ? [...formData.selectedServices, serviceId]
+      : formData.selectedServices.filter((s) => s !== serviceId);
 
     setFormData({ ...formData, selectedServices: updatedServices });
     clearError("services");
   };
 
-  const handleDiscountSuggestion = (suggestedDiscount: number) => {
-    setFormData({ ...formData, discount: suggestedDiscount.toString() });
-    clearError("discount");
-  };
-
   // Group services by category
-  const servicesByCategory = availableServices.reduce((acc, service) => {
-    if (!acc[service.category]) {
-      acc[service.category] = [];
+  const servicesByCategory = categories.reduce((acc, category) => {
+    const servicesInCategory = availableServices.filter((service) =>
+      service.categories.some((cat) => cat.id === category.id)
+    );
+    if (servicesInCategory.length > 0) {
+      acc[category.name] = servicesInCategory;
     }
-    acc[service.category].push(service);
     return acc;
-  }, {} as Record<string, typeof availableServices>);
+  }, {} as Record<string, Service[]>);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <span className="ml-3 text-sm text-muted-foreground">
+            Loading services and categories...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -219,20 +249,6 @@ export default function PackageForm({
             <p className="text-sm text-red-500 mt-1">{errors.description}</p>
           )}
         </div>
-
-        <div className="md:col-span-2">
-          <Label htmlFor="package-image" className="text-sm font-medium">
-            Package Image URL
-          </Label>
-          <Input
-            id="package-image"
-            value={formData.image}
-            onChange={(e) =>
-              setFormData({ ...formData, image: e.target.value })
-            }
-            placeholder="Enter image URL (optional)"
-          />
-        </div>
       </div>
 
       {/* Service Selection */}
@@ -247,115 +263,117 @@ export default function PackageForm({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(servicesByCategory).map(([category, services]) => (
-            <Card key={category} className="p-4">
-              <h4 className="font-medium text-sm text-gray-700 mb-3">
-                {category}
-              </h4>
-              <div className="space-y-3">
-                {services.map((service) => (
-                  <div key={service.id} className="flex items-center space-x-3">
-                    <Checkbox
-                      id={`service-${service.id}`}
-                      checked={formData.selectedServices.includes(service.name)}
-                      onCheckedChange={(checked) =>
-                        handleServiceToggle(service.name, checked as boolean)
-                      }
-                    />
-                    <div className="flex-1 min-w-0">
-                      <Label
-                        htmlFor={`service-${service.id}`}
-                        className="text-sm font-medium cursor-pointer"
+          {Object.keys(servicesByCategory).length === 0 ? (
+            <div className="col-span-full">
+              {/* Show all services without category grouping */}
+              {availableServices.length > 0 ? (
+                <Card className="p-4">
+                  <h4 className="font-medium text-sm text-gray-700 mb-3">
+                    Available Services ({availableServices.length})
+                  </h4>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {availableServices.map((service) => (
+                      <div
+                        key={service.id}
+                        className="flex items-center space-x-3"
                       >
-                        {service.name}
-                      </Label>
-                      <p className="text-xs text-green-600 font-medium">
-                        ${service.price}
-                      </p>
-                    </div>
+                        <Checkbox
+                          id={`service-${service.id}`}
+                          checked={formData.selectedServices.includes(
+                            service.id
+                          )}
+                          onCheckedChange={(checked) =>
+                            handleServiceToggle(service.id, checked as boolean)
+                          }
+                        />
+                        <div className="flex-1 min-w-0">
+                          <Label
+                            htmlFor={`service-${service.id}`}
+                            className="text-sm font-medium cursor-pointer"
+                          >
+                            {service.name}
+                          </Label>
+                          <p className="text-xs text-green-600 font-medium">
+                            ${service.price}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </Card>
-          ))}
+                </Card>
+              ) : (
+                <div className="p-8 text-center bg-gray-50 rounded-lg">
+                  <p className="text-gray-600 mb-2">
+                    No services available for this salon.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Please add services to this salon first.
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            Object.entries(servicesByCategory).map(([category, services]) => (
+              <Card key={category} className="p-4">
+                <h4 className="font-medium text-sm text-gray-700 mb-3">
+                  {category} ({services.length} services)
+                </h4>
+                <div className="space-y-3">
+                  {services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="flex items-center space-x-3"
+                    >
+                      <Checkbox
+                        id={`service-${service.id}`}
+                        checked={formData.selectedServices.includes(service.id)}
+                        onCheckedChange={(checked) =>
+                          handleServiceToggle(service.id, checked as boolean)
+                        }
+                      />
+                      <div className="flex-1 min-w-0">
+                        <Label
+                          htmlFor={`service-${service.id}`}
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          {service.name}
+                        </Label>
+                        <p className="text-xs text-green-600 font-medium">
+                          ${service.price}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </div>
 
       {/* Discount Section */}
       {formData.selectedServices.length > 0 && (
-        <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-orange-700 flex items-center">
-              <Percent className="w-4 h-4 mr-2" />
-              Package Discount
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="package-discount" className="text-sm font-medium">
-                Discount Percentage (%) *
-              </Label>
-              <Input
-                id="package-discount"
-                type="number"
-                value={formData.discount}
-                onChange={(e) => {
-                  setFormData({ ...formData, discount: e.target.value });
-                  clearError("discount");
-                }}
-                placeholder="0"
-                min="0"
-                max="50"
-                className={errors.discount ? "border-red-500" : ""}
-              />
-              {errors.discount && (
-                <p className="text-sm text-red-500 mt-1">{errors.discount}</p>
-              )}
-            </div>
-
-            <div className="p-3 bg-white rounded-lg border border-orange-200">
-              <p className="text-xs font-medium text-orange-700 mb-2">
-                Suggested Discount Ranges for {formData.selectedServices.length}{" "}
-                Services:
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    handleDiscountSuggestion(discountSuggestions.min)
-                  }
-                  className="text-xs hover:bg-orange-50"
-                >
-                  {discountSuggestions.min}%
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    handleDiscountSuggestion(discountSuggestions.recommended)
-                  }
-                  className="text-xs bg-orange-100 hover:bg-orange-200 border-orange-300"
-                >
-                  {discountSuggestions.recommended}% (Recommended)
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    handleDiscountSuggestion(discountSuggestions.max)
-                  }
-                  className="text-xs hover:bg-orange-50"
-                >
-                  {discountSuggestions.max}%
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div>
+          <Label htmlFor="package-discount" className="text-sm font-medium">
+            Discount Percentage (%)
+          </Label>
+          <Input
+            id="package-discount"
+            type="number"
+            value={formData.discount}
+            onChange={(e) => {
+              setFormData({ ...formData, discount: e.target.value });
+              clearError("discount");
+            }}
+            placeholder="0"
+            min="0"
+            max="50"
+            className={errors.discount ? "border-red-500" : ""}
+          />
+          {errors.discount && (
+            <p className="text-sm text-red-500 mt-1">{errors.discount}</p>
+          )}
+        </div>
       )}
 
       {/* Price Calculator */}
@@ -533,9 +551,19 @@ export default function PackageForm({
         </Button>
         <Button
           type="submit"
-          className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white"
+          disabled={isSubmitting}
+          className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white disabled:opacity-50"
         >
-          {isEditing ? "Update Package" : "Create Package"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {isEditing ? "Updating..." : "Creating..."}
+            </>
+          ) : isEditing ? (
+            "Update Package"
+          ) : (
+            "Create Package"
+          )}
         </Button>
       </div>
     </form>
