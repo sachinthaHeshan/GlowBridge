@@ -15,6 +15,9 @@ import {
   Clock,
   LogOut,
   User,
+  ShoppingCart,
+  Warehouse,
+  LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -49,13 +52,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     {
       href: "/dashboard/inventory",
       name: "Inventory Management",
-      icon: Building2,
-      description: "Manage all inventory",
+      icon: Warehouse  ,
+      description: "Manage ll inventory",
     },
     {
       href: "/dashboard/users",
       name: "User Management",
-      icon: Users,
+      icon: User ,
       description: "Manage salon users",
     },
     {
@@ -69,32 +72,32 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       name: "Categories",
       href: "/dashboard/categories",
       icon: FolderOpen,
-      gradient: "from-green-500 to-teal-600",
+      description: "Service types"
     },
 
     {
       name: "Packages",
       href: "/dashboard/packages",
       icon: Gift,
-      gradient: "from-orange-500 to-red-600",
+      description: "Service bundles",
     },
     {
-      name: "working-hours",
+      name: "Working Hours",
       href: "/dashboard/working-hours",
       icon: Clock,
-      description: "Staff-working-hoursnpm ",
+      description: "Staff working hours",
     },
     {
-      name: "staff-dashboard",
+      name: "Staff Dashboard",
       href: "/dashboard/staff-dashboard",
-      icon: Settings,
-      description: "Staff perspective",
+      icon: LayoutDashboard,
+      description: "Staff oversight",
     },
     {
-      name: "staff-appointments",
+      name: "Staff Appointments",
       href: "/dashboard/staff-appointments",
-      icon: Settings,
-      description: "Salon owner perspective",
+      icon: Users,
+      description: "Salon owner's staff control",
     },
   ];
 
