@@ -41,6 +41,7 @@ import {
   Package,
   Loader2,
   AlertCircle,
+  FileText,
 } from "lucide-react";
 import {
   Product,
@@ -468,29 +469,26 @@ export function InventoryManagement() {
 
       {/* Inventory Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Inventory Items</CardTitle>
-          <CardDescription>Manage your products and supplies</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Inventory Items</CardTitle>
+            <CardDescription>Manage your products and supplies</CardDescription>
+          </div>
+          <Button
+            onClick={() => {
+              // Add PDF generation logic here
+              console.log("Generate PDF clicked");
+            }}
+            className="bg-primary hover:bg-primary/90"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Generate PDF
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 mb-4">
-            {/* Search and filter controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="sm:col-span-1">
-                <Label htmlFor="search">Search</Label>
-                <Input
-                  id="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by item name"
-                />
-              </div>
-              <div className="sm:col-span-1">
-                <Label htmlFor="category">Category</Label>
-                <Select
-                  value={selectedCategory}
-                  onValueChange={(value: string) => setSelectedCategory(value)}
-                >
+            {/* Empty space for margin */}
+            <div className="h-2">
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
@@ -539,11 +537,11 @@ export function InventoryManagement() {
               <TableRow>
                 <TableHead>Item</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Updated</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-center">Quantity</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-right">Discount (%)</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
