@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -20,197 +21,120 @@ import {
   DollarSign,
   Package,
   ArrowLeft,
+  Loader2,
+  Search,
+  X,
 } from "lucide-react";
-import AdvancedSearch from "@/components/advanced-search";
 import ServiceForm from "@/components/service-form";
 import ConfirmationModal from "@/components/confirmation-modal";
+import { Pagination } from "@/shared/components/pagination";
+import {
+  fetchCategoryById,
+  fetchServicesByCategory,
+  createService,
+  updateService,
+  deleteService,
+  Category,
+  Service,
+} from "@/lib/categoryApi";
+import { showApiErrorToast } from "@/lib/errorToast";
 
-// Mock data for categories and services
-const mockCategories = [
-  {
-    id: "1",
-    name: "Hair Services",
-    description: "Professional hair cutting, styling, and treatment services",
-  },
-  {
-    id: "2",
-    name: "Nail Services",
-    description: "Complete nail care including manicures and pedicures",
-  },
-  {
-    id: "3",
-    name: "Spa Services",
-    description: "Relaxing spa treatments and wellness services",
-  },
-  {
-    id: "4",
-    name: "Beauty Services",
-    description: "Makeup, skincare, and beauty enhancement services",
-  },
-];
-
-const mockServices = [
-  {
-    id: 1,
-    name: "Premium Haircut",
-    description: "Professional haircut with styling and consultation",
-    categoryId: "1",
-    duration: "60",
-    price: 85,
-    discount: 10,
-    finalPrice: 76.5,
-    isPrivate: false,
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Hair Coloring",
-    description: "Full hair coloring service with premium products",
-    categoryId: "1",
-    duration: "120",
-    price: 150,
-    discount: 0,
-    finalPrice: 150,
-    isPrivate: false,
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Luxury Manicure",
-    description: "Complete manicure with nail art and premium polish",
-    categoryId: "2",
-    duration: "45",
-    price: 65,
-    discount: 15,
-    finalPrice: 55.25,
-    isPrivate: false,
-    status: "active",
-  },
-];
+// Constants
+const DEFAULT_SALON_ID = "1df3195c-05b9-43c9-bebd-79d8684cbf55"; // TODO: Replace with actual salon ID from auth context
 
 export default function CategoryServicesPage() {
   const params = useParams();
   const router = useRouter();
   const categoryId = params.categoryId as string;
 
-  const [category, setCategory] = useState<{
-    id: string;
-    name: string;
-    description: string;
-  } | null>(null);
-  const [services, setServices] = useState<typeof mockServices>([]);
-  const [filteredServices, setFilteredServices] = useState<typeof mockServices>(
-    []
-  );
+  const [category, setCategory] = useState<Category | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingService, setEditingService] = useState<
-    (typeof mockServices)[0] | null
-  >(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
-    serviceId: number | null;
+    serviceId: string | null;
   }>({ isOpen: false, serviceId: null });
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
 
+  // Load category and services from API
+  const loadCategoryAndServices = async (page: number = 1, search?: string) => {
+    try {
+      setLoading(true);
+
+      // Load category details
+      const categoryData = await fetchCategoryById(categoryId);
+      setCategory(categoryData);
+
+      // Load services for this category with search
+      const servicesData = await fetchServicesByCategory(categoryId);
+
+      // Apply search filter if provided
+      let filteredData = servicesData;
+      if (search) {
+        filteredData = servicesData.filter(
+          (service) =>
+            service.name.toLowerCase().includes(search.toLowerCase()) ||
+            service.description.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
+      // Simple pagination simulation (API doesn't support pagination for services by category yet)
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedServices = filteredData.slice(startIndex, endIndex);
+
+      setServices(servicesData);
+      setFilteredServices(paginatedServices);
+      setTotal(filteredData.length);
+      setCurrentPage(page);
+      setTotalPages(Math.ceil(filteredData.length / limit));
+    } catch (error) {
+      console.error("Failed to load category and services:", error);
+      showApiErrorToast(error, "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load initial data
   useEffect(() => {
-    // Find the category and its services
-    const foundCategory = mockCategories.find((cat) => cat.id === categoryId);
-    const categoryServices = mockServices.filter(
-      (service) => service.categoryId === categoryId
-    );
-
-    setCategory(foundCategory || null);
-    setServices(categoryServices);
-    setFilteredServices(categoryServices);
+    loadCategoryAndServices(1);
   }, [categoryId]);
 
-  const handleSearch = (filters: {
-    searchTerm: string;
-    category: string;
-    status: string;
-    priceRange: [number, number];
-    duration: string;
-    isPrivate: boolean | null;
-    sortBy: string;
-    sortOrder: string;
-  }) => {
-    let filtered = [...services];
+  // Handle search
+  const handleSearch = useCallback(() => {
+    setCurrentPage(1);
+    loadCategoryAndServices(1, searchTerm || undefined);
+  }, [searchTerm, categoryId]);
 
-    if (filters.searchTerm) {
-      filtered = filtered.filter(
-        (service) =>
-          service.name
-            .toLowerCase()
-            .includes(filters.searchTerm.toLowerCase()) ||
-          service.description
-            .toLowerCase()
-            .includes(filters.searchTerm.toLowerCase())
-      );
-    }
-
-    if (filters.status) {
-      filtered = filtered.filter(
-        (service) => service.status === filters.status
-      );
-    }
-
-    if (
-      filters.priceRange &&
-      (filters.priceRange[0] > 0 || filters.priceRange[1] < 500)
-    ) {
-      filtered = filtered.filter(
-        (service) =>
-          service.finalPrice >= filters.priceRange[0] &&
-          service.finalPrice <= filters.priceRange[1]
-      );
-    }
-
-    if (filters.duration) {
-      filtered = filtered.filter(
-        (service) => service.duration === filters.duration
-      );
-    }
-
-    if (filters.isPrivate !== null) {
-      filtered = filtered.filter(
-        (service) => service.isPrivate === filters.isPrivate
-      );
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      if (filters.sortBy === "price") {
-        aValue = a.finalPrice;
-        bValue = b.finalPrice;
-      } else if (filters.sortBy === "duration") {
-        aValue = Number.parseInt(a.duration);
-        bValue = Number.parseInt(b.duration);
-      } else if (filters.sortBy === "name") {
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-      } else {
-        // Default to name sorting for unknown sortBy values
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-      }
-
-      if (filters.sortOrder === "desc") {
-        return aValue < bValue ? 1 : -1;
-      }
-      return aValue > bValue ? 1 : -1;
-    });
-
-    setFilteredServices(filtered);
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+    loadCategoryAndServices(1);
   };
 
-  const handleResetSearch = () => {
-    setFilteredServices(services);
+  // Handle Enter key press in search input
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
-  const handleAddService = (formData: {
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadCategoryAndServices(page, searchTerm || undefined);
+  };
+
+  const handleAddService = async (formData: {
     name: string;
     description: string;
     category: string;
@@ -220,31 +144,37 @@ export default function CategoryServicesPage() {
     isPrivate: boolean;
     finalPrice?: number;
   }) => {
-    const newService = {
-      id: Date.now(),
-      name: formData.name,
-      description: formData.description,
-      categoryId: categoryId,
-      duration: formData.duration,
-      price: Number.parseFloat(formData.price),
-      discount: Number.parseFloat(formData.discount) || 0,
-      finalPrice: formData.finalPrice || 0,
-      isPrivate: formData.isPrivate,
-      status: "active",
-    };
+    try {
+      setActionLoading(true);
+      await createService({
+        salon_id: DEFAULT_SALON_ID,
+        name: formData.name,
+        description: formData.description,
+        duration: formData.duration,
+        price: Number.parseFloat(formData.price) || 0,
+        is_public: !formData.isPrivate,
+        discount: Number.parseFloat(formData.discount) || 0,
+        is_completed: false,
+        category_ids: [Number.parseInt(categoryId)],
+      });
 
-    const updatedServices = [...services, newService];
-    setServices(updatedServices);
-    setFilteredServices(updatedServices);
-    setIsAddDialogOpen(false);
+      setIsAddDialogOpen(false);
+      // Reload services to get updated data
+      await loadCategoryAndServices(currentPage, searchTerm || undefined);
+    } catch (error) {
+      console.error("Failed to create service:", error);
+      showApiErrorToast(error, "Failed to create service");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleEditService = (service: (typeof mockServices)[0]) => {
+  const handleEditService = (service: Service) => {
     setEditingService(service);
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateService = (formData: {
+  const handleUpdateService = async (formData: {
     name: string;
     description: string;
     category: string;
@@ -256,43 +186,67 @@ export default function CategoryServicesPage() {
   }) => {
     if (!editingService) return;
 
-    const updatedService = {
-      ...editingService,
-      name: formData.name,
-      description: formData.description,
-      duration: formData.duration,
-      price: Number.parseFloat(formData.price),
-      discount: Number.parseFloat(formData.discount) || 0,
-      finalPrice: formData.finalPrice || 0,
-      isPrivate: formData.isPrivate,
-    };
+    try {
+      setActionLoading(true);
+      await updateService(editingService.id, {
+        name: formData.name,
+        description: formData.description,
+        duration: formData.duration,
+        price: Number.parseFloat(formData.price) || 0,
+        is_public: !formData.isPrivate,
+        discount: Number.parseFloat(formData.discount) || 0,
+        category_ids: [Number.parseInt(categoryId)],
+      });
 
-    const updatedServices = services.map((service) =>
-      service.id === editingService.id ? updatedService : service
-    );
-    setServices(updatedServices);
-    setFilteredServices(updatedServices);
-    setIsEditDialogOpen(false);
-    setEditingService(null);
+      setIsEditDialogOpen(false);
+      setEditingService(null);
+      // Reload services to get updated data
+      await loadCategoryAndServices(currentPage, searchTerm || undefined);
+    } catch (error) {
+      console.error("Failed to update service:", error);
+      showApiErrorToast(error, "Failed to update service");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleDeleteService = (id: number) => {
+  const handleDeleteService = (id: string) => {
     setDeleteConfirmation({ isOpen: true, serviceId: id });
   };
 
-  const confirmDeleteService = () => {
-    if (deleteConfirmation.serviceId) {
-      const updatedServices = services.filter(
-        (service) => service.id !== deleteConfirmation.serviceId
-      );
-      setServices(updatedServices);
-      setFilteredServices(updatedServices);
+  const confirmDeleteService = async () => {
+    if (!deleteConfirmation.serviceId) return;
+
+    try {
+      setActionLoading(true);
+      await deleteService(deleteConfirmation.serviceId);
+
+      setDeleteConfirmation({ isOpen: false, serviceId: null });
+      // Reload services to get updated data
+      await loadCategoryAndServices(currentPage, searchTerm || undefined);
+    } catch (error) {
+      console.error("Failed to delete service:", error);
+      showApiErrorToast(error, "Failed to delete service");
+    } finally {
+      setActionLoading(false);
     }
-    setDeleteConfirmation({ isOpen: false, serviceId: null });
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-2 text-muted-foreground">Loading services...</span>
+      </div>
+    );
+  }
+
   if (!category) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">Category not found</p>
+      </div>
+    );
   }
 
   return (
@@ -332,17 +286,41 @@ export default function CategoryServicesPage() {
               onSubmit={handleAddService}
               onCancel={() => setIsAddDialogOpen(false)}
               prefilledCategory={category.name}
+              isLoading={actionLoading}
             />
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Advanced Search */}
-      <AdvancedSearch
-        onSearch={handleSearch}
-        onReset={handleResetSearch}
-        type="services"
-      />
+      {/* Simple Search */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search services by name or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                className="pl-10 pr-10"
+              />
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <Button onClick={handleSearch} disabled={loading}>
+              <Search className="w-4 h-4 mr-2" />
+              Search
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -377,10 +355,14 @@ export default function CategoryServicesPage() {
                 <p className="text-sm font-medium text-green-700">Avg. Price</p>
                 <p className="text-2xl font-bold text-green-800">
                   $
-                  {(
-                    filteredServices.reduce((sum, s) => sum + s.finalPrice, 0) /
-                      filteredServices.length || 0
-                  ).toFixed(0)}
+                  {filteredServices.length > 0
+                    ? (
+                        filteredServices.reduce(
+                          (sum, s) => sum + s.price * (1 - s.discount / 100),
+                          0
+                        ) / filteredServices.length
+                      ).toFixed(0)
+                    : 0}
                 </p>
               </div>
             </div>
@@ -398,12 +380,18 @@ export default function CategoryServicesPage() {
                   Avg. Duration
                 </p>
                 <p className="text-2xl font-bold text-purple-800">
-                  {Math.round(
-                    filteredServices.reduce(
-                      (sum, s) => sum + Number.parseInt(s.duration),
-                      0
-                    ) / filteredServices.length || 0
-                  )}
+                  {filteredServices.length > 0
+                    ? Math.round(
+                        filteredServices.reduce(
+                          (sum, s) =>
+                            sum +
+                            Number.parseInt(
+                              s.duration.replace(/\D/g, "") || "0"
+                            ),
+                          0
+                        ) / filteredServices.length
+                      )
+                    : 0}
                   m
                 </p>
               </div>
@@ -422,7 +410,7 @@ export default function CategoryServicesPage() {
                   Private Services
                 </p>
                 <p className="text-2xl font-bold text-blue-800">
-                  {filteredServices.filter((s) => s.isPrivate).length}
+                  {filteredServices.filter((s) => !s.is_public).length}
                 </p>
               </div>
             </div>
@@ -445,14 +433,21 @@ export default function CategoryServicesPage() {
                   </CardTitle>
                 </div>
                 <div className="flex gap-1">
-                  {service.isPrivate && (
+                  {!service.is_public && (
                     <Badge className="bg-purple-500 text-white text-xs">
                       Private
                     </Badge>
                   )}
-                  <Badge className="bg-green-500 text-white text-xs">
-                    {service.status}
-                  </Badge>
+                  {service.is_public && (
+                    <Badge className="bg-green-500 text-white text-xs">
+                      Public
+                    </Badge>
+                  )}
+                  {service.is_completed && (
+                    <Badge className="bg-blue-500 text-white text-xs">
+                      Completed
+                    </Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -466,14 +461,17 @@ export default function CategoryServicesPage() {
                 <div className="flex items-center space-x-2">
                   <Clock className="w-4 h-4 text-blue-500" />
                   <span className="text-sm font-medium">
-                    {service.duration}m
+                    {service.duration}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <DollarSign className="w-4 h-4 text-green-500" />
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-green-600">
-                      ${service.finalPrice.toFixed(2)}
+                      $
+                      {(service.price * (1 - service.discount / 100)).toFixed(
+                        2
+                      )}
                     </span>
                     {service.discount > 0 && (
                       <span className="text-xs text-muted-foreground line-through">
@@ -522,18 +520,28 @@ export default function CategoryServicesPage() {
       </div>
 
       {/* No Results */}
-      {filteredServices.length === 0 && (
+      {filteredServices.length === 0 && !loading && (
         <Card className="p-12 text-center">
           <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">
             No services found
           </h3>
           <p className="text-sm text-muted-foreground">
-            Try adjusting your search filters or create a new service for this
-            category.
+            Try adjusting your search or create a new service for this category.
           </p>
         </Card>
       )}
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={total}
+        itemsPerPage={limit}
+        onPageChange={handlePageChange}
+        disabled={loading}
+        itemLabel="services"
+      />
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -550,7 +558,7 @@ export default function CategoryServicesPage() {
                 duration: editingService.duration,
                 price: editingService.price.toString(),
                 discount: editingService.discount.toString(),
-                isPrivate: editingService.isPrivate,
+                isPrivate: !editingService.is_public,
               }}
               onSubmit={handleUpdateService}
               onCancel={() => {
@@ -559,6 +567,7 @@ export default function CategoryServicesPage() {
               }}
               isEditing={true}
               prefilledCategory={category.name}
+              isLoading={actionLoading}
             />
           )}
         </DialogContent>

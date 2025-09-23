@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,218 +13,189 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Eye, FolderOpen, Package } from "lucide-react";
-import AdvancedSearch from "@/components/advanced-search";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  FolderOpen,
+  Package,
+  Loader2,
+  Search,
+  X,
+} from "lucide-react";
 import CategoryForm from "@/components/category-form";
 import ConfirmationModal from "@/components/confirmation-modal";
-
-// Mock data for categories
-const mockCategories = [
-  {
-    id: 1,
-    name: "Hair Services",
-    description: "Professional hair cutting, styling, and treatment services",
-    serviceCount: 12,
-    image: "/hair-salon-services.jpg",
-    status: "active",
-    services: ["Haircut", "Hair Coloring", "Hair Styling", "Hair Treatment"],
-  },
-  {
-    id: 2,
-    name: "Nail Services",
-    description: "Complete nail care including manicures and pedicures",
-    serviceCount: 8,
-    image: "/nail-salon-services.jpg",
-    status: "active",
-    services: ["Manicure", "Pedicure", "Nail Art", "Gel Polish"],
-  },
-  {
-    id: 3,
-    name: "Spa Services",
-    description: "Relaxing spa treatments and wellness services",
-    serviceCount: 15,
-    image: "/spa-wellness-services.jpg",
-    status: "active",
-    services: ["Massage", "Facial", "Body Treatment", "Aromatherapy"],
-  },
-  {
-    id: 4,
-    name: "Beauty Services",
-    description: "Makeup, skincare, and beauty enhancement services",
-    serviceCount: 10,
-    image: "/beauty-makeup-services.jpg",
-    status: "active",
-    services: ["Makeup", "Eyebrow Shaping", "Eyelash Extensions", "Skincare"],
-  },
-];
+import { Pagination } from "@/shared/components/pagination";
+import {
+  fetchCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  Category,
+} from "@/lib/categoryApi";
+import { showApiErrorToast } from "@/lib/errorToast";
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState(mockCategories);
-  const [filteredCategories, setFilteredCategories] = useState(mockCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<
-    (typeof mockCategories)[0] | null
-  >(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
-    categoryId: number | null;
+    categoryId: string | null;
   }>({ isOpen: false, categoryId: null });
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
+  const limit = 10;
 
-  const handleSearch = (filters: {
-    searchTerm: string;
-    category: string;
-    status: string;
-    priceRange: [number, number];
-    duration: string;
-    isPrivate: boolean | null;
-    sortBy: string;
-    sortOrder: string;
-  }) => {
-    let filtered = [...categories];
+  // Load categories from API
+  const loadCategories = async (page: number = 1, search?: string) => {
+    try {
+      setLoading(true);
 
-    // Search term filter
-    if (filters.searchTerm) {
-      filtered = filtered.filter(
-        (category) =>
-          category.name
-            .toLowerCase()
-            .includes(filters.searchTerm.toLowerCase()) ||
-          category.description
-            .toLowerCase()
-            .includes(filters.searchTerm.toLowerCase()) ||
-          category.services.some((service) =>
-            service.toLowerCase().includes(filters.searchTerm.toLowerCase())
-          )
-      );
+      const result = await fetchCategories(page, limit, search);
+
+      setCategories(result.categories);
+      setFilteredCategories(result.categories);
+      setCurrentPage(result.page);
+      setTotalPages(result.totalPages);
+      setTotal(result.total);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+      showApiErrorToast(error, "Failed to load categories");
+    } finally {
+      setLoading(false);
     }
-
-    // Status filter
-    if (filters.status) {
-      filtered = filtered.filter(
-        (category) => category.status === filters.status
-      );
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      if (filters.sortBy === "serviceCount") {
-        aValue = a.serviceCount;
-        bValue = b.serviceCount;
-      } else if (filters.sortBy === "name") {
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-      } else {
-        // Default to name sorting for unknown sortBy values
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-      }
-
-      if (filters.sortOrder === "desc") {
-        return aValue < bValue ? 1 : -1;
-      }
-      return aValue > bValue ? 1 : -1;
-    });
-
-    setFilteredCategories(filtered);
   };
 
-  const handleResetSearch = () => {
-    setFilteredCategories(categories);
+  // Load initial data
+  useEffect(() => {
+    loadCategories(1);
+  }, []);
+
+  // Handle search with debouncing
+  const handleSearch = useCallback(() => {
+    setCurrentPage(1);
+    loadCategories(1, searchTerm || undefined);
+  }, [searchTerm]);
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+    loadCategories(1);
   };
 
-  const handleAddCategory = (formData: {
+  // Handle Enter key press in search input
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadCategories(page, searchTerm || undefined);
+  };
+
+  const handleAddCategory = async (formData: {
     name: string;
     description: string;
-    services: string;
-    image?: string | File | null;
   }) => {
-    const newCategory = {
-      id: Date.now(),
-      name: formData.name,
-      description: formData.description,
-      serviceCount: formData.services.split(",").filter((s) => s.trim()).length,
-      image:
-        typeof formData.image === "string"
-          ? formData.image
-          : "/default-category.jpg",
-      status: "active",
-      services: formData.services
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s),
-    };
+    try {
+      setActionLoading(true);
+      await createCategory({
+        name: formData.name,
+        description: formData.description,
+        is_active: true,
+      });
 
-    const updatedCategories = [...categories, newCategory];
-    setCategories(updatedCategories);
-    setFilteredCategories(updatedCategories);
-    setIsAddDialogOpen(false);
+      setIsAddDialogOpen(false);
+      // Reload categories to get updated data
+      await loadCategories(currentPage, searchTerm || undefined);
+    } catch (error) {
+      console.error("Failed to create category:", error);
+      showApiErrorToast(error, "Failed to create category");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleEditCategory = (category: (typeof mockCategories)[0]) => {
+  const handleEditCategory = (category: Category) => {
     setEditingCategory(category);
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateCategory = (formData: {
+  const handleUpdateCategory = async (formData: {
     name: string;
     description: string;
-    services: string;
-    image?: string | File | null;
   }) => {
     if (!editingCategory) return;
 
-    const updatedCategory = {
-      ...editingCategory,
-      name: formData.name,
-      description: formData.description,
-      serviceCount: formData.services.split(",").filter((s) => s.trim()).length,
-      image:
-        typeof formData.image === "string"
-          ? formData.image
-          : editingCategory?.image || "/default-category.jpg",
-      services: formData.services
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s),
-    };
+    try {
+      setActionLoading(true);
+      await updateCategory(editingCategory.id, {
+        name: formData.name,
+        description: formData.description,
+        is_active: editingCategory.is_active,
+      });
 
-    const updatedCategories = categories.map((cat) =>
-      cat.id === editingCategory.id ? updatedCategory : cat
-    );
-    setCategories(updatedCategories);
-    setFilteredCategories(updatedCategories);
-    setIsEditDialogOpen(false);
-    setEditingCategory(null);
+      setIsEditDialogOpen(false);
+      setEditingCategory(null);
+      // Reload categories to get updated data
+      await loadCategories(currentPage, searchTerm || undefined);
+    } catch (error) {
+      console.error("Failed to update category:", error);
+      showApiErrorToast(error, "Failed to update category");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleDeleteCategory = (id: number) => {
+  const handleDeleteCategory = (id: string) => {
     setDeleteConfirmation({ isOpen: true, categoryId: id });
   };
 
-  const confirmDeleteCategory = () => {
-    if (deleteConfirmation.categoryId) {
-      const updatedCategories = categories.filter(
-        (cat) => cat.id !== deleteConfirmation.categoryId
-      );
-      setCategories(updatedCategories);
-      setFilteredCategories(updatedCategories);
+  const confirmDeleteCategory = async () => {
+    if (!deleteConfirmation.categoryId) return;
+
+    try {
+      setActionLoading(true);
+      await deleteCategory(deleteConfirmation.categoryId);
+
+      setDeleteConfirmation({ isOpen: false, categoryId: null });
+      // Reload categories to get updated data
+      await loadCategories(currentPage, searchTerm || undefined);
+    } catch (error) {
+      console.error("Failed to delete category:", error);
+      showApiErrorToast(error, "Failed to delete category");
+    } finally {
+      setActionLoading(false);
     }
-    setDeleteConfirmation({ isOpen: false, categoryId: null });
   };
 
-  const handleViewServices = (category: (typeof mockCategories)[0]) => {
+  const handleViewServices = (category: Category) => {
     router.push(`/dashboard/categories/${category.id}/services`);
   };
 
-  const totalServices = categories.reduce(
-    (sum, category) => sum + category.serviceCount,
-    0
-  );
+  // Removed service count calculation since we're not fetching individual counts
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-2 text-muted-foreground">
+          Loading categories...
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -253,17 +224,41 @@ export default function CategoriesPage() {
             <CategoryForm
               onSubmit={handleAddCategory}
               onCancel={() => setIsAddDialogOpen(false)}
+              isLoading={actionLoading}
             />
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Advanced Search */}
-      <AdvancedSearch
-        onSearch={handleSearch}
-        onReset={handleResetSearch}
-        type="categories"
-      />
+      {/* Simple Search */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search categories by name or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                className="pl-10 pr-10"
+              />
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <Button onClick={handleSearch} disabled={loading}>
+              <Search className="w-4 h-4 mr-2" />
+              Search
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -295,13 +290,11 @@ export default function CategoriesPage() {
                 <Package className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-green-700">
-                  Total Services
-                </p>
+                <p className="text-sm font-medium text-green-700">Displaying</p>
                 <p className="text-2xl font-bold text-green-800">
-                  {totalServices}
+                  {filteredCategories.length}
                 </p>
-                <p className="text-xs text-green-600">Across all categories</p>
+                <p className="text-xs text-green-600">Results shown</p>
               </div>
             </div>
           </CardContent>
@@ -315,17 +308,19 @@ export default function CategoriesPage() {
             key={category.id}
             className="group hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm border-border/50"
           >
-            <div className="relative overflow-hidden rounded-t-lg">
-              <Image
-                src={category.image || "/default-category.jpg"}
-                alt={category.name}
-                width={400}
-                height={192}
-                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute top-3 right-3">
-                <Badge className="bg-green-500 text-white">
-                  {category.status}
+            <div className="relative p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <FolderOpen className="w-6 h-6 text-white" />
+                </div>
+                <Badge
+                  className={
+                    category.is_active
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-500 text-white"
+                  }
+                >
+                  {category.is_active ? "active" : "inactive"}
                 </Badge>
               </div>
             </div>
@@ -345,22 +340,9 @@ export default function CategoriesPage() {
                   <div className="flex items-center space-x-2">
                     <Package className="w-4 h-4 text-blue-500" />
                     <span className="text-sm font-medium text-blue-600">
-                      {category.serviceCount} Services
+                      Category
                     </span>
                   </div>
-                </div>
-
-                <div className="flex flex-wrap gap-1">
-                  {category.services.slice(0, 3).map((service, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {service}
-                    </Badge>
-                  ))}
-                  {category.services.length > 3 && (
-                    <Badge variant="secondary" className="text-xs">
-                      +{category.services.length - 3} more
-                    </Badge>
-                  )}
                 </div>
 
                 <div className="flex gap-2 pt-2">
@@ -397,7 +379,7 @@ export default function CategoriesPage() {
       </div>
 
       {/* No Results */}
-      {filteredCategories.length === 0 && (
+      {filteredCategories.length === 0 && !loading && (
         <Card className="p-12 text-center">
           <FolderOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">
@@ -408,6 +390,17 @@ export default function CategoriesPage() {
           </p>
         </Card>
       )}
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={total}
+        itemsPerPage={limit}
+        onPageChange={handlePageChange}
+        disabled={loading}
+        itemLabel="categories"
+      />
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -420,8 +413,6 @@ export default function CategoriesPage() {
               initialData={{
                 name: editingCategory.name,
                 description: editingCategory.description,
-                services: editingCategory.services.join(", "),
-                image: editingCategory.image,
               }}
               onSubmit={handleUpdateCategory}
               onCancel={() => {
@@ -429,6 +420,7 @@ export default function CategoriesPage() {
                 setEditingCategory(null);
               }}
               isEditing={true}
+              isLoading={actionLoading}
             />
           )}
         </DialogContent>
