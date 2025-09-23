@@ -41,6 +41,7 @@ import {
   Package,
   Loader2,
   AlertCircle,
+  FileText,
 } from "lucide-react";
 import {
   Product,
@@ -80,6 +81,10 @@ export function InventoryManagement() {
     isPublic: true,
     discount: 0,
   });
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // Fetch products on component mount
   useEffect(() => {
@@ -230,6 +235,26 @@ export function InventoryManagement() {
     }
   };
 
+  const filterItems = (items: InventoryItem[]) => {
+    return items.filter((item) => {
+      // Search term filter
+      const matchesSearch = item.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      // Category filter
+      const matchesCategory =
+        selectedCategory === "all" || item.category === selectedCategory;
+
+      // Price range filter
+      const matchesPrice =
+        (!priceRange.min || item.price >= Number(priceRange.min)) &&
+        (!priceRange.max || item.price <= Number(priceRange.max));
+
+      return matchesSearch && matchesCategory && matchesPrice;
+    });
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -361,27 +386,166 @@ export function InventoryManagement() {
         </Card>
       </div>
 
-      {/* Inventory Table */}
-      <Card>
+      {/* Search and Filters Card */}
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Inventory Items</CardTitle>
-          <CardDescription>Manage your products and supplies</CardDescription>
+          <CardTitle>Search and Filters</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="grid gap-6 md:grid-cols-4">
+            {/* Search Bar */}
+            <div>
+              <Label htmlFor="search">Search Items</Label>
+              <Input
+                id="search"
+                placeholder="Search by name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <Label htmlFor="category-filter">Category</Label>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="hair-care">Hair Care</SelectItem>
+                  <SelectItem value="skin-care">Skin Care</SelectItem>
+                  <SelectItem value="tools">Tools</SelectItem>
+                  <SelectItem value="accessories">Accessories</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Price Range Filter */}
+            <div>
+              <Label>Price Range</Label>
+              <div className="flex items-center space-x-2 mt-1">
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={priceRange.min}
+                  onChange={(e) =>
+                    setPriceRange({ ...priceRange, min: e.target.value })
+                  }
+                />
+                <span>-</span>
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={priceRange.max}
+                  onChange={(e) =>
+                    setPriceRange({ ...priceRange, max: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("all");
+                  setPriceRange({ min: "", max: "" });
+                }}
+                className="w-full"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Inventory Table */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Inventory Items</CardTitle>
+            <CardDescription>Manage your products and supplies</CardDescription>
+          </div>
+          <Button
+            onClick={() => {
+              // Add PDF generation logic here
+              console.log("Generate PDF clicked");
+            }}
+            className="bg-primary hover:bg-primary/90"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Generate PDF
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 mb-4">
+            {/* Empty space for margin */}
+            <div className="h-2">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="hair-care">Hair Care</SelectItem>
+                    <SelectItem value="skin-care">Skin Care</SelectItem>
+                    <SelectItem value="tools">Tools</SelectItem>
+                    <SelectItem value="accessories">Accessories</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="sm:col-span-1">
+                <Label htmlFor="price-range">Price Range ($)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    id="price-range-min"
+                    type="number"
+                    value={priceRange.min}
+                    onChange={(e) =>
+                      setPriceRange({
+                        ...priceRange,
+                        min: e.target.value,
+                      })
+                    }
+                    placeholder="Min"
+                  />
+                  <Input
+                    id="price-range-max"
+                    type="number"
+                    value={priceRange.max}
+                    onChange={(e) =>
+                      setPriceRange({
+                        ...priceRange,
+                        max: e.target.value,
+                      })
+                    }
+                    placeholder="Max"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Item</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Updated</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-center">Quantity</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-right">Discount (%)</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {filterItems(items).map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
