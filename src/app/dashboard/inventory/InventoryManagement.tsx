@@ -486,52 +486,6 @@ export function InventoryManagement() {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 mb-4">
-            {/* Empty space for margin */}
-            <div className="h-2">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="hair-care">Hair Care</SelectItem>
-                    <SelectItem value="skin-care">Skin Care</SelectItem>
-                    <SelectItem value="tools">Tools</SelectItem>
-                    <SelectItem value="accessories">Accessories</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="sm:col-span-1">
-                <Label htmlFor="price-range">Price Range ($)</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    id="price-range-min"
-                    type="number"
-                    value={priceRange.min}
-                    onChange={(e) =>
-                      setPriceRange({
-                        ...priceRange,
-                        min: e.target.value,
-                      })
-                    }
-                    placeholder="Min"
-                  />
-                  <Input
-                    id="price-range-max"
-                    type="number"
-                    value={priceRange.max}
-                    onChange={(e) =>
-                      setPriceRange({
-                        ...priceRange,
-                        max: e.target.value,
-                      })
-                    }
-                    placeholder="Max"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -558,16 +512,16 @@ export function InventoryManagement() {
                   <TableCell>
                     <Badge variant="outline">{item.category}</Badge>
                   </TableCell>
-                  <TableCell>${item.price.toFixed(2)}</TableCell>
-                  <TableCell>{item.quantity}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-right">
+                    ${item.price.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-center">{item.quantity}</TableCell>
+                  <TableCell className="text-center">
                     <Badge variant={getStatusBadgeVariant(item.status)}>
                       {item.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    {new Date(item.lastUpdated).toLocaleDateString()}
-                  </TableCell>
+                  <TableCell className="text-right">{item.discount}%</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
                       <Button
