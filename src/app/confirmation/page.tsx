@@ -18,6 +18,7 @@ import {
   Download,
   Share2,
   Home,
+  ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -55,7 +56,6 @@ export default function ConfirmationPage() {
               confirmation to your email.
             </p>
           </div>
-
           {/* Booking Details */}
           <Card className="mb-6">
             <CardHeader>
@@ -135,7 +135,6 @@ export default function ConfirmationPage() {
               </div>
             </CardContent>
           </Card>
-
           {/* Contact Information */}
           <Card className="mb-6">
             <CardHeader>
@@ -179,8 +178,14 @@ export default function ConfirmationPage() {
             </CardContent>
           </Card>
 
+          <Link href="/">
+            <Button variant="ghost" className="w-full" size="lg">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </Link>
           {/* Action Buttons */}
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <Button className="flex-1" size="lg">
                 <Download className="w-4 h-4 mr-2" />
@@ -211,10 +216,9 @@ export default function ConfirmationPage() {
                 Back to Home
               </Button>
             </Link>
-          </div>
-
+          </div> */}
           {/* Important Notes */}
-          <Card className="mt-6 bg-blue-50 border-blue-200">
+          {/* <Card className="mt-6 bg-blue-50 border-blue-200">
             <CardContent className="p-4">
               <h4 className="font-medium text-foreground mb-2">
                 Important Notes
@@ -228,7 +232,7 @@ export default function ConfirmationPage() {
                 <li>• Contact the salon directly for any changes or queries</li>
               </ul>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </div>

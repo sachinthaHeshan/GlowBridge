@@ -1,6 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  fetchStaffAvailability,
+  StaffAvailabilityItem,
+  updateStaffAvailability,
+} from "@/lib/userApi";
 import {
   Card,
   CardContent,
@@ -20,6 +25,8 @@ interface DaySchedule {
   enabled: boolean;
   start: string;
   end: string;
+  availabilityId?: string; // ID for updating this specific day's availability
+  dayOfWeek: number; // 1-7 for API calls
 }
 
 type DayOfWeek =
@@ -31,8 +38,19 @@ type DayOfWeek =
   | "saturday"
   | "sunday";
 
+// Map day number to day name (API uses 1-7 for Mon-Sun)
+const dayNumberToName: Record<number, DayOfWeek> = {
+  1: "monday",
+  2: "tuesday",
+  3: "wednesday",
+  4: "thursday",
+  5: "friday",
+  6: "saturday",
+  7: "sunday",
+};
+
 interface Staff {
-  id: number;
+  id: string;
   name: string;
   avatar: string;
   role: string;
@@ -40,83 +58,98 @@ interface Staff {
   schedule: Record<DayOfWeek, DaySchedule>;
   totalHours: number;
   status: string;
+  email: string;
+  contact_number: string;
 }
 
-// Dummy data for staff working hours
-const staffWorkingHours = [
-  {
-    id: 1,
-    name: "Emma Wilson",
-    avatar: "/professional-woman.png",
-    role: "Senior Stylist",
-    salon: "Downtown Salon",
-    schedule: {
-      monday: { enabled: true, start: "09:00", end: "17:00" },
-      tuesday: { enabled: true, start: "09:00", end: "17:00" },
-      wednesday: { enabled: true, start: "09:00", end: "17:00" },
-      thursday: { enabled: true, start: "09:00", end: "17:00" },
-      friday: { enabled: true, start: "09:00", end: "17:00" },
-      saturday: { enabled: true, start: "10:00", end: "16:00" },
-      sunday: { enabled: false, start: "09:00", end: "17:00" },
-    },
-    totalHours: 46,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "James Rodriguez",
-    avatar: "/man-professional.jpg",
-    role: "Barber",
-    salon: "Downtown Salon",
-    schedule: {
-      monday: { enabled: true, start: "10:00", end: "18:00" },
-      tuesday: { enabled: true, start: "10:00", end: "18:00" },
-      wednesday: { enabled: false, start: "10:00", end: "18:00" },
-      thursday: { enabled: true, start: "10:00", end: "18:00" },
-      friday: { enabled: true, start: "10:00", end: "18:00" },
-      saturday: { enabled: true, start: "09:00", end: "17:00" },
-      sunday: { enabled: true, start: "11:00", end: "15:00" },
-    },
-    totalHours: 44,
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Lisa Thompson",
-    avatar: "/woman-therapist.jpg",
-    role: "Esthetician",
-    salon: "Spa & Wellness",
-    schedule: {
-      monday: { enabled: true, start: "08:00", end: "16:00" },
-      tuesday: { enabled: true, start: "08:00", end: "16:00" },
-      wednesday: { enabled: true, start: "08:00", end: "16:00" },
-      thursday: { enabled: true, start: "08:00", end: "16:00" },
-      friday: { enabled: true, start: "08:00", end: "16:00" },
-      saturday: { enabled: false, start: "08:00", end: "16:00" },
-      sunday: { enabled: false, start: "08:00", end: "16:00" },
-    },
-    totalHours: 40,
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Sophie Chen",
-    avatar: "/woman-asian-professional.jpg",
-    role: "Nail Technician",
-    salon: "Beauty Lounge",
-    schedule: {
-      monday: { enabled: true, start: "09:30", end: "17:30" },
-      tuesday: { enabled: true, start: "09:30", end: "17:30" },
-      wednesday: { enabled: true, start: "09:30", end: "17:30" },
-      thursday: { enabled: true, start: "09:30", end: "17:30" },
-      friday: { enabled: true, start: "09:30", end: "17:30" },
-      saturday: { enabled: true, start: "10:00", end: "18:00" },
-      sunday: { enabled: false, start: "09:30", end: "17:30" },
-    },
-    totalHours: 48,
-    status: "Active",
-  },
-];
+// Transform API data to UI format
+const transformStaffAvailability = (
+  apiData: StaffAvailabilityItem[]
+): Staff[] => {
+  // Group by staff member
+  const staffMap = new Map<string, Staff>();
+
+  apiData.forEach((item) => {
+    const staffId = item.salon_staff_id;
+
+    if (!staffMap.has(staffId)) {
+      // Initialize staff member
+      const emptySchedule: Record<DayOfWeek, DaySchedule> = {
+        monday: { enabled: false, start: "09:00", end: "17:00", dayOfWeek: 1 },
+        tuesday: { enabled: false, start: "09:00", end: "17:00", dayOfWeek: 2 },
+        wednesday: {
+          enabled: false,
+          start: "09:00",
+          end: "17:00",
+          dayOfWeek: 3,
+        },
+        thursday: {
+          enabled: false,
+          start: "09:00",
+          end: "17:00",
+          dayOfWeek: 4,
+        },
+        friday: { enabled: false, start: "09:00", end: "17:00", dayOfWeek: 5 },
+        saturday: {
+          enabled: false,
+          start: "09:00",
+          end: "17:00",
+          dayOfWeek: 6,
+        },
+        sunday: { enabled: false, start: "09:00", end: "17:00", dayOfWeek: 7 },
+      };
+
+      staffMap.set(staffId, {
+        id: staffId,
+        name: `${item.first_name} ${item.last_name}`,
+        avatar: "", // No avatar in API response
+        role: item.role,
+        salon: item.salon_name,
+        schedule: emptySchedule,
+        totalHours: 0,
+        status: "Active",
+        email: item.email,
+        contact_number: item.contact_number,
+      });
+    }
+
+    // Update schedule for this day
+    const staff = staffMap.get(staffId)!;
+    const dayName = dayNumberToName[item.day_of_week];
+
+    if (dayName) {
+      staff.schedule[dayName] = {
+        enabled: item.is_available,
+        start: item.start_time.substring(0, 5), // Convert "HH:MM:SS" to "HH:MM"
+        end: item.end_time.substring(0, 5),
+        availabilityId: item.id,
+        dayOfWeek: item.day_of_week,
+      };
+    }
+  });
+
+  // Calculate total hours for each staff member
+  staffMap.forEach((staff) => {
+    let totalHours = 0;
+    Object.values(staff.schedule).forEach((day) => {
+      if (day.enabled) {
+        const startHour = parseInt(day.start.split(":")[0]);
+        const startMin = parseInt(day.start.split(":")[1]);
+        const endHour = parseInt(day.end.split(":")[0]);
+        const endMin = parseInt(day.end.split(":")[1]);
+
+        const startTotalMin = startHour * 60 + startMin;
+        const endTotalMin = endHour * 60 + endMin;
+        const dayHours = (endTotalMin - startTotalMin) / 60;
+
+        totalHours += dayHours;
+      }
+    });
+    staff.totalHours = Math.round(totalHours);
+  });
+
+  return Array.from(staffMap.values());
+};
 
 const daysOfWeek: Array<{ key: DayOfWeek; label: string }> = [
   { key: "monday", label: "Monday" },
@@ -128,19 +161,70 @@ const daysOfWeek: Array<{ key: DayOfWeek; label: string }> = [
   { key: "sunday", label: "Sunday" },
 ];
 
-function StaffScheduleCard({ staff }: { staff: Staff }) {
+function StaffScheduleCard({
+  staff,
+  onUpdate,
+}: {
+  staff: Staff;
+  onUpdate: () => void;
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedSchedule, setEditedSchedule] = useState(staff.schedule);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const handleSave = () => {
-    // Here you would typically save to your backend
-    console.log("Saving schedule for", staff.name, editedSchedule);
-    setIsEditing(false);
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      // Find changed days and update them
+      const updatePromises: Promise<{ message: string }>[] = [];
+
+      daysOfWeek.forEach((day) => {
+        const originalDay = staff.schedule[day.key];
+        const editedDay = editedSchedule[day.key];
+
+        // Check if this day has changes
+        const hasChanges =
+          originalDay.enabled !== editedDay.enabled ||
+          originalDay.start !== editedDay.start ||
+          originalDay.end !== editedDay.end;
+
+        if (hasChanges && editedDay.availabilityId) {
+          const updatePromise = updateStaffAvailability(
+            editedDay.availabilityId,
+            {
+              day_of_week: editedDay.dayOfWeek,
+              start_time: editedDay.start,
+              end_time: editedDay.end,
+              is_available: editedDay.enabled,
+            }
+          );
+          updatePromises.push(updatePromise);
+        }
+      });
+
+      // Wait for all updates to complete
+      if (updatePromises.length > 0) {
+        await Promise.all(updatePromises);
+        console.log("Successfully updated schedule for", staff.name);
+        onUpdate(); // Refresh the data
+      }
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating schedule:", error);
+      setSaveError("Failed to save changes. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
     setEditedSchedule(staff.schedule);
     setIsEditing(false);
+    setSaveError(null);
   };
 
   const toggleDay = (day: DayOfWeek) => {
@@ -208,11 +292,16 @@ function StaffScheduleCard({ staff }: { staff: Staff }) {
               </Button>
             ) : (
               <div className="flex gap-1">
-                <Button size="sm" onClick={handleSave}>
+                <Button size="sm" onClick={handleSave} disabled={isSaving}>
                   <Save className="h-3 w-3 mr-1" />
-                  Save
+                  {isSaving ? "Saving..." : "Save"}
                 </Button>
-                <Button size="sm" variant="outline" onClick={handleCancel}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                >
                   <X className="h-3 w-3 mr-1" />
                   Cancel
                 </Button>
@@ -222,6 +311,11 @@ function StaffScheduleCard({ staff }: { staff: Staff }) {
         </div>
       </CardHeader>
       <CardContent>
+        {saveError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{saveError}</p>
+          </div>
+        )}
         <div className="space-y-3">
           {daysOfWeek.map((day) => {
             const daySchedule = isEditing
@@ -299,6 +393,80 @@ function StaffScheduleCard({ staff }: { staff: Staff }) {
 }
 
 export default function WorkingHoursPage() {
+  const [staffWorkingHours, setStaffWorkingHours] = useState<Staff[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadStaffAvailability = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const apiData = await fetchStaffAvailability();
+      const transformedData = transformStaffAvailability(apiData);
+      setStaffWorkingHours(transformedData);
+    } catch (err) {
+      console.error("Error fetching staff availability:", err);
+      setError("Failed to load staff availability data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStaffAvailability();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Staff Working Hours
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Loading staff availability data...
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="pb-2">
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-gray-200 rounded w-12 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-20"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Staff Working Hours
+            </h1>
+            <p className="text-red-600 mt-2">{error}</p>
+          </div>
+          <Button
+            onClick={() => window.location.reload()}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -373,9 +541,27 @@ export default function WorkingHoursPage() {
 
       {/* Staff Schedule Cards */}
       <div className="space-y-6">
-        {staffWorkingHours.map((staff) => (
-          <StaffScheduleCard key={staff.id} staff={staff} />
-        ))}
+        {staffWorkingHours.length > 0 ? (
+          staffWorkingHours.map((staff) => (
+            <StaffScheduleCard
+              key={staff.id}
+              staff={staff}
+              onUpdate={loadStaffAvailability}
+            />
+          ))
+        ) : (
+          <Card className="p-8 text-center">
+            <CardContent>
+              <p className="text-gray-500">No staff availability data found.</p>
+              <Button
+                onClick={() => window.location.reload()}
+                className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                Refresh
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

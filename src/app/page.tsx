@@ -96,7 +96,6 @@ export default function HomePage() {
           </div>
         </div>
       </header>
-
       {/* Hero Section */}
       <section className="py-16 px-4">
         <div className="container mx-auto text-center max-w-4xl">
@@ -117,6 +116,7 @@ export default function HomePage() {
                 <Input
                   placeholder="Search services, salons, or treatments..."
                   className="border-0 bg-transparent focus-visible:ring-0 text-base"
+                  onClick={() => (window.location.href = "/services")}
                 />
               </div>
               <div className="flex items-center gap-2 px-3 border-l border-border">
@@ -124,9 +124,14 @@ export default function HomePage() {
                 <Input
                   placeholder="Location"
                   className="border-0 bg-transparent focus-visible:ring-0 text-base w-32"
+                  onClick={() => (window.location.href = "/services")}
                 />
               </div>
-              <Button size="lg" className="px-8">
+              <Button
+                size="lg"
+                className="px-8"
+                onClick={() => (window.location.href = "/services")}
+              >
                 Search
               </Button>
             </div>
@@ -161,7 +166,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
       {/* Service Categories */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto">
@@ -175,7 +179,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Link href="/services/hair">
+            <Link href="/services">
               <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border/50 hover:border-primary/20">
                 <CardHeader className="text-center pb-4">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
@@ -195,7 +199,7 @@ export default function HomePage() {
               </Card>
             </Link>
 
-            <Link href="/services/facial">
+            <Link href="/services">
               <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border/50 hover:border-primary/20">
                 <CardHeader className="text-center pb-4">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
@@ -215,7 +219,7 @@ export default function HomePage() {
               </Card>
             </Link>
 
-            <Link href="/services/nails">
+            <Link href="/services">
               <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border/50 hover:border-primary/20">
                 <CardHeader className="text-center pb-4">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
@@ -235,7 +239,7 @@ export default function HomePage() {
               </Card>
             </Link>
 
-            <Link href="/services/spa">
+            <Link href="/services">
               <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border/50 hover:border-primary/20">
                 <CardHeader className="text-center pb-4">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
@@ -257,8 +261,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Featured Salons */}
+      {/* Featured Salons
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-12">
@@ -347,8 +350,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
-
+      </section> */}
       {/* CTA Section */}
       <section className="py-16 px-4 bg-primary/5">
         <div className="container mx-auto text-center max-w-3xl">
@@ -376,7 +378,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
       {/* Footer */}
       <footer className="py-12 px-4 bg-card border-t border-border">
         <div className="container mx-auto">

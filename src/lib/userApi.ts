@@ -64,6 +64,39 @@ interface DeleteResponse {
   message: string;
 }
 
+// Staff Availability interfaces
+export interface StaffAvailabilityItem {
+  id: string;
+  salon_staff_id: string;
+  day_of_week: number; // 1-7 (Monday to Sunday)
+  start_time: string; // "HH:MM:SS" format
+  end_time: string; // "HH:MM:SS" format
+  is_available: boolean;
+  first_name: string;
+  last_name: string;
+  email: string;
+  contact_number: string;
+  role: string;
+  salon_name: string;
+}
+
+interface StaffAvailabilityResponse {
+  data: StaffAvailabilityItem[];
+  message: string;
+}
+
+// Update staff availability payload
+interface UpdateStaffAvailabilityPayload {
+  day_of_week: number;
+  start_time: string; // "HH:MM" format
+  end_time: string; // "HH:MM" format
+  is_available: boolean;
+}
+
+interface UpdateStaffAvailabilityResponse {
+  message: string;
+}
+
 // Map UserRole enum or string to backend API role (since backend expects specific strings)
 const mapUserRoleToBackendRole = (userRole: UserRole | string): string => {
   // Handle string inputs (like "CUSTOMER", "ADMIN", etc.)
@@ -366,4 +399,28 @@ export const deleteUser = async (id: string): Promise<{ message: string }> => {
   return (await apiRequest(`/users/${id}`, {
     method: "DELETE",
   })) as DeleteResponse;
+};
+
+// Fetch staff availability
+export const fetchStaffAvailability = async (): Promise<
+  StaffAvailabilityItem[]
+> => {
+  const response = (await apiRequest(
+    "/staff-availability"
+  )) as StaffAvailabilityResponse;
+  return response.data;
+};
+
+// Update staff availability
+export const updateStaffAvailability = async (
+  availabilityId: string,
+  updateData: UpdateStaffAvailabilityPayload
+): Promise<{ message: string }> => {
+  // Send payload directly - API expects HH:MM format
+  const response = (await apiRequest(`/staff-availability/${availabilityId}`, {
+    method: "PUT",
+    body: JSON.stringify(updateData),
+  })) as UpdateStaffAvailabilityResponse;
+
+  return response;
 };

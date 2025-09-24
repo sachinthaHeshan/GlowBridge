@@ -70,7 +70,7 @@ export default async function SalonSelectionPage({
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/services/hair">
+            <Link href="/services">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
@@ -209,7 +209,7 @@ export default async function SalonSelectionPage({
                         </span>
                       </div>
                       <Link href={`/book/${serviceId}/salon/${salon.id}`}>
-                        <Button>Select Salon</Button>
+                        <Button>Book Now</Button>
                       </Link>
                     </div>
                   </div>
