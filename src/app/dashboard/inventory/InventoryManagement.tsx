@@ -65,7 +65,7 @@ export function InventoryManagement() {
   const [error, setError] = useState<string | null>(null);
 
   // Default salon ID - in a real app, this would come from user context or route params
-  const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55"; // You may want to get this from props or context
+  const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55"; 
 
   const [formData, setFormData] = useState({
     name: "",
@@ -314,7 +314,7 @@ export function InventoryManagement() {
   // Inventory management view
   return (
     <div className="space-y-6">
-      {/* Header with back button */}
+      {}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div>
@@ -336,7 +336,7 @@ export function InventoryManagement() {
         </Button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards  need to change*/}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -355,8 +355,9 @@ export function InventoryManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            
             <div className="text-2xl font-bold text-green-500">
-              {items.filter((i) => i.status === "in-stock").length}
+              {items.filter((i) => i.status === "in-stock").length} 
             </div>
           </CardContent>
         </Card>
@@ -484,6 +485,14 @@ export function InventoryManagement() {
             <FileText className="h-4 w-4 mr-2" />
             Generate PDF
           </Button>
+           <Button
+          onClick={handleAddItem}
+          className="bg-primary hover:bg-primary/90"
+          disabled={saving}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Item
+        </Button>
         </CardHeader>
         <CardContent>
           <Table>
