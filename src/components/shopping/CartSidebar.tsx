@@ -1,12 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { X, Plus, Minus, ShoppingBag, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useShoppingCart } from "./ShoppingProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import AuthModal from "./AuthModal";
 
 export default function CartSidebar() {
   const {
@@ -17,11 +19,29 @@ export default function CartSidebar() {
     setIsCartOpen,
     updateQuantity,
     removeFromCart,
+    clearInvalidItems,
   } = useShoppingCart();
 
+  const { userData } = useAuth();
   const router = useRouter();
 
+  // Auth modal state
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
   const handleProceedToPayment = () => {
+    if (userData) {
+      // User is authenticated, proceed to payment
+      setIsCartOpen(false);
+      router.push("/payment");
+    } else {
+      // User not authenticated, show auth modal
+      setAuthModalOpen(true);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    // After successful authentication, proceed to payment
+    setAuthModalOpen(false);
     setIsCartOpen(false);
     router.push("/payment");
   };
@@ -60,6 +80,30 @@ export default function CartSidebar() {
               <X className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Invalid Items Warning */}
+          {cartItems.some((item) => !item.originalId) && (
+            <div className="p-4 bg-destructive/10 border-b border-destructive/20">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm text-destructive font-medium">
+                    Some cart items are outdated
+                  </p>
+                  <p className="text-xs text-destructive/80">
+                    These items cannot be ordered. Clear them to proceed.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={clearInvalidItems}
+                  className="ml-2"
+                >
+                  Clear Invalid
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto p-6">
@@ -211,6 +255,14 @@ export default function CartSidebar() {
           )}
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultMode="login"
+        onSuccess={handleAuthSuccess}
+      />
     </>
   );
 }

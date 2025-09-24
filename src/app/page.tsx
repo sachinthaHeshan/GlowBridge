@@ -22,6 +22,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -301,9 +302,11 @@ export default function HomePage() {
                 className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
               >
                 <div className="aspect-video bg-muted relative overflow-hidden">
-                  <img
+                  <Image
                     src={salon.image || "/placeholder.svg"}
                     alt={salon.name}
+                    width={400}
+                    height={200}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>

@@ -84,7 +84,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       name: "Working Hours",
       href: "/dashboard/working-hours",
       icon: Clock,
-      permission: [UserRole.SALON_OWNER, UserRole.STAFF],
+      permission: [UserRole.SALON_OWNER],
       description: "Staff working hours",
     },
     {
@@ -97,7 +97,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     {
       name: "All Appointments",
       href: "/dashboard/staff-appointments",
-      permission: [UserRole.STAFF],
+      permission: [UserRole.SALON_OWNER],
       icon: Users,
       description: "All appointments",
     },

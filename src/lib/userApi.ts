@@ -245,7 +245,7 @@ export const fetchUserByFirebaseUID = async (
   firebaseUid: string
 ): Promise<User> => {
   const response = await apiRequest(`/users/firebase/${firebaseUid}`);
-
+  console.log(1111, response);
   // Handle the response format from your API: {"success":true,"message":"User retrieved successfully","data":{...}}
   const apiResponse = response as {
     success: boolean;

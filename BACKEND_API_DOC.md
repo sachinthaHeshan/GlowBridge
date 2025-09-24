@@ -221,6 +221,88 @@ curl -X DELETE http://localhost:3005/api/users/$USER_ID
 
 ---
 
+## Orders
+
+### Create order
+
+- Method: POST
+- Path: `/orders`
+- Body:
+
+```json
+{
+  "user_id": "115de678-3e5c-4599-86ac-6b294934a2e4",
+  "items": [
+    {
+      "product_id": "54c9132e-7540-40e7-8261-e2264c89ce7f",
+      "quantity": 2,
+      "price": 15.0
+    },
+    {
+      "product_id": "a1b2c3d4-5678-90ab-cdef-123456789012",
+      "quantity": 1,
+      "price": 45.0
+    }
+  ],
+  "description": "Complete beauty package - manicure, facial, and hair treatment",
+  "payment_type": "Digital Wallet - PayPal"
+}
+```
+
+- Response: 201
+
+```json
+{
+  "id": "8013856c-4d89-44d6-a750-b2ec999fc501",
+  "user_id": "115de678-3e5c-4599-86ac-6b294934a2e4",
+  "description": "Complete beauty package - manicure, facial, and hair treatment",
+  "payment_type": "Digital Wallet - PayPal",
+  "amount": 75.0,
+  "is_paid": false,
+  "items": [
+    {
+      "id": "bf25d056-d213-461c-9c5d-a59851df57a4",
+      "order_id": "8013856c-4d89-44d6-a750-b2ec999fc501",
+      "product_id": "54c9132e-7540-40e7-8261-e2264c89ce7f",
+      "quantity": 2,
+      "price": 15.0,
+      "created_at": "2025-09-24T14:48:11.633Z",
+      "updated_at": "2025-09-24T14:48:11.633Z"
+    },
+    {
+      "id": "c1d2e3f4-g5h6-i7j8-k9l0-m1n2o3p4q5r6",
+      "order_id": "8013856c-4d89-44d6-a750-b2ec999fc501",
+      "product_id": "a1b2c3d4-5678-90ab-cdef-123456789012",
+      "quantity": 1,
+      "price": 45.0,
+      "created_at": "2025-09-24T14:48:11.633Z",
+      "updated_at": "2025-09-24T14:48:11.633Z"
+    }
+  ]
+}
+```
+
+- cURL
+
+```bash
+curl -X POST http://localhost:3005/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "115de678-3e5c-4599-86ac-6b294934a2e4",
+    "items": [
+      {
+        "product_id": "54c9132e-7540-40e7-8261-e2264c89ce7f",
+        "quantity": 2,
+        "price": 15.00
+      }
+    ],
+    "description": "Complete beauty package order",
+    "payment_type": "Credit Card"
+  }'
+```
+
+---
+
 ## Salons
 
 Currently implemented route:

@@ -8,7 +8,6 @@ import {
   Shield,
   CheckCircle,
   XCircle,
-  User,
   MapPin,
   ChevronRight,
   ChevronLeft,
@@ -18,9 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useShoppingCart } from "@/components/shopping/ShoppingProvider";
+import { useAuth } from "@/contexts/AuthContext";
+import { createOrder, CreateOrderItem, ApiError } from "@/lib/orderApi";
 
 interface PaymentFormData {
-  email: string;
   firstName: string;
   lastName: string;
   address: string;
@@ -48,18 +48,12 @@ interface PaymentResult {
 const paymentSteps: PaymentStep[] = [
   {
     id: 1,
-    title: "Contact Information",
-    description: "Enter your email address",
-    icon: User,
-  },
-  {
-    id: 2,
     title: "Shipping Details",
     description: "Your delivery address",
     icon: MapPin,
   },
   {
-    id: 3,
+    id: 2,
     title: "Payment Method",
     description: "Card details and confirmation",
     icon: CreditCard,
@@ -69,10 +63,10 @@ const paymentSteps: PaymentStep[] = [
 export default function PaymentPage() {
   const router = useRouter();
   const { cartItems, cartTotal, clearCart } = useShoppingCart();
+  const { userData } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<PaymentFormData>({
-    email: "",
     firstName: "",
     lastName: "",
     address: "",
@@ -107,17 +101,7 @@ export default function PaymentPage() {
     let isValid = true;
 
     switch (step) {
-      case 1: // Contact Information
-        if (!formData.email) {
-          newErrors.email = "Email is required";
-          isValid = false;
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-          newErrors.email = "Email is invalid";
-          isValid = false;
-        }
-        break;
-
-      case 2: // Shipping Details
+      case 1: // Shipping Details
         if (!formData.firstName) {
           newErrors.firstName = "First name is required";
           isValid = false;
@@ -140,7 +124,7 @@ export default function PaymentPage() {
         }
         break;
 
-      case 3: // Payment Method
+      case 2: // Payment Method
         if (!formData.cardholderName) {
           newErrors.cardholderName = "Cardholder name is required";
           isValid = false;
@@ -175,12 +159,12 @@ export default function PaymentPage() {
   };
 
   const validateForm = (): boolean => {
-    return validateStep(1) && validateStep(2) && validateStep(3);
+    return validateStep(1) && validateStep(2);
   };
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3));
+      setCurrentStep((prev) => Math.min(prev + 1, 2));
     }
   };
 
@@ -188,24 +172,80 @@ export default function PaymentPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const simulatePaymentGateway = async (): Promise<PaymentResult> => {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  const processPaymentAndCreateOrder = async (): Promise<PaymentResult> => {
+    try {
+      // Check if user is authenticated
+      if (!userData?.id) {
+        return {
+          success: false,
+          message:
+            "User authentication required. Please sign in and try again.",
+        };
+      }
 
-    // Simulate random success/failure for demo (90% success rate)
-    const isSuccess = Math.random() > 0.1;
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    if (isSuccess) {
+      // Validate cart items have originalId (UUID)
+      const invalidItems = cartItems.filter((item) => !item.originalId);
+
+      if (invalidItems.length > 0) {
+        console.error("Invalid cart items found:", invalidItems);
+        return {
+          success: false,
+          message:
+            "Some cart items are invalid. Please refresh the page and add items to cart again.",
+        };
+      }
+
+      // Debug: Log cart items structure
+      console.log(
+        "Cart items for order creation:",
+        cartItems.map((item) => ({
+          id: item.id,
+          originalId: item.originalId,
+          name: item.name,
+        }))
+      );
+
+      // Convert cart items to order items format
+      const orderItems: CreateOrderItem[] = cartItems.map((item) => ({
+        product_id: item.originalId, // Use the original UUID instead of numeric id
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      // Create payment method string
+      const paymentType = `Credit Card ending in ${formData.cardNumber.slice(
+        -4
+      )}`;
+
+      const description = `Complete beauty package order containing ${cartItems.length} item(s). Order placed via web payment for ${userData.email}.`;
+
+      // Create order using the new API
+      await createOrder({
+        user_id: userData.id,
+        items: orderItems,
+        description: description,
+        payment_type: paymentType,
+      });
+
       return {
         success: true,
-        transactionId: `TXN${Date.now()}${Math.floor(Math.random() * 1000)}`,
-        message: "Payment processed successfully!",
+        message: "Payment processed and order created successfully!",
       };
-    } else {
+    } catch (error) {
+      console.error("Order creation failed:", error);
+
+      if (error instanceof ApiError) {
+        return {
+          success: false,
+          message: `Order creation failed: ${error.message}`,
+        };
+      }
+
       return {
         success: false,
-        message:
-          "Payment failed. Please check your card details and try again.",
+        message: "Payment failed. Please check your details and try again.",
       };
     }
   };
@@ -213,7 +253,7 @@ export default function PaymentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (currentStep < 3) {
+    if (currentStep < 2) {
       nextStep();
       return;
     }
@@ -225,21 +265,21 @@ export default function PaymentPage() {
     setIsProcessing(true);
 
     try {
-      const result = await simulatePaymentGateway();
+      const result = await processPaymentAndCreateOrder();
       setPaymentResult(result);
 
       if (result.success) {
-        // Clear cart on successful payment
+        // Clear cart on successful order creation
         setTimeout(() => {
           clearCart();
-          router.push("/");
+          router.push(`/products`);
         }, 3000);
       }
     } catch {
       setPaymentResult({
         success: false,
         message:
-          "An error occurred while processing your payment. Please try again.",
+          "An error occurred while processing your order. Please try again.",
       });
     } finally {
       setIsProcessing(false);
@@ -251,29 +291,16 @@ export default function PaymentPage() {
       case 1:
         return (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email Address *</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your.email@example.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                className={errors.email ? "border-destructive" : ""}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive mt-1">{errors.email}</p>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                We&apos;ll send your order confirmation to this email
-              </p>
+            {/* Show user's email */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="text-sm text-blue-800">
+                <p className="font-medium">
+                  Order confirmation will be sent to:
+                </p>
+                <p className="text-blue-600">{userData?.email}</p>
+              </div>
             </div>
-          </div>
-        );
 
-      case 2:
-        return (
-          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="firstName">First Name *</Label>
@@ -361,7 +388,7 @@ export default function PaymentPage() {
           </div>
         );
 
-      case 3:
+      case 2:
         return (
           <div className="space-y-4">
             <div>
@@ -507,7 +534,7 @@ export default function PaymentPage() {
               <>
                 <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
                 <h2 className="text-xl font-semibold text-foreground mb-2">
-                  Payment Successful!
+                  Payment Successful! & Order placed successfully!
                 </h2>
                 <p className="text-muted-foreground mb-4">
                   {paymentResult.message}
@@ -655,7 +682,7 @@ export default function PaymentPage() {
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
                           Processing...
                         </>
-                      ) : currentStep === 3 ? (
+                      ) : currentStep === 2 ? (
                         <>
                           <CreditCard className="h-4 w-4 mr-2" />
                           Pay Now
@@ -748,13 +775,13 @@ export default function PaymentPage() {
                 {/* Progress Indicator */}
                 <div className="mt-4">
                   <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                    <span>Step {currentStep} of 3</span>
-                    <span>{Math.round((currentStep / 3) * 100)}% Complete</span>
+                    <span>Step {currentStep} of 2</span>
+                    <span>{Math.round((currentStep / 2) * 100)}% Complete</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div
                       className="bg-primary h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(currentStep / 3) * 100}%` }}
+                      style={{ width: `${(currentStep / 2) * 100}%` }}
                     />
                   </div>
                 </div>

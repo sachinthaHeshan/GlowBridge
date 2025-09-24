@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { MapPin, Star, ArrowLeft, Users, Award, Calendar } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default async function SalonSelectionPage({
   params,
@@ -138,9 +139,11 @@ export default async function SalonSelectionPage({
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Salon Image */}
                   <div className="w-full md:w-48 h-32 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                    <img
+                    <Image
                       src={salon.image || "/placeholder.svg"}
                       alt={salon.name}
+                      width={192}
+                      height={128}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
