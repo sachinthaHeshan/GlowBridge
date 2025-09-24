@@ -1,26 +1,41 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Search, MapPin, Star, Users, Scissors, Sparkles, Heart, Calendar, ShoppingBag } from "lucide-react"
-import Link from "next/link"
-import { useAuth } from "@/hooks/use-auth"
-import { AuthModal } from "@/components/auth-modal"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Search,
+  MapPin,
+  Star,
+  Users,
+  Scissors,
+  Sparkles,
+  Heart,
+  Calendar,
+  ShoppingBag,
+} from "lucide-react";
+import Link from "next/link";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function HomePage() {
-  const { user, login } = useAuth()
-  const [showAuthModal, setShowAuthModal] = useState(false)
+  const { user } = useAuth();
 
   const handleStartBooking = () => {
     if (!user) {
-      setShowAuthModal(true)
+      // Redirect to login page instead of showing modal
+      window.location.href = "/login";
     } else {
-      window.location.href = "/services/hair"
+      window.location.href = "/services/hair";
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,19 +47,33 @@ export default function HomePage() {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
-              <h1 className="text-xl font-semibold text-foreground">GlowBridge</h1>
+              <h1 className="text-xl font-semibold text-foreground">
+                GlowBridge
+              </h1>
             </div>
             <nav className="hidden md:flex items-center gap-6">
-              <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="#"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Services
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="#"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Salons
               </Link>
-              <Link href="/products" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/products"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Products
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="#"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 About
               </Link>
               {user ? (
@@ -54,7 +83,11 @@ export default function HomePage() {
                   </Button>
                 </Link>
               ) : (
-                <Button variant="outline" size="sm" onClick={() => setShowAuthModal(true)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (window.location.href = "/login")}
+                >
                   Sign In
                 </Button>
               )}
@@ -71,8 +104,8 @@ export default function HomePage() {
             <span className="text-primary block">Beauty Experience</span>
           </h2>
           <p className="text-lg text-muted-foreground mb-8 text-pretty max-w-2xl mx-auto">
-            Discover and book appointments at Sri Lanka's finest beauty salons. From haircuts to spa treatments, find
-            your perfect match.
+            Discover and book appointments at Sri Lanka&apos;s finest beauty
+            salons. From haircuts to spa treatments, find your perfect match.
           </p>
 
           {/* Search Bar */}
@@ -87,7 +120,10 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2 px-3 border-l border-border">
                 <MapPin className="w-5 h-5 text-muted-foreground" />
-                <Input placeholder="Location" className="border-0 bg-transparent focus-visible:ring-0 text-base w-32" />
+                <Input
+                  placeholder="Location"
+                  className="border-0 bg-transparent focus-visible:ring-0 text-base w-32"
+                />
               </div>
               <Button size="lg" className="px-8">
                 Search
@@ -99,19 +135,27 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">500+</div>
-              <div className="text-sm text-muted-foreground">Partner Salons</div>
+              <div className="text-sm text-muted-foreground">
+                Partner Salons
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">50K+</div>
-              <div className="text-sm text-muted-foreground">Happy Customers</div>
+              <div className="text-sm text-muted-foreground">
+                Happy Customers
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">24/7</div>
-              <div className="text-sm text-muted-foreground">Online Booking</div>
+              <div className="text-sm text-muted-foreground">
+                Online Booking
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">4.9★</div>
-              <div className="text-sm text-muted-foreground">Average Rating</div>
+              <div className="text-sm text-muted-foreground">
+                Average Rating
+              </div>
             </div>
           </div>
         </div>
@@ -121,7 +165,9 @@ export default function HomePage() {
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold text-foreground mb-4">Popular Services</h3>
+            <h3 className="text-3xl font-bold text-foreground mb-4">
+              Popular Services
+            </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Choose from our wide range of beauty and wellness services
             </p>
@@ -135,7 +181,9 @@ export default function HomePage() {
                     <Scissors className="w-8 h-8 text-primary" />
                   </div>
                   <CardTitle className="text-lg">Hair Services</CardTitle>
-                  <CardDescription>Cuts, styling, coloring & treatments</CardDescription>
+                  <CardDescription>
+                    Cuts, styling, coloring & treatments
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
@@ -153,7 +201,9 @@ export default function HomePage() {
                     <Sparkles className="w-8 h-8 text-primary" />
                   </div>
                   <CardTitle className="text-lg">Facial Treatments</CardTitle>
-                  <CardDescription>Deep cleansing, anti-aging & glow</CardDescription>
+                  <CardDescription>
+                    Deep cleansing, anti-aging & glow
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
@@ -171,7 +221,9 @@ export default function HomePage() {
                     <Heart className="w-8 h-8 text-primary" />
                   </div>
                   <CardTitle className="text-lg">Nail Care</CardTitle>
-                  <CardDescription>Manicure, pedicure & nail art</CardDescription>
+                  <CardDescription>
+                    Manicure, pedicure & nail art
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
@@ -189,7 +241,9 @@ export default function HomePage() {
                     <Users className="w-8 h-8 text-primary" />
                   </div>
                   <CardTitle className="text-lg">Spa & Wellness</CardTitle>
-                  <CardDescription>Massage, body treatments & relaxation</CardDescription>
+                  <CardDescription>
+                    Massage, body treatments & relaxation
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
@@ -207,8 +261,12 @@ export default function HomePage() {
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold text-foreground mb-4">Featured Salons</h3>
-            <p className="text-muted-foreground max-w-2xl mx-auto">Top-rated salons in your area</p>
+            <h3 className="text-3xl font-bold text-foreground mb-4">
+              Featured Salons
+            </h3>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Top-rated salons in your area
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -260,8 +318,12 @@ export default function HomePage() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">{salon.rating}</span>
-                      <span className="text-sm text-muted-foreground">({salon.reviews})</span>
+                      <span className="text-sm font-medium">
+                        {salon.rating}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        ({salon.reviews})
+                      </span>
                     </div>
                   </div>
                 </CardHeader>
@@ -287,17 +349,23 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-16 px-4 bg-primary/5">
         <div className="container mx-auto text-center max-w-3xl">
-          <h3 className="text-3xl font-bold text-foreground mb-4">Ready to Book Your Appointment?</h3>
+          <h3 className="text-3xl font-bold text-foreground mb-4">
+            Ready to Book Your Appointment?
+          </h3>
           <p className="text-muted-foreground mb-8 text-pretty">
-            Join thousands of satisfied customers who trust BeautyBook for their beauty needs. Book now and experience
-            the difference.
+            Join thousands of satisfied customers who trust BeautyBook for their
+            beauty needs. Book now and experience the difference.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="px-8" onClick={handleStartBooking}>
               Start Booking
             </Button>
             <Link href="/products">
-              <Button variant="outline" size="lg" className="px-8 bg-transparent">
+              <Button
+                variant="outline"
+                size="lg"
+                className="px-8 bg-transparent"
+              >
                 <ShoppingBag className="w-4 h-4 mr-2" />
                 Shop Products
               </Button>
@@ -318,29 +386,42 @@ export default function HomePage() {
                 <h4 className="text-lg font-semibold">BeautyBook</h4>
               </div>
               <p className="text-muted-foreground text-sm">
-                Sri Lanka's premier beauty booking platform. Connecting you with the best salons and spas.
+                Sri Lanka&apos;s premier beauty booking platform. Connecting you
+                with the best salons and spas.
               </p>
             </div>
             <div>
               <h5 className="font-semibold mb-4">Services</h5>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Hair Services
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Facial Treatments
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Nail Care
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Spa & Wellness
                   </Link>
                 </li>
@@ -350,22 +431,34 @@ export default function HomePage() {
               <h5 className="font-semibold mb-4">Company</h5>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Partner Salons
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Careers
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Contact
                   </Link>
                 </li>
@@ -375,22 +468,34 @@ export default function HomePage() {
               <h5 className="font-semibold mb-4">Support</h5>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Help Center
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
+                  <Link
+                    href="#"
+                    className="hover:text-foreground transition-colors"
+                  >
                     Booking Policy
                   </Link>
                 </li>
@@ -398,13 +503,13 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 BeautyBook. All rights reserved. Made with ❤️ in Sri Lanka.</p>
+            <p>
+              &copy; 2025 BeautyBook. All rights reserved. Made with ❤️ in Sri
+              Lanka.
+            </p>
           </div>
         </div>
       </footer>
-
-      {/* Auth Modal */}
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={login} />
     </div>
-  )
+  );
 }

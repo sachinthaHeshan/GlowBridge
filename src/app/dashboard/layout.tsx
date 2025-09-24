@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
   Building2,
   Users,
-  Settings,
   Menu,
   X,
   Sparkles,
@@ -15,7 +14,6 @@ import {
   Clock,
   LogOut,
   User,
-  ShoppingCart,
   Warehouse,
   LayoutDashboard,
 } from "lucide-react";

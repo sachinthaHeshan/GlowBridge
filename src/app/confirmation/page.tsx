@@ -1,9 +1,25 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { CheckCircle, Calendar, Clock, MapPin, Phone, Mail, Download, Share2, Home } from "lucide-react"
-import Link from "next/link"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  CheckCircle,
+  Calendar,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
+  Download,
+  Share2,
+  Home,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function ConfirmationPage() {
   const booking = {
@@ -20,7 +36,7 @@ export default function ConfirmationPage() {
     customerName: "John Doe",
     customerPhone: "+94 77 123 4567",
     customerEmail: "john@example.com",
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,9 +47,12 @@ export default function ConfirmationPage() {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Booking Confirmed!</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Booking Confirmed!
+            </h1>
             <p className="text-muted-foreground">
-              Your appointment has been successfully booked. We've sent a confirmation to your email.
+              Your appointment has been successfully booked. We&apos;ve sent a
+              confirmation to your email.
             </p>
           </div>
 
@@ -43,9 +62,14 @@ export default function ConfirmationPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="text-xl">{booking.service}</CardTitle>
-                  <CardDescription className="mt-1">Booking ID: {booking.id}</CardDescription>
+                  <CardDescription className="mt-1">
+                    Booking ID: {booking.id}
+                  </CardDescription>
                 </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-800"
+                >
                   Confirmed
                 </Badge>
               </div>
@@ -58,8 +82,12 @@ export default function ConfirmationPage() {
                   <AvatarFallback>PP</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-foreground">{booking.staff}</h3>
-                  <p className="text-sm text-muted-foreground">{booking.salon}</p>
+                  <h3 className="font-semibold text-foreground">
+                    {booking.staff}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {booking.salon}
+                  </p>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                     <MapPin className="w-3 h-3" />
                     {booking.address}
@@ -72,15 +100,21 @@ export default function ConfirmationPage() {
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-primary" />
                   <div>
-                    <p className="font-medium text-foreground">{booking.date}</p>
+                    <p className="font-medium text-foreground">
+                      {booking.date}
+                    </p>
                     <p className="text-sm text-muted-foreground">Date</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-primary" />
                   <div>
-                    <p className="font-medium text-foreground">{booking.time}</p>
-                    <p className="text-sm text-muted-foreground">Duration: {booking.duration}</p>
+                    <p className="font-medium text-foreground">
+                      {booking.time}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Duration: {booking.duration}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -88,10 +122,16 @@ export default function ConfirmationPage() {
               {/* Price */}
               <div className="border-t border-border pt-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium text-foreground">Total Amount</span>
-                  <span className="text-2xl font-bold text-primary">{booking.price}</span>
+                  <span className="text-lg font-medium text-foreground">
+                    Total Amount
+                  </span>
+                  <span className="text-2xl font-bold text-primary">
+                    {booking.price}
+                  </span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">Payment will be collected at the salon</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Payment will be collected at the salon
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -104,7 +144,9 @@ export default function ConfirmationPage() {
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-medium text-foreground mb-2">Your Details</h4>
+                  <h4 className="font-medium text-foreground mb-2">
+                    Your Details
+                  </h4>
                   <div className="space-y-1 text-sm">
                     <p>{booking.customerName}</p>
                     <div className="flex items-center gap-2">
@@ -118,7 +160,9 @@ export default function ConfirmationPage() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-foreground mb-2">Salon Contact</h4>
+                  <h4 className="font-medium text-foreground mb-2">
+                    Salon Contact
+                  </h4>
                   <div className="space-y-1 text-sm">
                     <p>{booking.salon}</p>
                     <div className="flex items-center gap-2">
@@ -142,7 +186,11 @@ export default function ConfirmationPage() {
                 <Download className="w-4 h-4 mr-2" />
                 Download Confirmation
               </Button>
-              <Button variant="outline" className="flex-1 bg-transparent" size="lg">
+              <Button
+                variant="outline"
+                className="flex-1 bg-transparent"
+                size="lg"
+              >
                 <Share2 className="w-4 h-4 mr-2" />
                 Share Details
               </Button>
@@ -168,11 +216,15 @@ export default function ConfirmationPage() {
           {/* Important Notes */}
           <Card className="mt-6 bg-blue-50 border-blue-200">
             <CardContent className="p-4">
-              <h4 className="font-medium text-foreground mb-2">Important Notes</h4>
+              <h4 className="font-medium text-foreground mb-2">
+                Important Notes
+              </h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• Please arrive 10 minutes before your appointment time</li>
                 <li>• Bring a valid ID for verification</li>
-                <li>• Cancellations must be made at least 2 hours in advance</li>
+                <li>
+                  • Cancellations must be made at least 2 hours in advance
+                </li>
                 <li>• Contact the salon directly for any changes or queries</li>
               </ul>
             </CardContent>
@@ -180,5 +232,5 @@ export default function ConfirmationPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,12 +1,23 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MapPin, Star, ArrowLeft, Users, Award, Calendar } from "lucide-react"
-import Link from "next/link"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MapPin, Star, ArrowLeft, Users, Award, Calendar } from "lucide-react";
+import Link from "next/link";
 
-export default function SalonSelectionPage({ params }: { params: { serviceId: string } }) {
+export default async function SalonSelectionPage({
+  params,
+}: {
+  params: Promise<{ serviceId: string }>;
+}) {
+  const { serviceId } = await params;
   const salons = [
     {
       id: 1,
@@ -50,7 +61,7 @@ export default function SalonSelectionPage({ params }: { params: { serviceId: st
       verified: false,
       staff: 6,
     },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,8 +76,12 @@ export default function SalonSelectionPage({ params }: { params: { serviceId: st
               </Button>
             </Link>
             <div>
-              <h1 className="text-xl font-semibold text-foreground">Select Salon</h1>
-              <p className="text-sm text-muted-foreground">Classic Haircut & Style</p>
+              <h1 className="text-xl font-semibold text-foreground">
+                Select Salon
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Classic Haircut & Style
+              </p>
             </div>
           </div>
         </div>
@@ -79,7 +94,11 @@ export default function SalonSelectionPage({ params }: { params: { serviceId: st
             <div className="flex-1">
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input placeholder="Enter your location..." className="pl-10" defaultValue="Colombo, Sri Lanka" />
+                <Input
+                  placeholder="Enter your location..."
+                  className="pl-10"
+                  defaultValue="Colombo, Sri Lanka"
+                />
               </div>
             </div>
             <div className="flex gap-2">
@@ -111,7 +130,10 @@ export default function SalonSelectionPage({ params }: { params: { serviceId: st
         {/* Salons List */}
         <div className="space-y-6">
           {salons.map((salon) => (
-            <Card key={salon.id} className="group hover:shadow-lg transition-all duration-300">
+            <Card
+              key={salon.id}
+              className="group hover:shadow-lg transition-all duration-300"
+            >
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Salon Image */}
@@ -128,7 +150,9 @@ export default function SalonSelectionPage({ params }: { params: { serviceId: st
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-semibold text-foreground">{salon.name}</h3>
+                          <h3 className="text-lg font-semibold text-foreground">
+                            {salon.name}
+                          </h3>
                           {salon.verified && (
                             <Badge variant="secondary" className="text-xs">
                               <Award className="w-3 h-3 mr-1" />
@@ -148,13 +172,21 @@ export default function SalonSelectionPage({ params }: { params: { serviceId: st
                         </div>
                         <div className="flex items-center gap-1 mb-3">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{salon.rating}</span>
-                          <span className="text-sm text-muted-foreground">({salon.reviews} reviews)</span>
+                          <span className="text-sm font-medium">
+                            {salon.rating}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            ({salon.reviews} reviews)
+                          </span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-semibold text-primary">{salon.price}</div>
-                        <div className="text-sm text-muted-foreground">per service</div>
+                        <div className="text-lg font-semibold text-primary">
+                          {salon.price}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          per service
+                        </div>
                       </div>
                     </div>
 
@@ -169,9 +201,11 @@ export default function SalonSelectionPage({ params }: { params: { serviceId: st
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="w-4 h-4 text-green-600" />
-                        <span className="text-green-600 font-medium">Next available: {salon.nextAvailable}</span>
+                        <span className="text-green-600 font-medium">
+                          Next available: {salon.nextAvailable}
+                        </span>
                       </div>
-                      <Link href={`/book/${params.serviceId}/salon/${salon.id}`}>
+                      <Link href={`/book/${serviceId}/salon/${salon.id}`}>
                         <Button>Select Salon</Button>
                       </Link>
                     </div>
@@ -191,5 +225,5 @@ export default function SalonSelectionPage({ params }: { params: { serviceId: st
         </div>
       </div>
     </div>
-  )
+  );
 }

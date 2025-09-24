@@ -1,13 +1,30 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Star, Clock, ArrowLeft, Filter } from "lucide-react"
-import Link from "next/link"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Star, Clock, ArrowLeft, Filter } from "lucide-react";
+import Link from "next/link";
 
-export default function ServiceCategoryPage({ params }: { params: { category: string } }) {
-  const categoryName = params.category.charAt(0).toUpperCase() + params.category.slice(1)
+export default async function ServiceCategoryPage({
+  params,
+}: {
+  params: Promise<{ category: string }>;
+}) {
+  const { category } = await params;
+  const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
 
   const services = [
     {
@@ -50,7 +67,7 @@ export default function ServiceCategoryPage({ params }: { params: { category: st
       reviews: 156,
       salons: 20,
     },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,7 +82,9 @@ export default function ServiceCategoryPage({ params }: { params: { category: st
               </Button>
             </Link>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold text-foreground">{categoryName} Services</h1>
+              <h1 className="text-xl font-semibold text-foreground">
+                {categoryName} Services
+              </h1>
             </div>
           </div>
         </div>
@@ -78,7 +97,10 @@ export default function ServiceCategoryPage({ params }: { params: { category: st
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input placeholder={`Search ${categoryName.toLowerCase()} services...`} className="pl-10" />
+                <Input
+                  placeholder={`Search ${categoryName.toLowerCase()} services...`}
+                  className="pl-10"
+                />
               </div>
             </div>
             <div className="flex gap-2">
@@ -112,12 +134,19 @@ export default function ServiceCategoryPage({ params }: { params: { category: st
         {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service) => (
-            <Card key={service.id} className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
+            <Card
+              key={service.id}
+              className="group hover:shadow-lg transition-all duration-300 cursor-pointer"
+            >
               <CardHeader>
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1">
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors">{service.name}</CardTitle>
-                    <CardDescription className="mt-2">{service.description}</CardDescription>
+                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                      {service.name}
+                    </CardTitle>
+                    <CardDescription className="mt-2">
+                      {service.description}
+                    </CardDescription>
                   </div>
                   <Badge variant="secondary" className="ml-2">
                     {service.salons} salons
@@ -138,7 +167,9 @@ export default function ServiceCategoryPage({ params }: { params: { category: st
 
               <CardContent>
                 <div className="flex justify-between items-center">
-                  <div className="text-lg font-semibold text-primary">{service.price}</div>
+                  <div className="text-lg font-semibold text-primary">
+                    {service.price}
+                  </div>
                   <Link href={`/book/${service.id}`}>
                     <Button size="sm">Select Salon</Button>
                   </Link>
@@ -150,7 +181,9 @@ export default function ServiceCategoryPage({ params }: { params: { category: st
 
         {/* Popular Combinations */}
         <section className="mt-16">
-          <h3 className="text-2xl font-bold text-foreground mb-6">Popular Combinations</h3>
+          <h3 className="text-2xl font-bold text-foreground mb-6">
+            Popular Combinations
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-primary/20 bg-primary/5">
               <CardHeader>
@@ -160,8 +193,12 @@ export default function ServiceCategoryPage({ params }: { params: { category: st
               <CardContent>
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="text-sm text-muted-foreground line-through">LKR 27,000</div>
-                    <div className="text-lg font-semibold text-primary">LKR 22,000</div>
+                    <div className="text-sm text-muted-foreground line-through">
+                      LKR 27,000
+                    </div>
+                    <div className="text-lg font-semibold text-primary">
+                      LKR 22,000
+                    </div>
                     <div className="text-sm text-green-600">Save LKR 5,000</div>
                   </div>
                   <Button>Book Package</Button>
@@ -177,8 +214,12 @@ export default function ServiceCategoryPage({ params }: { params: { category: st
               <CardContent>
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="text-sm text-muted-foreground line-through">LKR 35,000</div>
-                    <div className="text-lg font-semibold text-primary">LKR 28,000</div>
+                    <div className="text-sm text-muted-foreground line-through">
+                      LKR 35,000
+                    </div>
+                    <div className="text-lg font-semibold text-primary">
+                      LKR 28,000
+                    </div>
                     <div className="text-sm text-green-600">Save LKR 7,000</div>
                   </div>
                   <Button>Book Package</Button>
@@ -189,5 +230,5 @@ export default function ServiceCategoryPage({ params }: { params: { category: st
         </section>
       </div>
     </div>
-  )
+  );
 }
