@@ -209,7 +209,7 @@ export function SalonManagement() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -241,18 +241,6 @@ export function SalonManagement() {
           <CardContent>
             <div className="text-2xl font-bold text-red-500">
               {salons.filter((salon) => salon.status === "inactive").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Current Page
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {pagination.page} of {pagination.totalPages}
             </div>
           </CardContent>
         </Card>

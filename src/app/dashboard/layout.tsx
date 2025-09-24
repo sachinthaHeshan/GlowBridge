@@ -21,6 +21,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { UserRole } from "@/constraint";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, userData, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -45,24 +46,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       name: "Salon Management",
       icon: Building2,
       description: "Manage all salons",
+      permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
     },
     {
       href: "/dashboard/inventory",
       name: "Inventory Management",
       icon: Building2,
       description: "Manage all inventory",
+      permission: [UserRole.SALON_OWNER],
     },
     {
       href: "/dashboard/users",
       name: "User Management",
       icon: Users,
       description: "Manage salon users",
+      permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
     },
     {
       href: "/dashboard/settings",
       name: "Settings",
       icon: Settings,
       description: "System settings",
+      permission: [],
     },
 
     {
@@ -70,6 +75,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/dashboard/categories",
       icon: FolderOpen,
       gradient: "from-green-500 to-teal-600",
+      permission: [UserRole.SALON_OWNER],
     },
 
     {
@@ -77,26 +83,42 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/dashboard/packages",
       icon: Gift,
       gradient: "from-orange-500 to-red-600",
+      permission: [UserRole.SALON_OWNER],
     },
     {
       name: "working-hours",
       href: "/dashboard/working-hours",
       icon: Clock,
       description: "Staff-working-hoursnpm ",
+      permission: [UserRole.SALON_OWNER, UserRole.STAFF],
     },
     {
       name: "staff-dashboard",
       href: "/dashboard/staff-dashboard",
       icon: Settings,
       description: "Staff perspective",
+      permission: [UserRole.STAFF],
     },
     {
       name: "staff-appointments",
       href: "/dashboard/staff-appointments",
       icon: Settings,
       description: "Salon owner perspective",
+      permission: [UserRole.STAFF],
     },
   ];
+
+  const filteredNavigation = navigation.filter((item) => {
+    if (item.permission.length === 0) return true; // Show items with no permission restriction
+    if (!userData?.role) return false; // Hide items if no user data
+
+    // Convert string role to UserRole enum for comparison
+    const userRoleEnum = Object.values(UserRole).find(
+      (role) => role === userData.role
+    ) as UserRole;
+
+    return userRoleEnum && item.permission.includes(userRoleEnum);
+  });
 
   return (
     <ProtectedRoute>
@@ -142,7 +164,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* Navigation */}
             <nav className="flex-1 p-4 space-y-2">
-              {navigation.map((item) => {
+              {filteredNavigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -196,7 +218,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Menu className="h-5 w-5" />
               </Button>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4 w-full justify-between">
                 <div className="text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   {navigation.find((item) => item.href === pathname)?.name}
                 </div>
@@ -205,7 +227,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div className="flex items-center space-x-3">
                   <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
                     <User className="h-4 w-4" />
-                    <span>{user?.displayName || user?.email}</span>
+                    <span>
+                      {userData?.name || user?.email} (
+                      {userData?.role.toUpperCase()})
+                    </span>
                   </div>
                   <Button
                     variant="ghost"

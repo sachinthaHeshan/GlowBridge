@@ -226,6 +226,43 @@ export const fetchUserById = async (id: string): Promise<User> => {
   return transformBackendUser(response.user);
 };
 
+// Fetch user by email
+export const fetchUserByEmail = async (email: string): Promise<User> => {
+  // For now, we'll fetch all users and filter by email
+  // This should be optimized in the backend to have a direct endpoint
+  const response = (await apiRequest(`/users`)) as UsersResponse;
+  const userWithEmail = response.users.find((user) => user.email === email);
+
+  if (!userWithEmail) {
+    throw new ApiError(`User with email ${email} not found`, 404);
+  }
+
+  return transformBackendUser(userWithEmail);
+};
+
+// Fetch user by Firebase UID
+export const fetchUserByFirebaseUID = async (
+  firebaseUid: string
+): Promise<User> => {
+  const response = await apiRequest(`/users/firebase/${firebaseUid}`);
+
+  // Handle the response format from your API: {"success":true,"message":"User retrieved successfully","data":{...}}
+  const apiResponse = response as {
+    success: boolean;
+    message: string;
+    data: BackendUser;
+  };
+
+  if (!apiResponse.success || !apiResponse.data) {
+    throw new ApiError(
+      apiResponse.message || `User with Firebase UID ${firebaseUid} not found`,
+      404
+    );
+  }
+
+  return transformBackendUser(apiResponse.data);
+};
+
 // Create new user
 export const createUser = async (userData: {
   name: string;

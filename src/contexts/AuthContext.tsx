@@ -6,22 +6,18 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  createUserWithEmailAndPassword,
   sendPasswordResetEmail,
-  updateProfile,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "react-hot-toast";
+import { fetchUserByFirebaseUID } from "@/lib/userApi";
+import { UserCookies, UserCookieData } from "@/lib/cookies";
 
 interface AuthContextType {
   user: User | null;
+  userData: UserCookieData | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (
-    email: string,
-    password: string,
-    displayName: string
-  ) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
@@ -38,6 +34,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState<UserCookieData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,10 +44,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    // Load user data from cookies on initialization
+    const savedUserData = UserCookies.getUserData();
+    if (savedUserData) {
+      setUserData(savedUserData);
+    }
+
     try {
       const firebaseAuth = auth();
       const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
         setUser(user);
+
+        // If user is signed out but we have cookie data, clear it
+        if (!user && savedUserData) {
+          UserCookies.clearAllUserCookies();
+          setUserData(null);
+        }
+
         setLoading(false);
       });
 
@@ -65,8 +75,55 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       const firebaseAuth = auth();
-      await signInWithEmailAndPassword(firebaseAuth, email, password);
-      toast.success("Welcome back!");
+      const { user: firebaseUser } = await signInWithEmailAndPassword(
+        firebaseAuth,
+        email,
+        password
+      );
+
+      // Fetch user details from database
+      try {
+        // Use the Firebase user's UID to find the user in the database
+        const dbUser = await fetchUserByFirebaseUID(firebaseUser.uid);
+
+        // Convert to cookie data format
+        const userCookieData: UserCookieData = {
+          id: dbUser.id,
+          name: dbUser.name,
+          email: dbUser.email,
+          phone: dbUser.phone,
+          role: dbUser.role.toLowerCase(),
+          status: dbUser.status,
+          joinDate: dbUser.joinDate,
+          salonId: dbUser.salonId,
+        };
+
+        // Store user data in cookies
+        UserCookies.setUserData(userCookieData);
+        setUserData(userCookieData);
+
+        toast.success("Welcome back!");
+      } catch (dbError) {
+        // If we can't fetch user details from DB, still allow Firebase login
+        console.warn("Failed to fetch user details from database:", dbError);
+
+        // Create minimal user data from Firebase user
+        const fallbackUserData: UserCookieData = {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || "User",
+          email: firebaseUser.email || email,
+          phone: "",
+          role: "customer", // Default role
+          status: "active",
+          joinDate: new Date().toISOString().split("T")[0],
+          salonId: "1",
+        };
+
+        UserCookies.setUserData(fallbackUserData);
+        setUserData(fallbackUserData);
+
+        toast.success("Welcome back! (Using basic profile)");
+      }
     } catch (error: unknown) {
       const errorMessage =
         (error as { code?: string })?.code === "auth/invalid-credential"
@@ -77,34 +134,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (
-    email: string,
-    password: string,
-    displayName: string
-  ) => {
-    try {
-      const firebaseAuth = auth();
-      const { user } = await createUserWithEmailAndPassword(
-        firebaseAuth,
-        email,
-        password
-      );
-      await updateProfile(user, { displayName });
-      toast.success("Account created successfully!");
-    } catch (error: unknown) {
-      const errorMessage =
-        (error as { code?: string })?.code === "auth/email-already-in-use"
-          ? "Email is already registered"
-          : "Failed to create account";
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
   const logout = async () => {
     try {
       const firebaseAuth = auth();
       await signOut(firebaseAuth);
+
+      // Clear all user-related cookies
+      UserCookies.clearAllUserCookies();
+      setUserData(null);
+
       toast.success("Logged out successfully");
     } catch (error) {
       toast.error("Failed to logout");
@@ -129,9 +167,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const value = {
     user,
+    userData,
     loading,
     signIn,
-    signUp,
     logout,
     resetPassword,
   };

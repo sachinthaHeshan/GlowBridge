@@ -19,7 +19,6 @@ import {
   Gift,
   Package as PackageIcon,
   DollarSign,
-  Users,
 } from "lucide-react";
 import PackageForm from "@/components/package-form";
 import ConfirmationModal from "@/components/confirmation-modal";
@@ -150,10 +149,6 @@ export default function PackagesPage() {
   };
 
   const totalRevenue = packages.reduce((sum, pkg) => sum + pkg.finalPrice, 0);
-  const averageDiscount =
-    packages.length > 0
-      ? packages.reduce((sum, pkg) => sum + pkg.discount, 0) / packages.length
-      : 0;
 
   return (
     <div className="space-y-6">

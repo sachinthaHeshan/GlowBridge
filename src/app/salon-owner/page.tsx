@@ -104,12 +104,12 @@ export default function SalonLandingPage() {
               beauty professionals.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
+              <Link href="/login">
                 <Button
                   size="lg"
                   className="text-lg px-8 py-6 bg-primary hover:bg-primary/90"
                 >
-                  Start Your Free Trial
+                  Get Started
                 </Button>
               </Link>
               <Button
