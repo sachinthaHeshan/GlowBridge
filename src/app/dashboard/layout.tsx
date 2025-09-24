@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/dashboard/inventory",
       name: "Inventory Management",
       icon: Warehouse  ,
-      description: "Manage ll inventory",
+      description: "Manage all inventory",
     },
     {
       href: "/dashboard/users",
