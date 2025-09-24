@@ -15,6 +15,9 @@ import {
   Clock,
   LogOut,
   User,
+  ShoppingCart,
+  Warehouse,
+  LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -51,31 +54,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     {
       href: "/dashboard/inventory",
       name: "Inventory Management",
-      icon: Building2,
+      icon: Warehouse,
       description: "Manage all inventory",
       permission: [UserRole.SALON_OWNER],
     },
     {
       href: "/dashboard/users",
       name: "User Management",
-      icon: Users,
+      icon: User,
       description: "Manage salon users",
       permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
     },
-    {
-      href: "/dashboard/settings",
-      name: "Settings",
-      icon: Settings,
-      description: "System settings",
-      permission: [],
-    },
-
     {
       name: "Categories",
       href: "/dashboard/categories",
       icon: FolderOpen,
       gradient: "from-green-500 to-teal-600",
       permission: [UserRole.SALON_OWNER],
+      description: "Service types",
     },
 
     {
@@ -84,27 +80,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       icon: Gift,
       gradient: "from-orange-500 to-red-600",
       permission: [UserRole.SALON_OWNER],
+      description: "Service bundles",
     },
     {
-      name: "working-hours",
+      name: "Working Hours",
       href: "/dashboard/working-hours",
       icon: Clock,
-      description: "Staff-working-hoursnpm ",
       permission: [UserRole.SALON_OWNER, UserRole.STAFF],
+      description: "Staff working hours",
     },
     {
-      name: "staff-dashboard",
+      name: "My Appointments",
       href: "/dashboard/staff-dashboard",
-      icon: Settings,
-      description: "Staff perspective",
       permission: [UserRole.STAFF],
+      icon: LayoutDashboard,
+      description: "Staff overview",
     },
     {
-      name: "staff-appointments",
+      name: "All Appointments",
       href: "/dashboard/staff-appointments",
-      icon: Settings,
-      description: "Salon owner perspective",
       permission: [UserRole.STAFF],
+      icon: Users,
+      description: "All appointments",
     },
   ];
 
