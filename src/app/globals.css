@@ -40,6 +40,8 @@
   --sidebar-ring: oklch(0.55 0.22 280 / 0.5); /* rgba(139, 92, 246, 0.5) */
   --font-dm-sans: "DM Sans", sans-serif;
   --font-space-grotesk: "Space Grotesk", sans-serif;
+   --font-sans: 'Inter', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
 }
 
 .dark {
