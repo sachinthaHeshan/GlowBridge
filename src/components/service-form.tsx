@@ -238,7 +238,7 @@ export default function ServiceForm({
 
         <div>
           <Label htmlFor="service-price" className="text-sm font-medium">
-            Price ($) *
+            Price (Rs.) *
           </Label>
           <Input
             id="service-price"
@@ -294,7 +294,7 @@ export default function ServiceForm({
             <div className="flex justify-between items-center">
               <span className="text-sm text-green-600">Original Price:</span>
               <span className="font-medium text-green-800">
-                ${Number.parseFloat(formData.price).toFixed(2)}
+                Rs. {Number.parseFloat(formData.price).toFixed(2)}
               </span>
             </div>
             {formData.discount && Number.parseFloat(formData.discount) > 0 && (
@@ -304,7 +304,7 @@ export default function ServiceForm({
                     Discount ({formData.discount}%):
                   </span>
                   <span className="font-medium text-red-600">
-                    -$
+                    -Rs. 
                     {(
                       (Number.parseFloat(formData.price) *
                         Number.parseFloat(formData.discount)) /
@@ -320,7 +320,7 @@ export default function ServiceForm({
                 Final Price:
               </span>
               <span className="text-lg font-bold text-green-800">
-                ${finalPrice.toFixed(2)}
+                Rs. {finalPrice.toFixed(2)}
               </span>
             </div>
           </CardContent>

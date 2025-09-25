@@ -522,7 +522,7 @@ export function InventoryManagement() {
                     <Badge variant="outline">{item.category}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    ${item.price.toFixed(2)}
+                    Rs.{item.price.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-center">{item.quantity}</TableCell>
                   <TableCell className="text-center">
@@ -557,7 +557,7 @@ export function InventoryManagement() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Item Dialog */}
+      {/* Add/Edit Item Form View*/}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -617,7 +617,7 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Price (Rs.)</Label> {/*update*/}
               <Input
                 id="price"
                 type="number"

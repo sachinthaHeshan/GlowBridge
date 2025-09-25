@@ -344,7 +344,7 @@ export default function ServicesPage() {
               <div>
                 <p className="text-sm font-medium text-blue-700">Avg. Price</p>
                 <p className="text-2xl font-bold text-blue-800">
-                  $
+                  Rs.
                   {(
                     filteredServices.reduce((sum, s) => sum + s.finalPrice, 0) /
                       filteredServices.length || 0
@@ -444,11 +444,11 @@ export default function ServicesPage() {
                   <DollarSign className="w-4 h-4 text-green-500" />
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-green-600">
-                      ${service.finalPrice.toFixed(2)}
+                      Rs.{service.finalPrice.toFixed(2)}
                     </span>
                     {service.discount > 0 && (
                       <span className="text-xs text-muted-foreground line-through">
-                        ${service.price.toFixed(2)}
+                        Rs.{service.price.toFixed(2)}
                       </span>
                     )}
                   </div>

@@ -18,7 +18,7 @@ import {
   Edit,
   Trash2,
   Clock,
-  DollarSign,
+  IndianRupee,
   Package,
   ArrowLeft,
   Loader2,
@@ -352,12 +352,12 @@ export default function CategoryServicesPage() {
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-white" />
+                <IndianRupee className="w-5 h-5 text-white" />
               </div>
               <div>
                 <p className="text-sm font-medium text-green-700">Avg. Price</p>
                 <p className="text-2xl font-bold text-green-800">
-                  $
+                  Rs. 
                   {filteredServices.length > 0
                     ? (
                         filteredServices.reduce(
@@ -468,17 +468,17 @@ export default function CategoryServicesPage() {
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="w-4 h-4 text-green-500" />
+                  <IndianRupee className="w-4 h-4 text-green-500" />
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-green-600">
-                      $
+                      Rs. 
                       {(service.price * (1 - service.discount / 100)).toFixed(
                         2
                       )}
                     </span>
                     {service.discount > 0 && (
                       <span className="text-xs text-muted-foreground line-through">
-                        ${service.price.toFixed(2)}
+                        Rs. {service.price.toFixed(2)}
                       </span>
                     )}
                   </div>
