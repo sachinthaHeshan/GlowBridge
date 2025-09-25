@@ -29,7 +29,24 @@ export interface Service {
   }>;
 }
 
-// Appointment response structure
+// Nested user data from API response
+export interface AppointmentUser {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  contact_number: string;
+}
+
+// Nested service data from API response
+export interface AppointmentService {
+  id: string;
+  name: string;
+  description: string;
+  duration: string;
+}
+
+// Appointment response structure with nested data
 export interface Appointment {
   id: string;
   user_id: string;
@@ -39,9 +56,23 @@ export interface Appointment {
   end_at: string;
   payment_type: string;
   amount: number;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
+  is_paid: boolean;
+  status: "upcoming" | "in_progress" | "completed";
+  created_at: string;
+  updated_at: string;
+  user: AppointmentUser;
+  service: AppointmentService;
+}
+
+// All appointments API response structure
+export interface AllAppointmentsResponse {
+  success: boolean;
+  message: string;
+  data: Appointment[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 // API Response types
@@ -176,4 +207,95 @@ export const cancelAppointment = async (
   return (await apiRequest(`/appointments/${id}`, {
     method: "DELETE",
   })) as { message: string };
+};
+
+// Update appointment status
+export const updateAppointmentStatus = async (
+  id: string,
+  status: "upcoming" | "in_progress" | "completed"
+): Promise<Appointment> => {
+  // Use the correct API endpoint without the `/api_g` prefix for this specific endpoint
+  const url = `/api_g/appointments/${id}/status`;
+
+  const config: RequestInit = {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status }),
+  };
+
+  try {
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new ApiError(
+        result.message || "Failed to update appointment status",
+        400
+      );
+    }
+
+    return result.data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      `Network error: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+      0
+    );
+  }
+};
+
+// Fetch all appointments with pagination
+export const fetchAllAppointments = async (
+  limit: number = 100,
+  page: number = 1
+): Promise<AllAppointmentsResponse> => {
+  // Use the correct API endpoint without the `/api_g` prefix for this specific endpoint
+  const url = `/api_g/appointments?limit=${limit}&page=${page}`;
+
+  const config: RequestInit = {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  try {
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      `Network error: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+      0
+    );
+  }
 };

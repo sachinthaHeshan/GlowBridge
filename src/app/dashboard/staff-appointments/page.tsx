@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -11,152 +11,135 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Clock, CheckCircle, PlayCircle } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  CheckCircle,
+  PlayCircle,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import {
+  fetchAllAppointments,
+  type Appointment as ApiAppointment,
+} from "@/lib/appointmentApi";
 
 interface Appointment {
-  id: number;
+  id: string;
   customerName: string;
   customerAvatar: string;
   service: string;
   startTime: string;
   endTime: string;
-  status: string;
+  status: "upcoming" | "in_progress" | "completed";
   duration: string;
   staffMember: string;
+  amount: number;
+  is_paid: boolean;
 }
 
-const appointmentsData = {
-  inProgress: [
-    {
-      id: 1,
-      customerName: "Sarah Johnson",
-      customerAvatar: "/diverse-woman-portrait.png",
-      service: "Hair Cut & Color",
-      startTime: "10:00 AM",
-      endTime: "11:30 AM",
-      status: "In Progress",
-      duration: "1h 30m",
-      staffMember: "Emma Wilson",
-    },
-    {
-      id: 2,
-      customerName: "Michael Chen",
-      customerAvatar: "/thoughtful-man.png",
-      service: "Beard Trim",
-      startTime: "11:00 AM",
-      endTime: "11:30 AM",
-      status: "In Progress",
-      duration: "30m",
-      staffMember: "James Rodriguez",
-    },
-  ],
-  upcoming: [
-    {
-      id: 3,
-      customerName: "Lisa Anderson",
-      customerAvatar: "/diverse-woman-portrait.png",
-      service: "Highlights",
-      startTime: "2:00 PM",
-      endTime: "4:00 PM",
-      status: "Confirmed",
-      duration: "2h",
-      staffMember: "Emma Wilson",
-    },
-    {
-      id: 4,
-      customerName: "David Wilson",
-      customerAvatar: "/thoughtful-man.png",
-      service: "Hair Wash & Style",
-      startTime: "3:30 PM",
-      endTime: "4:15 PM",
-      status: "Confirmed",
-      duration: "45m",
-      staffMember: "James Rodriguez",
-    },
-    {
-      id: 5,
-      customerName: "Amanda Taylor",
-      customerAvatar: "/diverse-woman-portrait.png",
-      service: "Hair Cut",
-      startTime: "4:30 PM",
-      endTime: "5:15 PM",
-      status: "Confirmed",
-      duration: "45m",
-      staffMember: "Maria Garcia",
-    },
-    {
-      id: 6,
-      customerName: "Robert Brown",
-      customerAvatar: "/thoughtful-man.png",
-      service: "Full Service",
-      startTime: "5:00 PM",
-      endTime: "6:30 PM",
-      status: "Confirmed",
-      duration: "1h 30m",
-      staffMember: "Emma Wilson",
-    },
-  ],
-  past: [
-    {
-      id: 7,
-      customerName: "Jennifer Lee",
-      customerAvatar: "/diverse-woman-portrait.png",
-      service: "Hair Color",
-      startTime: "8:00 AM",
-      endTime: "10:00 AM",
-      status: "Completed",
-      duration: "2h",
-      staffMember: "Emma Wilson",
-    },
-    {
-      id: 8,
-      customerName: "Thomas Garcia",
-      customerAvatar: "/thoughtful-man.png",
-      service: "Hair Cut",
-      startTime: "9:00 AM",
-      endTime: "9:45 AM",
-      status: "Completed",
-      duration: "45m",
-      staffMember: "James Rodriguez",
-    },
-    {
-      id: 9,
-      customerName: "Rachel Martinez",
-      customerAvatar: "/diverse-woman-portrait.png",
-      service: "Blowout",
-      startTime: "Yesterday 4:00 PM",
-      endTime: "Yesterday 5:00 PM",
-      status: "Completed",
-      duration: "1h",
-      staffMember: "Maria Garcia",
-    },
-  ],
+interface AppointmentData {
+  inProgress: Appointment[];
+  upcoming: Appointment[];
+  past: Appointment[];
+}
+
+// Helper function to format time from ISO string
+const formatTime = (isoString: string): string => {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+// Helper function to calculate duration
+const calculateDuration = (startAt: string, endAt: string): string => {
+  const start = new Date(startAt);
+  const end = new Date(endAt);
+  const diffMs = end.getTime() - start.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+
+  if (diffMins < 60) {
+    return `${diffMins}m`;
+  } else {
+    const hours = Math.floor(diffMins / 60);
+    const mins = diffMins % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  }
+};
+
+// Helper function to categorize appointments by backend status
+const categorizeAppointments = (
+  appointments: Appointment[]
+): AppointmentData => {
+  const categorized: AppointmentData = {
+    inProgress: [],
+    upcoming: [],
+    past: [],
+  };
+
+  appointments.forEach((appointment) => {
+    switch (appointment.status) {
+      case "in_progress":
+        categorized.inProgress.push(appointment);
+        break;
+      case "upcoming":
+        categorized.upcoming.push(appointment);
+        break;
+      case "completed":
+        categorized.past.push(appointment);
+        break;
+      default:
+        // Default to upcoming if status is unknown
+        categorized.upcoming.push(appointment);
+        break;
+    }
+  });
+
+  return categorized;
 };
 
 function AppointmentCard({ appointment }: { appointment: Appointment }) {
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: "upcoming" | "in_progress" | "completed") => {
     switch (status) {
-      case "In Progress":
+      case "in_progress":
         return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Confirmed":
+      case "upcoming":
         return "bg-green-100 text-green-800 border-green-200";
-      case "Completed":
+      case "completed":
         return "bg-gray-100 text-gray-800 border-gray-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: "upcoming" | "in_progress" | "completed") => {
     switch (status) {
-      case "In Progress":
+      case "in_progress":
         return <PlayCircle className="h-4 w-4" />;
-      case "Confirmed":
+      case "upcoming":
         return <Calendar className="h-4 w-4" />;
-      case "Completed":
+      case "completed":
         return <CheckCircle className="h-4 w-4" />;
       default:
         return <Calendar className="h-4 w-4" />;
+    }
+  };
+
+  const getStatusDisplayName = (
+    status: "upcoming" | "in_progress" | "completed"
+  ) => {
+    switch (status) {
+      case "in_progress":
+        return "In Progress";
+      case "upcoming":
+        return "Upcoming";
+      case "completed":
+        return "Completed";
+      default:
+        return "Unknown";
     }
   };
 
@@ -185,16 +168,29 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {appointment.startTime} - {appointment.endTime}
+                  {formatTime(appointment.startTime)} -{" "}
+                  {formatTime(appointment.endTime)}
                 </div>
-                <span>Staff: {appointment.staffMember}</span>
+                {/* <span>Staff: {appointment.staffMember}</span> */}
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                <span>${appointment.amount}</span>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs ${
+                    appointment.is_paid
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {appointment.is_paid ? "Paid" : "Unpaid"}
+                </span>
               </div>
             </div>
           </div>
           <div className="flex flex-col items-end gap-2">
             <Badge className={getStatusColor(appointment.status)}>
               {getStatusIcon(appointment.status)}
-              {appointment.status}
+              {getStatusDisplayName(appointment.status)}
             </Badge>
             <span className="text-xs text-gray-500">
               {appointment.duration}
@@ -208,6 +204,95 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
 
 export default function StaffAppointmentsPage() {
   const [activeTab, setActiveTab] = useState("in-progress");
+  const [appointmentsData, setAppointmentsData] = useState<AppointmentData>({
+    inProgress: [],
+    upcoming: [],
+    past: [],
+  });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Transform API appointment to component appointment
+  const transformAppointment = (
+    apiAppointment: ApiAppointment
+  ): Appointment => {
+    // Use nested user and service data directly from API response
+    const customerName =
+      `${apiAppointment.user.first_name} ${apiAppointment.user.last_name}`.trim();
+
+    return {
+      id: apiAppointment.id,
+      customerName: customerName,
+      customerAvatar: "/placeholder.svg", // Default avatar
+      service: apiAppointment.service.name,
+      startTime: apiAppointment.start_at,
+      endTime: apiAppointment.end_at,
+      status: apiAppointment.status, // Use backend status directly
+      duration: calculateDuration(
+        apiAppointment.start_at,
+        apiAppointment.end_at
+      ),
+      staffMember: "Staff Member", // This would need to be added to API response when staff assignment is implemented
+      amount: apiAppointment.amount,
+      is_paid: apiAppointment.is_paid,
+    };
+  };
+
+  // Fetch appointments from API
+  const fetchAppointments = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetchAllAppointments(100, 1);
+
+      if (response.success && response.data) {
+        // Transform all appointments (no longer async since we have all data)
+        const transformedAppointments = response.data.map(transformAppointment);
+
+        // Categorize appointments
+        const categorized = categorizeAppointments(transformedAppointments);
+        setAppointmentsData(categorized);
+      } else {
+        throw new Error(response.message || "Failed to fetch appointments");
+      }
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to load appointments"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load appointments on component mount
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  // Error component
+  const ErrorCard = ({ message }: { message: string }) => (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-center py-8">
+          <AlertCircle className="h-8 w-8 text-red-400" />
+          <div className="ml-2">
+            <p className="text-red-600 font-medium">
+              Error loading appointments
+            </p>
+            <p className="text-red-500 text-sm">{message}</p>
+            <button
+              onClick={fetchAppointments}
+              className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded-md text-sm hover:bg-red-200"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
@@ -216,6 +301,14 @@ export default function StaffAppointmentsPage() {
         <p className="text-gray-600 mt-2">
           Manage and view all staff appointments across the salon
         </p>
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+              <span className="ml-2 text-red-700">{error}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <Tabs
@@ -250,7 +343,14 @@ export default function StaffAppointmentsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {appointmentsData.inProgress.length > 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                  <span className="ml-2 text-gray-500">Loading...</span>
+                </div>
+              ) : error ? (
+                <ErrorCard message={error} />
+              ) : appointmentsData.inProgress.length > 0 ? (
                 appointmentsData.inProgress.map((appointment) => (
                   <AppointmentCard
                     key={appointment.id}
@@ -278,7 +378,14 @@ export default function StaffAppointmentsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {appointmentsData.upcoming.length > 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                  <span className="ml-2 text-gray-500">Loading...</span>
+                </div>
+              ) : error ? (
+                <ErrorCard message={error} />
+              ) : appointmentsData.upcoming.length > 0 ? (
                 appointmentsData.upcoming.map((appointment) => (
                   <AppointmentCard
                     key={appointment.id}
@@ -304,7 +411,14 @@ export default function StaffAppointmentsPage() {
               <CardDescription>Completed appointments history</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {appointmentsData.past.length > 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                  <span className="ml-2 text-gray-500">Loading...</span>
+                </div>
+              ) : error ? (
+                <ErrorCard message={error} />
+              ) : appointmentsData.past.length > 0 ? (
                 appointmentsData.past.map((appointment) => (
                   <AppointmentCard
                     key={appointment.id}
