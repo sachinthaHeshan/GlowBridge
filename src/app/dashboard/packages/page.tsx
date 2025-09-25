@@ -18,7 +18,7 @@ import {
   Trash2,
   Gift,
   Package as PackageIcon,
-  DollarSign,
+  IndianRupee,
 } from "lucide-react";
 import PackageForm from "@/components/package-form";
 import ConfirmationModal from "@/components/confirmation-modal";
@@ -210,14 +210,14 @@ export default function PackagesPage() {
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-white" />
+                <IndianRupee className="w-5 h-5 text-white" />
               </div>
               <div>
                 <p className="text-sm font-medium text-green-700">
                   Total Value
                 </p>
                 <p className="text-2xl font-bold text-green-800">
-                  ${totalRevenue.toFixed(0)}
+                  Rs.{totalRevenue.toFixed(0)}
                 </p>
                 <p className="text-xs text-green-600">Package revenue</p>
               </div>
@@ -331,13 +331,13 @@ export default function PackagesPage() {
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <DollarSign className="w-4 h-4 text-green-500" />
+                      <IndianRupee className="w-4 h-4 text-green-500" />
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-green-600">
-                          ${pkg.finalPrice.toFixed(2)}
+                          Rs.{pkg.finalPrice.toFixed(2)}
                         </span>
                         <span className="text-xs text-muted-foreground line-through">
-                          ${pkg.totalPrice.toFixed(2)}
+                          Rs.{pkg.totalPrice.toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -349,7 +349,7 @@ export default function PackagesPage() {
                         Package Savings
                       </span>
                       <span className="text-sm font-bold text-green-600">
-                        ${(pkg.totalPrice - pkg.finalPrice).toFixed(2)}
+                        Rs.{(pkg.totalPrice - pkg.finalPrice).toFixed(2)}
                       </span>
                     </div>
                   </div>

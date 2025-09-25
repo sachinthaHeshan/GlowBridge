@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Gift, DollarSign, Calculator, Package, Loader2 } from "lucide-react";
+import { Gift, IndianRupee, Calculator, Package, Loader2 } from "lucide-react";
 import {
   fetchServicesBySalon,
   fetchActiveCategories,
@@ -294,7 +294,7 @@ export default function PackageForm({
                             {service.name}
                           </Label>
                           <p className="text-xs text-green-600 font-medium">
-                            ${service.price}
+                            Rs. {service.price}
                           </p>
                         </div>
                       </div>
@@ -339,7 +339,7 @@ export default function PackageForm({
                           {service.name}
                         </Label>
                         <p className="text-xs text-green-600 font-medium">
-                          ${service.price}
+                          Rs. {service.price}
                         </p>
                       </div>
                     </div>
@@ -391,7 +391,7 @@ export default function PackageForm({
                 Total Service Price:
               </span>
               <span className="font-medium text-green-800">
-                ${totalPrice.toFixed(2)}
+                Rs. {totalPrice.toFixed(2)}
               </span>
             </div>
             {formData.discount && Number.parseFloat(formData.discount) > 0 && (
@@ -401,7 +401,7 @@ export default function PackageForm({
                     Package Discount ({formData.discount}%):
                   </span>
                   <span className="font-medium text-red-600">
-                    -$
+                    -Rs. 
                     {(
                       (totalPrice * Number.parseFloat(formData.discount)) /
                       100
@@ -413,7 +413,7 @@ export default function PackageForm({
                     Customer Saves:
                   </span>
                   <span className="font-bold text-green-600">
-                    ${(totalPrice - finalPrice).toFixed(2)}
+                    Rs. {(totalPrice - finalPrice).toFixed(2)}
                   </span>
                 </div>
                 <hr className="border-green-200" />
@@ -424,7 +424,7 @@ export default function PackageForm({
                 Final Package Price:
               </span>
               <span className="text-lg font-bold text-green-800">
-                ${finalPrice.toFixed(2)}
+                Rs. {finalPrice.toFixed(2)}
               </span>
             </div>
           </CardContent>
@@ -497,15 +497,15 @@ export default function PackageForm({
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="w-4 h-4 text-green-500" />
+                  <IndianRupee className="w-4 h-4 text-green-500" />
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-green-600">
-                      ${finalPrice.toFixed(2)}
+                      Rs. {finalPrice.toFixed(2)}
                     </span>
                     {formData.discount &&
                       Number.parseFloat(formData.discount) > 0 && (
                         <span className="text-xs text-muted-foreground line-through">
-                          ${totalPrice.toFixed(2)}
+                          Rs. {totalPrice.toFixed(2)}
                         </span>
                       )}
                   </div>
