@@ -45,7 +45,7 @@ export default function SignupPage() {
         formData.phone,
         formData.password
       );
-      router.push("/dashboard");
+      router.push("/");
     } catch {
       // Error handling is done in the AuthContext
     } finally {

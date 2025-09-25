@@ -28,6 +28,68 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+export const navigation = [
+  {
+    href: "/dashboard/salons",
+    name: "Salon Management",
+    icon: Building2,
+    description: "Manage all salons",
+    permission: [UserRole.ADMIN],
+  },
+  {
+    href: "/dashboard/inventory",
+    name: "Inventory Management",
+    icon: Warehouse,
+    description: "Manage all inventory",
+    permission: [UserRole.SALON_OWNER],
+  },
+  {
+    href: "/dashboard/users",
+    name: "User Management",
+    icon: User,
+    description: "Manage salon users",
+    permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
+  },
+  {
+    name: "Categories",
+    href: "/dashboard/categories",
+    icon: FolderOpen,
+    gradient: "from-green-500 to-teal-600",
+    permission: [UserRole.SALON_OWNER],
+    description: "Service types",
+  },
+
+  {
+    name: "Packages",
+    href: "/dashboard/packages",
+    icon: Gift,
+    gradient: "from-orange-500 to-red-600",
+    permission: [UserRole.SALON_OWNER],
+    description: "Service bundles",
+  },
+  {
+    name: "Working Hours",
+    href: "/dashboard/working-hours",
+    icon: Clock,
+    permission: [UserRole.SALON_OWNER],
+    description: "Staff working hours",
+  },
+  {
+    name: "My Appointments",
+    href: "/dashboard/staff-dashboard",
+    permission: [UserRole.STAFF],
+    icon: LayoutDashboard,
+    description: "Staff overview",
+  },
+  {
+    name: "All Appointments",
+    href: "/dashboard/staff-appointments",
+    permission: [UserRole.SALON_OWNER],
+    icon: Users,
+    description: "All appointments",
+  },
+];
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
@@ -40,68 +102,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       console.error("Logout error:", error);
     }
   };
-
-  const navigation = [
-    {
-      href: "/dashboard/salons",
-      name: "Salon Management",
-      icon: Building2,
-      description: "Manage all salons",
-      permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
-    },
-    {
-      href: "/dashboard/inventory",
-      name: "Inventory Management",
-      icon: Warehouse,
-      description: "Manage all inventory",
-      permission: [UserRole.SALON_OWNER],
-    },
-    {
-      href: "/dashboard/users",
-      name: "User Management",
-      icon: User,
-      description: "Manage salon users",
-      permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
-    },
-    {
-      name: "Categories",
-      href: "/dashboard/categories",
-      icon: FolderOpen,
-      gradient: "from-green-500 to-teal-600",
-      permission: [UserRole.SALON_OWNER],
-      description: "Service types",
-    },
-
-    {
-      name: "Packages",
-      href: "/dashboard/packages",
-      icon: Gift,
-      gradient: "from-orange-500 to-red-600",
-      permission: [UserRole.SALON_OWNER],
-      description: "Service bundles",
-    },
-    {
-      name: "Working Hours",
-      href: "/dashboard/working-hours",
-      icon: Clock,
-      permission: [UserRole.SALON_OWNER],
-      description: "Staff working hours",
-    },
-    {
-      name: "My Appointments",
-      href: "/dashboard/staff-dashboard",
-      permission: [UserRole.STAFF],
-      icon: LayoutDashboard,
-      description: "Staff overview",
-    },
-    {
-      name: "All Appointments",
-      href: "/dashboard/staff-appointments",
-      permission: [UserRole.SALON_OWNER],
-      icon: Users,
-      description: "All appointments",
-    },
-  ];
 
   const filteredNavigation = navigation.filter((item) => {
     if (item.permission.length === 0) return true; // Show items with no permission restriction
