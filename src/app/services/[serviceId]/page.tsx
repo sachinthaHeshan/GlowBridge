@@ -30,9 +30,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   createAppointment,
   CreateAppointmentPayload,
-  fetchServiceById,
-  Service,
 } from "@/lib/appointmentApi";
+import { fetchServiceById, Service } from "@/lib/categoryApi";
 
 interface AppointmentFormData {
   note: string;

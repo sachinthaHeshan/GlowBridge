@@ -2,10 +2,9 @@
 
 // Backend category structure (reflects actual API response)
 interface BackendCategory {
-  id: string;
+  id: number;
   name: string;
-  description?: string;
-  is_active: boolean;
+  description: string;
 }
 
 // Backend service structure (reflects actual API response)
@@ -19,7 +18,7 @@ interface BackendService {
   is_public: boolean;
   discount: number;
   is_completed: boolean;
-  categories?: BackendCategory[];
+  categories: BackendCategory[];
 }
 
 // Frontend category structure (matching component interface)
@@ -121,10 +120,10 @@ const transformBackendCategory = (
   backendCategory: BackendCategory
 ): Category => {
   return {
-    id: backendCategory.id,
+    id: backendCategory.id.toString(), // Convert number to string
     name: backendCategory.name,
-    description: backendCategory.description || "",
-    is_active: backendCategory.is_active,
+    description: backendCategory.description,
+    is_active: true, // Default to active since not provided by backend
   };
 };
 
@@ -140,7 +139,7 @@ const transformBackendService = (backendService: BackendService): Service => {
     is_public: backendService.is_public,
     discount: backendService.discount,
     is_completed: backendService.is_completed,
-    categories: (backendService.categories || []).map((cat) =>
+    categories: backendService.categories.map((cat) =>
       transformBackendCategory(cat)
     ),
   };
@@ -445,10 +444,18 @@ export const fetchServicesByCategory = async (
 // Fetch service by ID
 export const fetchServiceById = async (id: string): Promise<Service> => {
   const response = (await apiRequest(`/services/${id}`)) as {
-    success: boolean;
-    data: BackendService;
+    service: BackendService;
   };
-  return transformBackendService(response.data);
+
+  if (!response.service) {
+    throw new ApiError("Service not found", 404);
+  }
+
+  if (!response.service.id) {
+    throw new ApiError("Invalid service data received", 500);
+  }
+
+  return transformBackendService(response.service);
 };
 
 // Create new service
