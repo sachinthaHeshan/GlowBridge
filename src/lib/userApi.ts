@@ -227,9 +227,9 @@ export const fetchUsers = async (
   limit: number = 10,
   role?: string
 ): Promise<PaginatedUsersResult> => {
-  let endpoint = `/users?page=${page}&limit=${limit}`;
+  let endpoint = `/users?page=${String(page)}&limit=${String(limit)}`;
   if (role && role !== "all") {
-    endpoint += `&role=${role}`;
+    endpoint += `&role=${encodeURIComponent(role)}`;
   }
 
   const response = (await apiRequest(endpoint)) as PaginatedUsersResponse;
@@ -261,16 +261,79 @@ export const fetchUserById = async (id: string): Promise<User> => {
 
 // Fetch user by email
 export const fetchUserByEmail = async (email: string): Promise<User> => {
-  // For now, we'll fetch all users and filter by email
-  // This should be optimized in the backend to have a direct endpoint
-  const response = (await apiRequest(`/users`)) as UsersResponse;
-  const userWithEmail = response.users.find((user) => user.email === email);
+  try {
+    console.log(`Searching for user with email: ${email}`);
 
-  if (!userWithEmail) {
+    // First, try to see if backend supports email filtering (undocumented feature)
+    try {
+      const directResponse = await apiRequest(
+        `/users?page=1&limit=1&email=${encodeURIComponent(email)}`
+      );
+      console.log("Trying direct email search...", directResponse);
+
+      const response = directResponse as PaginatedUsersResponse;
+      if (response.data && response.data.length > 0) {
+        const user = response.data.find(
+          (u) => u.email.toLowerCase() === email.toLowerCase()
+        );
+        if (user) {
+          console.log(
+            `Found user via direct search: ${user.first_name} ${user.last_name}`
+          );
+          return transformBackendUser(user);
+        }
+      }
+    } catch (directError) {
+      console.log(
+        "Direct email search failed, falling back to pagination:",
+        directError
+      );
+    }
+
+    // Fallback: Use fetchUsers with pagination to get all users, then filter by email
+    let page = 1;
+    const limit = 100; // Fetch more users per page to reduce API calls
+
+    while (true) {
+      console.log(`Fetching users page ${page} with limit ${limit}`);
+      const result = await fetchUsers(page, limit);
+      console.log(
+        `Found ${result.users.length} users on page ${page}/${result.totalPages}`
+      );
+
+      const userWithEmail = result.users.find(
+        (user) => user.email.toLowerCase() === email.toLowerCase()
+      );
+
+      if (userWithEmail) {
+        console.log(
+          `Found user: ${userWithEmail.name} (${userWithEmail.email})`
+        );
+        return userWithEmail;
+      }
+
+      // If we've checked all pages and no more users exist, user not found
+      if (page >= result.totalPages || result.users.length === 0) {
+        break;
+      }
+
+      page++;
+    }
+
+    console.log(`User with email ${email} not found after checking all pages`);
     throw new ApiError(`User with email ${email} not found`, 404);
+  } catch (error) {
+    console.error(`Error in fetchUserByEmail:`, error);
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      `Failed to fetch user by email: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+      500
+    );
   }
-
-  return transformBackendUser(userWithEmail);
 };
 
 // Fetch user by Firebase UID
@@ -296,7 +359,7 @@ export const fetchUserByFirebaseUID = async (
   return transformBackendUser(apiResponse.data);
 };
 
-// Create new user
+// Create new user (backend handles both Firebase and database user creation)
 export const createUser = async (userData: {
   name: string;
   email: string;
@@ -318,17 +381,46 @@ export const createUser = async (userData: {
     role: mapUserRoleToBackendRole(userData.role),
   };
 
-  // Add password if provided
+  // Add password if provided - backend will handle Firebase user creation
   if (userData.password) {
     payload.password = userData.password;
   }
 
-  const response = (await apiRequest("/users", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })) as UserResponse;
+  try {
+    const response = (await apiRequest("/users", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })) as UserResponse;
 
-  return transformBackendUser(response.user);
+    return transformBackendUser(response.user);
+  } catch (error) {
+    // Handle backend API errors and convert them to user-friendly messages
+    if (error instanceof ApiError) {
+      let errorMessage = error.message;
+
+      // Convert backend error messages to user-friendly ones
+      if (
+        error.message.includes("Email already exists") ||
+        error.message.includes("already exists in Firebase")
+      ) {
+        errorMessage = "An account with this email already exists";
+      } else if (
+        error.message.includes("weak password") ||
+        error.message.includes("password")
+      ) {
+        errorMessage = "Password is too weak. Please use at least 6 characters";
+      } else if (
+        error.message.includes("invalid email") ||
+        error.message.includes("email")
+      ) {
+        errorMessage = "Please enter a valid email address";
+      }
+
+      throw new ApiError(errorMessage, error.status, error.response);
+    }
+
+    throw error;
+  }
 };
 
 // Create user with raw backend format (direct API format)

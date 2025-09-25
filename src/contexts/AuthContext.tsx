@@ -4,14 +4,17 @@ import { createContext, useContext, useEffect, useState } from "react";
 import {
   User,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "react-hot-toast";
-import { fetchUserByFirebaseUID, createUser } from "@/lib/userApi";
+import {
+  fetchUserByFirebaseUID,
+  fetchUserByEmail,
+  createUser,
+} from "@/lib/userApi";
 import { UserCookies, UserCookieData } from "@/lib/cookies";
 
 interface AuthContextType {
@@ -88,10 +91,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password
       );
 
-      // Fetch user details from database
+      // Fetch user details from database using email instead of Firebase UID
       try {
-        // Use the Firebase user's UID to find the user in the database
-        const dbUser = await fetchUserByFirebaseUID(firebaseUser.uid);
+        // Use the user's email to find them in the database
+        const dbUser = await fetchUserByEmail(firebaseUser.email || email);
 
         // Convert to cookie data format
         const userCookieData: UserCookieData = {
@@ -111,25 +114,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         toast.success("Welcome back!");
       } catch (dbError) {
-        // If we can't fetch user details from DB, still allow Firebase login
-        console.warn("Failed to fetch user details from database:", dbError);
+        // If we can't fetch user details from DB, this is a critical error
+        // Don't proceed with fallback that uses Firebase UID as user ID
+        console.error("Failed to fetch user details from database:", dbError);
 
-        // Create minimal user data from Firebase user
-        const fallbackUserData: UserCookieData = {
-          id: firebaseUser.uid,
-          name: firebaseUser.displayName || "User",
-          email: firebaseUser.email || email,
-          phone: "",
-          role: "customer", // Default role
-          status: "active",
-          joinDate: new Date().toISOString().split("T")[0],
-          salonId: "1",
-        };
+        // Sign out from Firebase since we can't proceed with incomplete data
+        await signOut(firebaseAuth);
 
-        UserCookies.setUserData(fallbackUserData);
-        setUserData(fallbackUserData);
-
-        toast.success("Welcome back! (Using basic profile)");
+        toast.error(
+          "Account not found in our system. Please contact support or create a new account."
+        );
+        throw new Error("User account not found in database");
       }
     } catch (error: unknown) {
       const errorMessage =
@@ -148,77 +143,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     password: string
   ) => {
     try {
-      const firebaseAuth = auth();
-
-      // Create Firebase user
-      const { user: firebaseUser } = await createUserWithEmailAndPassword(
-        firebaseAuth,
+      // Use createUser method which handles both Firebase and database user creation
+      const dbUser = await createUser({
+        name,
         email,
-        password
-      );
+        phone,
+        role: "customer", // Default role for marketplace users
+        status: "active",
+        password, // Pass password to createUser for Firebase user creation
+      });
 
-      // Create user in backend database
-      try {
-        const dbUser = await createUser({
-          name,
-          email,
-          phone,
-          role: "customer", // Default role for marketplace users
-          status: "active",
-        });
+      // Convert to cookie data format
+      const userCookieData: UserCookieData = {
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        phone: dbUser.phone,
+        role: dbUser.role.toLowerCase(),
+        status: dbUser.status,
+        joinDate: dbUser.joinDate,
+        salonId: dbUser.salonId,
+      };
 
-        // Convert to cookie data format
-        const userCookieData: UserCookieData = {
-          id: dbUser.id,
-          name: dbUser.name,
-          email: dbUser.email,
-          phone: dbUser.phone,
-          role: dbUser.role.toLowerCase(),
-          status: dbUser.status,
-          joinDate: dbUser.joinDate,
-          salonId: dbUser.salonId,
-        };
+      // Store user data in cookies
+      UserCookies.setUserData(userCookieData);
+      setUserData(userCookieData);
 
-        // Store user data in cookies
-        UserCookies.setUserData(userCookieData);
-        setUserData(userCookieData);
-
-        toast.success("Account created successfully! Welcome to GlowBridge!");
-      } catch (dbError) {
-        console.error("Failed to create user in database:", dbError);
-
-        // If backend fails, still use Firebase user but with basic data
-        const fallbackUserData: UserCookieData = {
-          id: firebaseUser.uid,
-          name: name,
-          email: firebaseUser.email || email,
-          phone: phone,
-          role: "customer",
-          status: "active",
-          joinDate: new Date().toISOString().split("T")[0],
-          salonId: "1",
-        };
-
-        UserCookies.setUserData(fallbackUserData);
-        setUserData(fallbackUserData);
-
-        toast.success("Account created! (Using basic profile)");
-      }
+      toast.success("Account created successfully! Welcome to GlowBridge!");
     } catch (error: unknown) {
       let errorMessage = "Failed to create account";
 
-      const errorCode = (error as { code?: string })?.code;
-      switch (errorCode) {
-        case "auth/email-already-in-use":
+      // Handle common error cases
+      if (error instanceof Error) {
+        if (
+          error.message.includes("email already exists") ||
+          error.message.includes("already in use")
+        ) {
           errorMessage = "An account with this email already exists";
-          break;
-        case "auth/weak-password":
+        } else if (
+          error.message.includes("weak password") ||
+          error.message.includes("password")
+        ) {
           errorMessage =
             "Password is too weak. Please use at least 6 characters";
-          break;
-        case "auth/invalid-email":
+        } else if (
+          error.message.includes("invalid email") ||
+          error.message.includes("email")
+        ) {
           errorMessage = "Please enter a valid email address";
-          break;
+        } else {
+          errorMessage = error.message || "Failed to create account";
+        }
       }
 
       toast.error(errorMessage);

@@ -20,6 +20,8 @@ import {
   Heart,
   Calendar,
   ShoppingBag,
+  LogOut,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -27,7 +29,7 @@ import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, userData, logout } = useAuth();
 
   const handleStartBooking = () => {
     if (!user) {
@@ -35,6 +37,16 @@ export default function HomePage() {
       window.location.href = "/login";
     } else {
       window.location.href = "/services/hair";
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Optionally redirect or refresh the page
+      window.location.reload();
+    } catch (error) {
+      console.error("Logout error:", error);
     }
   };
 
@@ -52,6 +64,35 @@ export default function HomePage() {
                 GlowBridge
               </h1>
             </div>
+            {/* Mobile menu for authenticated users */}
+            <div className="flex md:hidden items-center gap-2">
+              {user && userData ? (
+                <div className="flex items-center gap-2">
+                  <Link href="/dashboard1">
+                    <Button variant="outline" size="sm">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (window.location.href = "/login")}
+                >
+                  Sign In
+                </Button>
+              )}
+            </div>
+
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 href="#"
@@ -77,12 +118,29 @@ export default function HomePage() {
               >
                 About
               </Link>
-              {user ? (
-                <Link href="/dashboard1">
-                  <Button variant="outline" size="sm">
-                    Dashboard
+              {user && userData ? (
+                <div className="flex items-center gap-3">
+                  <div className="hidden sm:flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">
+                      Welcome, {userData.name}
+                    </span>
+                  </div>
+                  <Link href="/dashboard1">
+                    <Button variant="outline" size="sm">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                  >
+                    <LogOut className="w-4 h-4 mr-1" />
+                    Logout
                   </Button>
-                </Link>
+                </div>
               ) : (
                 <Button
                   variant="outline"
