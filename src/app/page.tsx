@@ -16,7 +16,6 @@ import {
   Star,
   Users,
   Scissors,
-  Sparkles,
   Heart,
   Calendar,
   ShoppingBag,
@@ -24,7 +23,6 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -36,7 +34,7 @@ export default function HomePage() {
       // Redirect to login page instead of showing modal
       window.location.href = "/login";
     } else {
-      window.location.href = "/services/hair";
+      window.location.href = "/services";
     }
   };
 
@@ -58,7 +56,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary-foreground" />
+                <Scissors className="w-5 h-5 text-primary-foreground" />
               </div>
               <h1 className="text-xl font-semibold text-foreground">
                 GlowBridge
@@ -261,7 +259,7 @@ export default function HomePage() {
               <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border/50 hover:border-primary/20">
                 <CardHeader className="text-center pb-4">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                    <Sparkles className="w-8 h-8 text-primary" />
+                    <Scissors className="w-8 h-8 text-primary" />
                   </div>
                   <CardTitle className="text-lg">Facial Treatments</CardTitle>
                   <CardDescription>
@@ -443,7 +441,7 @@ export default function HomePage() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary-foreground" />
+                  <Scissors className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <h4 className="text-lg font-semibold">BeautyBook</h4>
               </div>

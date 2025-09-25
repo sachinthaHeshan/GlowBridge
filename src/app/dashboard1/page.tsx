@@ -17,7 +17,7 @@ import {
   User,
   Phone,
   Mail,
-  Sparkles,
+  Scissors,
   ArrowLeft,
   Plus,
 } from "lucide-react";
@@ -99,7 +99,7 @@ export default function DashboardPage() {
               </Link>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary-foreground" />
+                  <Scissors className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <h1 className="text-xl font-semibold text-foreground">
                   My Dashboard

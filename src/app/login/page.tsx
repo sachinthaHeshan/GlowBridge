@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Scissors, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -40,7 +40,7 @@ export default function LoginPage() {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                <Sparkles className="h-8 w-8 text-white" />
+                <Scissors className="h-8 w-8 text-white" />
               </div>
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
