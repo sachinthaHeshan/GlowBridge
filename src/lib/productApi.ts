@@ -132,7 +132,6 @@ const transformBackendProduct = (backendProduct: BackendProduct): Product => {
 // Transform frontend product to backend payload
 const transformToBackendPayload = (product: {
   name: string;
-  category: string;
   quantity: number;
   price: number;
   status: string;
@@ -272,7 +271,6 @@ export const fetchPublicProducts = async (): Promise<Product[]> => {
 // Create new product
 export const createProduct = async (productData: {
   name: string;
-  category: "hair-care" | "skin-care" | "tools" | "accessories";
   quantity: number;
   price: number;
   status: "in-stock" | "low-stock" | "out-of-stock";
@@ -296,7 +294,6 @@ export const updateProduct = async (
   id: string,
   productData: {
     name?: string;
-    category?: "hair-care" | "skin-care" | "tools" | "accessories";
     quantity?: number;
     price?: number;
     status?: "in-stock" | "low-stock" | "out-of-stock";

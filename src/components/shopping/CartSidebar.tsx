@@ -191,7 +191,7 @@ export default function CartSidebar() {
                             Item Total:
                           </span>
                           <span className="text-sm font-semibold text-foreground">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            Rs.{(item.price * item.quantity).toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -210,7 +210,7 @@ export default function CartSidebar() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal:</span>
                   <span className="text-foreground">
-                    ${cartTotal.toFixed(2)}
+                    Rs.{cartTotal.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -220,14 +220,14 @@ export default function CartSidebar() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax:</span>
                   <span className="text-foreground">
-                    ${(cartTotal * 0.1).toFixed(2)}
+                    Rs.{(cartTotal * 0.1).toFixed(2)}
                   </span>
                 </div>
                 <div className="border-t border-border pt-2">
                   <div className="flex justify-between font-semibold">
                     <span className="text-foreground">Total:</span>
                     <span className="text-primary">
-                      ${(cartTotal * 1.1).toFixed(2)}
+                      Rs.{(cartTotal * 1.1).toFixed(2)}
                     </span>
                   </div>
                 </div>

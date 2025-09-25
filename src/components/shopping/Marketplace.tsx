@@ -40,7 +40,7 @@ export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [priceRange, setPriceRange] = useState([0, 10000]);
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<number[]>([]);
 
@@ -320,7 +320,6 @@ export default function Marketplace() {
                   </div>
                 </div>
 
-                {/* Price Range Filter */}
                 <div>
                   <h3 className="font-medium text-foreground mb-3">
                     Price Range
@@ -329,14 +328,14 @@ export default function Marketplace() {
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
-                      max={100}
+                      max={10000}
                       min={0}
                       step={5}
                       className="w-full"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>${priceRange[0]}</span>
-                      <span>${priceRange[1]}</span>
+                      <span>Rs.{priceRange[0]}</span>
+                      <span>Rs.{priceRange[1]}</span>
                     </div>
                   </div>
                 </div>
@@ -357,7 +356,6 @@ export default function Marketplace() {
             </Card>
           </div>
 
-          {/* Product Grid */}
           <div className="flex-1">
             <div className="mb-6 flex items-center justify-between">
               <p className="text-muted-foreground">
@@ -454,14 +452,14 @@ export default function Marketplace() {
                             ))}
                           </div>
                           <span className="text-xs text-muted-foreground">
-                            {product.rating} ({product.reviews})
+                            {product.rating.toFixed(1)} ({product.reviews})
                           </span>
                         </div>
 
                         {/* Price and Add to Cart */}
                         <div className="flex items-center justify-between">
                           <span className="text-lg font-bold text-primary">
-                            ${product.price}
+                            Rs.{product.price}
                           </span>
                           <Button
                             onClick={() => handleAddToCart(product)}
