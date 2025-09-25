@@ -145,7 +145,7 @@ export default function ServiceCategoryPage() {
   };
 
   const formatPrice = (price: number) => {
-    return `LKR ${price.toLocaleString()}`;
+    return `Rs. ${price.toLocaleString()}`;
   };
 
   return (
@@ -190,9 +190,9 @@ export default function ServiceCategoryPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Prices</SelectItem>
-                  <SelectItem value="low">Under LKR 5,000</SelectItem>
-                  <SelectItem value="mid">LKR 5,000 - 15,000</SelectItem>
-                  <SelectItem value="high">Above LKR 15,000</SelectItem>
+                  <SelectItem value="low">Under Rs. 5,000</SelectItem>
+                  <SelectItem value="mid">Rs. 5,000 - 15,000</SelectItem>
+                  <SelectItem value="high">Above Rs. 15,000</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={duration} onValueChange={setDuration}>

@@ -31,7 +31,7 @@ export default function ConfirmationPage() {
     date: "Today, March 15, 2024",
     time: "2:00 PM - 3:00 PM",
     duration: "60 min",
-    price: "LKR 3,500",
+    price: "Rs. 3,500",
     address: "123 Galle Road, Colombo 03",
     phone: "+94 11 234 5678",
     customerName: "John Doe",

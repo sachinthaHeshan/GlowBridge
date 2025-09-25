@@ -248,7 +248,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>From LKR 2,500</span>
+                    <span>From Rs. 2,500</span>
                     <Badge variant="secondary">Popular</Badge>
                   </div>
                 </CardContent>
@@ -268,7 +268,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>From LKR 3,500</span>
+                    <span>From Rs. 3,500</span>
                     <Badge variant="secondary">Trending</Badge>
                   </div>
                 </CardContent>
@@ -288,7 +288,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>From LKR 1,800</span>
+                    <span>From Rs. 1,800</span>
                     <Badge variant="secondary">New</Badge>
                   </div>
                 </CardContent>
@@ -308,7 +308,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>From LKR 4,500</span>
+                    <span>From Rs. 4,500</span>
                     <Badge variant="secondary">Premium</Badge>
                   </div>
                 </CardContent>

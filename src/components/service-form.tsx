@@ -304,7 +304,7 @@ export default function ServiceForm({
                     Discount ({formData.discount}%):
                   </span>
                   <span className="font-medium text-red-600">
-                    -Rs. 
+                    -Rs.
                     {(
                       (Number.parseFloat(formData.price) *
                         Number.parseFloat(formData.discount)) /
@@ -393,10 +393,9 @@ export default function ServiceForm({
                 )}
                 {formData.price && (
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="w-4 h-4 text-green-500" />
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-green-600">
-                        ${finalPrice.toFixed(2)}
+                        Rs.{finalPrice.toFixed(2)}
                       </span>
                       {formData.discount &&
                         Number.parseFloat(formData.discount) > 0 && (

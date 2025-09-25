@@ -21,7 +21,6 @@ import {
   CreditCard,
   ArrowLeft,
   User,
-  DollarSign,
   CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -363,8 +362,7 @@ export default function AppointmentBookingPage({
                     <span>{service.duration} minutes</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <DollarSign className="w-4 h-4" />
-                    <span>LKR {service.price}</span>
+                    <span>Rs. {service.price}</span>
                   </div>
                   {service.categories && service.categories.length > 0 && (
                     <Badge variant="outline">
@@ -477,7 +475,6 @@ export default function AppointmentBookingPage({
                     <SelectContent>
                       <SelectItem value="cash">
                         <div className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4" />
                           Cash Payment
                         </div>
                       </SelectItem>
@@ -500,10 +497,10 @@ export default function AppointmentBookingPage({
                   )}
                 </div>
 
-                {/* Amount */}
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (LKR) *</Label>
+                  <Label htmlFor="amount">Amount (Rs.) *</Label>
                   <Input
+                    disabled
                     id="amount"
                     type="number"
                     step="0.01"
@@ -591,7 +588,7 @@ export default function AppointmentBookingPage({
                 </div>
                 <div className="flex justify-between font-semibold text-lg pt-2 border-t">
                   <span>Total Amount:</span>
-                  <span>LKR {formData.amount}</span>
+                  <span>Rs. {formData.amount}</span>
                 </div>
               </div>
             </CardContent>
