@@ -116,7 +116,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="min-h-screen bg-background">
         {/* Mobile sidebar backdrop */}
         {sidebarOpen && (
           <div
@@ -137,7 +137,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center justify-between p-6 border-b border-blue-100">
               <div className="flex items-center space-x-3">
                 <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <h1 className="text-xl font-bold text-foreground">
                     GlowBridge
                   </h1>
                   <p className="text-sm text-gray-600">Management Dashboard</p>
@@ -165,7 +165,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       className={cn(
                         "w-full justify-start h-auto p-4 text-left rounded-xl transition-all duration-200",
                         isActive
-                          ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-[1.02]"
+                          ? "bg-primary text-primary-foreground shadow-lg transform scale-[1.02]"
                           : "hover:bg-blue-50 hover:text-blue-700 hover:scale-[1.01]"
                       )}
                       onClick={() => setSidebarOpen(false)}
@@ -173,7 +173,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <Icon
                         className={cn(
                           "h-5 w-5 mr-3 flex-shrink-0",
-                          isActive ? "text-white" : "text-blue-600"
+                          isActive ? "text-primary-foreground" : "text-blue-600"
                         )}
                       />
                       <div>
@@ -181,7 +181,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         <div
                           className={cn(
                             "text-xs",
-                            isActive ? "text-blue-100" : "text-gray-500"
+                            isActive
+                              ? "text-primary-foreground/70"
+                              : "text-gray-500"
                           )}
                         >
                           {item.description}
@@ -210,7 +212,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
 
               <div className="flex items-center space-x-4 w-full justify-between">
-                <div className="text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <div className="text-sm font-medium text-foreground">
                   {navigation.find((item) => item.href === pathname)?.name}
                 </div>
 

@@ -268,7 +268,7 @@ export default function CategoryServicesPage() {
               Back to Categories
             </Button>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             {category.name} - Services
           </h1>
           <p className="text-muted-foreground mt-2">{category.description}</p>
@@ -357,7 +357,7 @@ export default function CategoryServicesPage() {
               <div>
                 <p className="text-sm font-medium text-green-700">Avg. Price</p>
                 <p className="text-2xl font-bold text-green-800">
-                  Rs. 
+                  Rs.
                   {filteredServices.length > 0
                     ? (
                         filteredServices.reduce(
@@ -471,7 +471,7 @@ export default function CategoryServicesPage() {
                   <IndianRupee className="w-4 h-4 text-green-500" />
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-green-600">
-                      Rs. 
+                      Rs.
                       {(service.price * (1 - service.discount / 100)).toFixed(
                         2
                       )}

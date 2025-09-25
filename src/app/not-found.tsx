@@ -5,7 +5,7 @@ import { Scissors } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-blue-100 shadow-xl">
         <div className="p-8 text-center">
           {/* Header */}
@@ -15,9 +15,7 @@ export default function NotFound() {
             </div>
           </div>
 
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            404
-          </h1>
+          <h1 className="text-6xl font-bold text-foreground mb-4">404</h1>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             Page Not Found

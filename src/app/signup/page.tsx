@@ -54,7 +54,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-blue-100 shadow-xl">
         <div className="p-8">
           {/* Header */}
@@ -64,7 +64,7 @@ export default function SignupPage() {
                 <Scissors className="h-8 w-8 text-white" />
               </div>
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold text-foreground">
               Create Your Account
             </h1>
             <p className="text-gray-600 mt-2">

@@ -155,7 +155,7 @@ export default function PackagesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Package Management
           </h1>
           <p className="text-muted-foreground mt-2">
@@ -289,7 +289,7 @@ export default function PackagesPage() {
             >
               <div className="relative overflow-hidden rounded-t-lg">
                 <Image
-                  src={pkg.image || "/default-package.jpg"}
+                  src={pkg.image || "/package.jpg"}
                   alt={pkg.name}
                   width={400}
                   height={192}
