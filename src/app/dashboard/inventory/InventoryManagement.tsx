@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DropZone } from "@/components/ui/drop-zone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ import {
   AlertCircle,
   FileText,
 } from "lucide-react";
+import ConfirmationModal from "@/components/confirmation-modal";
 import {
   Product,
   fetchSalonProducts,
@@ -63,6 +65,15 @@ export function InventoryManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    itemId: string | null;
+    itemName: string;
+  }>({
+    isOpen: false,
+    itemId: null,
+    itemName: "",
+  });
 
   // Default salon ID - in a real app, this would come from user context or route params
   const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55"; 
@@ -80,6 +91,8 @@ export function InventoryManagement() {
     description: "",
     isPublic: true,
     discount: 0,
+    image: null as File | null,
+    imagePreview: "",
   });
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -114,6 +127,15 @@ export function InventoryManagement() {
     loadProducts();
   }, [salonId]);
 
+  // Clean up object URLs when form data changes or component unmounts
+  useEffect(() => {
+    return () => {
+      if (formData.imagePreview && !formData.imagePreview.startsWith('http')) {
+        URL.revokeObjectURL(formData.imagePreview);
+      }
+    };
+  }, [formData.imagePreview]);
+
   const handleAddItem = () => {
     setEditingItem(null);
     setFormData({
@@ -125,6 +147,8 @@ export function InventoryManagement() {
       description: "",
       isPublic: true,
       discount: 0,
+      image: null,
+      imagePreview: "",
     });
     setIsDialogOpen(true);
   };
@@ -140,6 +164,8 @@ export function InventoryManagement() {
       description: item.description || "",
       isPublic: item.isPublic,
       discount: item.discount,
+      image: null,
+      imagePreview: item.image || "",
     });
     setIsDialogOpen(true);
   };
@@ -202,11 +228,30 @@ export function InventoryManagement() {
     }
   };
 
-  const handleDeleteItem = async (id: string) => {
+  const handleDeleteConfirm = (item: InventoryItem) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      itemId: item.id,
+      itemName: item.name,
+    });
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmation({
+      isOpen: false,
+      itemId: null,
+      itemName: "",
+    });
+  };
+
+  const handleDeleteItem = async () => {
+    if (!deleteConfirmation.itemId) return;
+
     try {
       setError(null);
-      await deleteProduct(id);
-      setItems(items.filter((item) => item.id !== id));
+      await deleteProduct(deleteConfirmation.itemId);
+      setItems(items.filter((item) => item.id !== deleteConfirmation.itemId));
+      handleDeleteCancel(); // Close the confirmation dialog
     } catch (error) {
       console.error("Failed to delete product:", error);
       if (error instanceof ApiError) {
@@ -315,25 +360,15 @@ export function InventoryManagement() {
   return (
     <div className="space-y-6">
       {}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Inventory Management
-            </h1>
-            <p className="text-muted-foreground">
-              Manage inventory for this salon location
-            </p>
-          </div>
+      <div className="flex items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Inventory Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage inventory for this salon location
+          </p>
         </div>
-        <Button
-          onClick={handleAddItem}
-          className="bg-primary hover:bg-primary/90"
-          disabled={saving}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Item
-        </Button>
       </div>
 
       {/* Stats Cards  need to change*/}
@@ -475,24 +510,26 @@ export function InventoryManagement() {
             <CardTitle>Inventory Items</CardTitle>
             <CardDescription>Manage your products and supplies</CardDescription>
           </div>
-          <Button
-            onClick={() => {
-              // Add PDF generation logic here
-              console.log("Generate PDF clicked");
-            }}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Generate PDF
-          </Button>
-           <Button
-          onClick={handleAddItem}
-          className="bg-primary hover:bg-primary/90"
-          disabled={saving}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Item
-        </Button>
+          <div className="flex space-x-2">
+            <Button
+              onClick={() => {
+                // Add PDF generation logic here
+                console.log("Generate PDF clicked");
+              }}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Generate PDF
+            </Button>
+            <Button
+              onClick={handleAddItem}
+              className="bg-primary hover:bg-primary/90"
+              disabled={saving}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -502,9 +539,10 @@ export function InventoryManagement() {
                 <TableHead>Category</TableHead>
                 <TableHead className="text-right">Price</TableHead>
                 <TableHead className="text-center">Quantity</TableHead>
-                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center">Visibility</TableHead>
                 <TableHead className="text-right">Discount (%)</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
+                <TableHead>Update</TableHead>
+                <TableHead>Delete</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -526,29 +564,29 @@ export function InventoryManagement() {
                   </TableCell>
                   <TableCell className="text-center">{item.quantity}</TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={getStatusBadgeVariant(item.status)}>
-                      {item.status}
+                    <Badge variant={item.isPublic ? "default" : "secondary"}>
+                      {item.isPublic ? "Public" : "Private"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">{item.discount}%</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditItem(item)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteItem(item.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditItem(item)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteConfirm(item)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -559,7 +597,7 @@ export function InventoryManagement() {
 
       {/* Add/Edit Item Form View*/}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>
               {editingItem ? "Edit Item" : "Add New Item"}
@@ -570,7 +608,21 @@ export function InventoryManagement() {
                 : "Add a new item to your inventory."}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 overflow-y-auto max-h-[calc(90vh-8rem)] pr-2">
+            <div className="grid gap-2">
+              <Label>Product Image</Label>
+              <DropZone
+                onDrop={(files) => {
+                  const file = files[0];
+                  setFormData({
+                    ...formData,
+                    image: file,
+                    imagePreview: URL.createObjectURL(file)
+                  });
+                }}
+                currentImage={formData.imagePreview}
+              />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="name">Item Name</Label>
               <Input
@@ -716,6 +768,15 @@ export function InventoryManagement() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteItem}
+        title="Delete Item"
+        description={`Are you sure you want to delete "${deleteConfirmation.itemName}"? This action cannot be undone.`}
+      />
     </div>
   );
 }
