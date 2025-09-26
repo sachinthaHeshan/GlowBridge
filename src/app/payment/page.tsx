@@ -124,7 +124,7 @@ export default function PaymentPage() {
         }
         break;
 
-      case 2: // Payment Method
+      case 2:
         if (!formData.cardholderName) {
           newErrors.cardholderName = "Cardholder name is required";
           isValid = false;

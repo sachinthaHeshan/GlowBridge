@@ -33,10 +33,10 @@ export function Slider({
 
   return (
     <div className={`relative w-full h-8 ${className}`}>
-      {/* Track */}
+      {}
       <div className="absolute top-1/2 left-0 right-0 h-2 bg-gray-200 rounded transform -translate-y-1/2" />
 
-      {/* Highlighted range */}
+      {}
       <div
         className="absolute top-1/2 h-2 bg-blue-500 rounded transform -translate-y-1/2"
         style={{
@@ -45,7 +45,7 @@ export function Slider({
         }}
       />
 
-      {/* Min Handle */}
+      {}
       <input
         type="range"
         min={min}
@@ -56,7 +56,7 @@ export function Slider({
         className="absolute w-full h-2 bg-transparent appearance-none pointer-events-auto accent-blue-500"
       />
 
-      {/* Max Handle */}
+      {}
       <input
         type="range"
         min={min}

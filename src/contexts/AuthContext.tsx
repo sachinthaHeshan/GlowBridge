@@ -4,14 +4,13 @@ import { createContext, useContext, useEffect, useState } from "react";
 import {
   User,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "react-hot-toast";
-import { fetchUserByFirebaseUID, createUser } from "@/lib/userApi";
+import { fetchUserByEmail, createUser } from "@/lib/userApi";
 import { UserCookies, UserCookieData } from "@/lib/cookies";
 
 interface AuthContextType {
@@ -45,13 +44,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if we're on the client side and Firebase is available
     if (typeof window === "undefined") {
       setLoading(false);
       return;
     }
 
-    // Load user data from cookies on initialization
     const savedUserData = UserCookies.getUserData();
     if (savedUserData) {
       setUserData(savedUserData);
@@ -62,7 +59,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
         setUser(user);
 
-        // If user is signed out but we have cookie data, clear it
         if (!user && savedUserData) {
           UserCookies.clearAllUserCookies();
           setUserData(null);
@@ -72,8 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       return unsubscribe;
-    } catch (error) {
-      console.warn("Firebase not configured:", error);
+    } catch {
       setLoading(false);
       return;
     }
@@ -88,12 +83,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password
       );
 
-      // Fetch user details from database
       try {
-        // Use the Firebase user's UID to find the user in the database
-        const dbUser = await fetchUserByFirebaseUID(firebaseUser.uid);
+        const dbUser = await fetchUserByEmail(firebaseUser.email || email);
 
-        // Convert to cookie data format
         const userCookieData: UserCookieData = {
           id: dbUser.id,
           name: dbUser.name,
@@ -105,31 +97,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           salonId: dbUser.salonId,
         };
 
-        // Store user data in cookies
         UserCookies.setUserData(userCookieData);
         setUserData(userCookieData);
 
         toast.success("Welcome back!");
-      } catch (dbError) {
-        // If we can't fetch user details from DB, still allow Firebase login
-        console.warn("Failed to fetch user details from database:", dbError);
+      } catch {
+        await signOut(firebaseAuth);
 
-        // Create minimal user data from Firebase user
-        const fallbackUserData: UserCookieData = {
-          id: firebaseUser.uid,
-          name: firebaseUser.displayName || "User",
-          email: firebaseUser.email || email,
-          phone: "",
-          role: "customer", // Default role
-          status: "active",
-          joinDate: new Date().toISOString().split("T")[0],
-          salonId: "1",
-        };
-
-        UserCookies.setUserData(fallbackUserData);
-        setUserData(fallbackUserData);
-
-        toast.success("Welcome back! (Using basic profile)");
+        toast.error(
+          "Account not found in our system. Please contact support or create a new account."
+        );
+        throw new Error("User account not found in database");
       }
     } catch (error: unknown) {
       const errorMessage =
@@ -148,77 +126,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     password: string
   ) => {
     try {
-      const firebaseAuth = auth();
-
-      // Create Firebase user
-      const { user: firebaseUser } = await createUserWithEmailAndPassword(
-        firebaseAuth,
+      const dbUser = await createUser({
+        name,
         email,
-        password
-      );
+        phone,
+        role: "customer",
+        status: "active",
+        password,
+      });
 
-      // Create user in backend database
-      try {
-        const dbUser = await createUser({
-          name,
-          email,
-          phone,
-          role: "customer", // Default role for marketplace users
-          status: "active",
-        });
+      const userCookieData: UserCookieData = {
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        phone: dbUser.phone,
+        role: dbUser.role.toLowerCase(),
+        status: dbUser.status,
+        joinDate: dbUser.joinDate,
+        salonId: dbUser.salonId,
+      };
 
-        // Convert to cookie data format
-        const userCookieData: UserCookieData = {
-          id: dbUser.id,
-          name: dbUser.name,
-          email: dbUser.email,
-          phone: dbUser.phone,
-          role: dbUser.role.toLowerCase(),
-          status: dbUser.status,
-          joinDate: dbUser.joinDate,
-          salonId: dbUser.salonId,
-        };
+      UserCookies.setUserData(userCookieData);
+      setUserData(userCookieData);
 
-        // Store user data in cookies
-        UserCookies.setUserData(userCookieData);
-        setUserData(userCookieData);
-
-        toast.success("Account created successfully! Welcome to GlowBridge!");
-      } catch (dbError) {
-        console.error("Failed to create user in database:", dbError);
-
-        // If backend fails, still use Firebase user but with basic data
-        const fallbackUserData: UserCookieData = {
-          id: firebaseUser.uid,
-          name: name,
-          email: firebaseUser.email || email,
-          phone: phone,
-          role: "customer",
-          status: "active",
-          joinDate: new Date().toISOString().split("T")[0],
-          salonId: "1",
-        };
-
-        UserCookies.setUserData(fallbackUserData);
-        setUserData(fallbackUserData);
-
-        toast.success("Account created! (Using basic profile)");
-      }
+      toast.success("Account created successfully! Welcome to GlowBridge!");
     } catch (error: unknown) {
       let errorMessage = "Failed to create account";
 
-      const errorCode = (error as { code?: string })?.code;
-      switch (errorCode) {
-        case "auth/email-already-in-use":
+      if (error instanceof Error) {
+        if (
+          error.message.includes("email already exists") ||
+          error.message.includes("already in use")
+        ) {
           errorMessage = "An account with this email already exists";
-          break;
-        case "auth/weak-password":
+        } else if (
+          error.message.includes("weak password") ||
+          error.message.includes("password")
+        ) {
           errorMessage =
             "Password is too weak. Please use at least 6 characters";
-          break;
-        case "auth/invalid-email":
+        } else if (
+          error.message.includes("invalid email") ||
+          error.message.includes("email")
+        ) {
           errorMessage = "Please enter a valid email address";
-          break;
+        } else {
+          errorMessage = error.message || "Failed to create account";
+        }
       }
 
       toast.error(errorMessage);
@@ -231,7 +185,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const firebaseAuth = auth();
       await signOut(firebaseAuth);
 
-      // Clear all user-related cookies
       UserCookies.clearAllUserCookies();
       setUserData(null);
 

@@ -1,6 +1,4 @@
-// Order API functions for backend integration
 
-// Backend order structures
 interface BackendOrderItem {
   id: string;
   order_id: string;
@@ -20,8 +18,6 @@ interface BackendOrder {
   is_paid: boolean;
   items: BackendOrderItem[];
 }
-
-// Frontend order structures
 export interface OrderItem {
   id: string;
   productId: string;
@@ -41,7 +37,7 @@ export interface Order {
   totalAmount: number;
   isPaid: boolean;
   items: OrderItem[];
-  // Legacy fields for backward compatibility
+
   status?:
     | "pending"
     | "confirmed"
@@ -53,23 +49,17 @@ export interface Order {
   shippingAddress?: string;
   notes?: string;
 }
-
-// Order item for creation
 export interface CreateOrderItem {
   product_id: string;
   quantity: number;
   price: number;
 }
-
-// Create order payload for backend (/api/orders endpoint)
 export interface CreateOrderPayload {
   user_id: string;
   items: CreateOrderItem[];
   description: string;
   payment_type: string;
 }
-
-// Order status update payload
 export interface UpdateOrderStatusPayload {
   status:
     | "pending"
@@ -79,8 +69,6 @@ export interface UpdateOrderStatusPayload {
     | "delivered"
     | "cancelled";
 }
-
-// API Response types
 interface OrdersResponse {
   orders: BackendOrder[];
   total: number;
@@ -88,8 +76,6 @@ interface OrdersResponse {
   limit: number;
   totalPages: number;
 }
-
-// API Error class
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -100,13 +86,11 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
-
-// Generic API request function
 const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<unknown> => {
-  // Use the backend URL directly for order APIs
+
   const url = `/api_g${endpoint}`;
 
   const config: RequestInit = {
@@ -142,8 +126,6 @@ const apiRequest = async (
     );
   }
 };
-
-// Transform backend order to frontend order
 const transformBackendOrder = (backendOrder: BackendOrder): Order => {
   return {
     id: backendOrder.id,
@@ -161,14 +143,12 @@ const transformBackendOrder = (backendOrder: BackendOrder): Order => {
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     })),
-    // Legacy fields for backward compatibility
+
     status: backendOrder.is_paid ? "confirmed" : "pending",
     orderDate: backendOrder.items[0]?.created_at || new Date().toISOString(),
     notes: backendOrder.description,
   };
 };
-
-// Create order using the standard /api/orders endpoint
 export const createOrder = async (
   payload: CreateOrderPayload
 ): Promise<string> => {
@@ -179,8 +159,6 @@ export const createOrder = async (
 
   return "success";
 };
-
-// Legacy function for backward compatibility - now uses createOrder
 export const createOrderFromCart = async (
   userId: string,
   cartItems: CreateOrderItem[],
@@ -194,8 +172,6 @@ export const createOrderFromCart = async (
     payment_type: paymentType,
   });
 };
-
-// Cancel order (restores product quantities)
 export const cancelOrder = async (
   orderId: string
 ): Promise<{ message: string }> => {
@@ -205,8 +181,6 @@ export const cancelOrder = async (
 
   return response;
 };
-
-// Update order status
 export const updateOrderStatus = async (
   orderId: string,
   payload: UpdateOrderStatusPayload
@@ -218,8 +192,6 @@ export const updateOrderStatus = async (
 
   return transformBackendOrder(response);
 };
-
-// Get detailed order with items and product info
 export const getOrderDetails = async (orderId: string): Promise<Order> => {
   const response = (await apiRequest(
     `/orders/${orderId}/details`
@@ -227,8 +199,6 @@ export const getOrderDetails = async (orderId: string): Promise<Order> => {
 
   return transformBackendOrder(response);
 };
-
-// Get user's orders (optional helper function)
 export const getUserOrders = async (
   userId: string,
   page: number = 1,

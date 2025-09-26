@@ -48,8 +48,6 @@ import {
   handleFormSubmissionWithToast,
 } from "@/lib/errorToast";
 import { Pagination } from "@/shared/components/pagination";
-
-// Use API salon interface directly
 type Salon = ApiSalon;
 
 export function SalonManagement() {
@@ -74,7 +72,7 @@ export function SalonManagement() {
     status: "active" as "active" | "inactive",
   });
 
-  // Load salons from API
+
   const loadSalons = async (page: number = 1, limit: number = 10) => {
     try {
       setLoading(true);
@@ -93,7 +91,7 @@ export function SalonManagement() {
     }
   };
 
-  // Load salons on component mount
+
   useEffect(() => {
     loadSalons();
   }, []);
@@ -130,7 +128,7 @@ export function SalonManagement() {
         setSubmitting(true);
 
         if (editingSalon) {
-          // Update existing salon
+
           const updatedSalon = await updateSalon(editingSalon.id, formData);
           setSalons(
             salons.map((salon) =>
@@ -139,9 +137,9 @@ export function SalonManagement() {
           );
           return updatedSalon;
         } else {
-          // Create new salon
+
           const newSalon = await createSalon(formData);
-          // Reload salons to get updated list with proper pagination
+
           await loadSalons(pagination.page, pagination.limit);
           return newSalon;
         }
@@ -163,7 +161,7 @@ export function SalonManagement() {
     await handleFormSubmissionWithToast(
       async () => {
         await deleteSalon(id);
-        // Reload salons to get updated list with proper pagination
+
         await loadSalons(pagination.page, pagination.limit);
         return true;
       },
@@ -175,7 +173,7 @@ export function SalonManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -194,7 +192,7 @@ export function SalonManagement() {
         </Button>
       </div>
 
-      {/* Loading State */}
+      {}
       {loading && (
         <Card>
           <CardContent className="pt-6">
@@ -208,7 +206,7 @@ export function SalonManagement() {
         </Card>
       )}
 
-      {/* Stats Cards */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -246,7 +244,7 @@ export function SalonManagement() {
         </Card>
       </div>
 
-      {/* Salons Table */}
+      {}
       <Card>
         <CardHeader>
           <CardTitle>All Salons</CardTitle>
@@ -344,7 +342,7 @@ export function SalonManagement() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
+      {}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

@@ -12,14 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Gift,
-  Package as PackageIcon,
-  DollarSign,
-} from "lucide-react";
+import { Plus, Edit, Trash2, Gift, Package as PackageIcon } from "lucide-react";
 import PackageForm from "@/components/package-form";
 import ConfirmationModal from "@/components/confirmation-modal";
 import {
@@ -32,8 +25,6 @@ import {
 } from "@/lib/packageApi";
 import { showApiErrorToast } from "@/lib/errorToast";
 import { Loader2 } from "lucide-react";
-
-// Types for package operations
 interface PackageFormData {
   name: string;
   description: string;
@@ -58,7 +49,7 @@ export default function PackagesPage() {
     packageId: string | null;
   }>({ isOpen: false, packageId: null });
 
-  // Load packages on component mount
+
   useEffect(() => {
     loadPackages();
   }, []);
@@ -152,10 +143,10 @@ export default function PackagesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Package Management
           </h1>
           <p className="text-muted-foreground mt-2">
@@ -165,7 +156,7 @@ export default function PackagesPage() {
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
               <Plus className="w-4 h-4 mr-2" />
               Add New Package
             </Button>
@@ -183,22 +174,22 @@ export default function PackagesPage() {
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200/50">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
                 <Gift className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-blue-700">
+                <p className="text-sm font-medium text-muted-foreground">
                   Total Packages
                 </p>
-                <p className="text-2xl font-bold text-blue-800">
+                <p className="text-2xl font-bold text-foreground">
                   {packages.length}
                 </p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-muted-foreground">
                   Showing {packages.length}
                 </p>
               </div>
@@ -206,49 +197,49 @@ export default function PackagesPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200/50">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
+                Rs
               </div>
               <div>
-                <p className="text-sm font-medium text-green-700">
+                <p className="text-sm font-medium text-muted-foreground">
                   Total Value
                 </p>
-                <p className="text-2xl font-bold text-green-800">
-                  ${totalRevenue.toFixed(0)}
+                <p className="text-2xl font-bold text-foreground">
+                  Rs.{totalRevenue.toFixed(0)}
                 </p>
-                <p className="text-xs text-green-600">Package revenue</p>
+                <p className="text-xs text-muted-foreground">Package revenue</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200/50">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
                 <PackageIcon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-blue-700">
+                <p className="text-sm font-medium text-muted-foreground">
                   Avg. Services
                 </p>
-                <p className="text-2xl font-bold text-blue-800">
+                <p className="text-2xl font-bold text-foreground">
                   {Math.round(
                     packages.reduce((sum, p) => sum + p.serviceCount, 0) /
                       packages.length || 0
                   )}
                 </p>
-                <p className="text-xs text-blue-600">Per package</p>
+                <p className="text-xs text-muted-foreground">Per package</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Loading State */}
+      {}
       {loading && (
         <Card className="p-12 text-center">
           <Loader2 className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-spin" />
@@ -261,7 +252,7 @@ export default function PackagesPage() {
         </Card>
       )}
 
-      {/* Error State */}
+      {}
       {error && !loading && (
         <Card className="p-12 text-center border-red-200 bg-red-50">
           <Gift className="w-12 h-12 text-red-400 mx-auto mb-4" />
@@ -279,7 +270,7 @@ export default function PackagesPage() {
         </Card>
       )}
 
-      {/* Packages Grid */}
+      {}
       {!loading && !error && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {packages.map((pkg) => (
@@ -289,7 +280,7 @@ export default function PackagesPage() {
             >
               <div className="relative overflow-hidden rounded-t-lg">
                 <Image
-                  src={pkg.image || "/default-package.jpg"}
+                  src={pkg.image || "/package.jpg"}
                   alt={pkg.name}
                   width={400}
                   height={192}
@@ -331,13 +322,12 @@ export default function PackagesPage() {
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <DollarSign className="w-4 h-4 text-green-500" />
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-green-600">
-                          ${pkg.finalPrice.toFixed(2)}
+                          Rs.{pkg.finalPrice.toFixed(2)}
                         </span>
                         <span className="text-xs text-muted-foreground line-through">
-                          ${pkg.totalPrice.toFixed(2)}
+                          Rs.{pkg.totalPrice.toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -349,7 +339,7 @@ export default function PackagesPage() {
                         Package Savings
                       </span>
                       <span className="text-sm font-bold text-green-600">
-                        ${(pkg.totalPrice - pkg.finalPrice).toFixed(2)}
+                        Rs.{(pkg.totalPrice - pkg.finalPrice).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -402,7 +392,7 @@ export default function PackagesPage() {
             </Card>
           ))}
 
-          {/* No Results */}
+          {}
           {packages.length === 0 && (
             <div className="col-span-full">
               <Card className="p-12 text-center">
@@ -419,7 +409,7 @@ export default function PackagesPage() {
         </div>
       )}
 
-      {/* Edit Dialog */}
+      {}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -446,7 +436,7 @@ export default function PackagesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {}
       <ConfirmationModal
         isOpen={deleteConfirmation.isOpen}
         onClose={() =>

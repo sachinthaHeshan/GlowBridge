@@ -18,7 +18,6 @@ import {
   Edit,
   Trash2,
   Clock,
-  DollarSign,
   Package,
   ArrowLeft,
   Loader2,
@@ -38,9 +37,7 @@ import {
   Service,
 } from "@/lib/categoryApi";
 import { showApiErrorToast } from "@/lib/errorToast";
-
-// Constants
-const DEFAULT_SALON_ID = "1df3195c-05b9-43c9-bebd-79d8684cbf55"; // TODO: Replace with actual salon ID from auth context
+const DEFAULT_SALON_ID = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
 
 export default function CategoryServicesPage() {
   const params = useParams();
@@ -65,20 +62,20 @@ export default function CategoryServicesPage() {
   const [total, setTotal] = useState(0);
   const limit = 10;
 
-  // Load category and services from API
+
   const loadCategoryAndServices = useCallback(
     async (page: number = 1, search?: string) => {
       try {
         setLoading(true);
 
-        // Load category details
+
         const categoryData = await fetchCategoryById(categoryId);
         setCategory(categoryData);
 
-        // Load services for this category with search
+
         const servicesData = await fetchServicesByCategory(categoryId);
 
-        // Apply search filter if provided
+
         let filteredData = servicesData;
         if (search) {
           filteredData = servicesData.filter(
@@ -88,7 +85,7 @@ export default function CategoryServicesPage() {
           );
         }
 
-        // Simple pagination simulation (API doesn't support pagination for services by category yet)
+
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
         const paginatedServices = filteredData.slice(startIndex, endIndex);
@@ -99,7 +96,6 @@ export default function CategoryServicesPage() {
         setCurrentPage(page);
         setTotalPages(Math.ceil(filteredData.length / limit));
       } catch (error) {
-        console.error("Failed to load category and services:", error);
         showApiErrorToast(error, "Failed to load data");
       } finally {
         setLoading(false);
@@ -108,12 +104,12 @@ export default function CategoryServicesPage() {
     [categoryId, limit]
   );
 
-  // Load initial data
+
   useEffect(() => {
     loadCategoryAndServices(1);
   }, [categoryId, loadCategoryAndServices]);
 
-  // Handle search
+
   const handleSearch = useCallback(() => {
     setCurrentPage(1);
     loadCategoryAndServices(1, searchTerm || undefined);
@@ -125,7 +121,7 @@ export default function CategoryServicesPage() {
     loadCategoryAndServices(1);
   };
 
-  // Handle Enter key press in search input
+
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleSearch();
@@ -162,10 +158,9 @@ export default function CategoryServicesPage() {
       });
 
       setIsAddDialogOpen(false);
-      // Reload services to get updated data
+
       await loadCategoryAndServices(currentPage, searchTerm || undefined);
     } catch (error) {
-      console.error("Failed to create service:", error);
       showApiErrorToast(error, "Failed to create service");
     } finally {
       setActionLoading(false);
@@ -203,10 +198,9 @@ export default function CategoryServicesPage() {
 
       setIsEditDialogOpen(false);
       setEditingService(null);
-      // Reload services to get updated data
+
       await loadCategoryAndServices(currentPage, searchTerm || undefined);
     } catch (error) {
-      console.error("Failed to update service:", error);
       showApiErrorToast(error, "Failed to update service");
     } finally {
       setActionLoading(false);
@@ -225,10 +219,9 @@ export default function CategoryServicesPage() {
       await deleteService(deleteConfirmation.serviceId);
 
       setDeleteConfirmation({ isOpen: false, serviceId: null });
-      // Reload services to get updated data
+
       await loadCategoryAndServices(currentPage, searchTerm || undefined);
     } catch (error) {
-      console.error("Failed to delete service:", error);
       showApiErrorToast(error, "Failed to delete service");
     } finally {
       setActionLoading(false);
@@ -254,7 +247,7 @@ export default function CategoryServicesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -268,7 +261,7 @@ export default function CategoryServicesPage() {
               Back to Categories
             </Button>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             {category.name} - Services
           </h1>
           <p className="text-muted-foreground mt-2">{category.description}</p>
@@ -295,7 +288,7 @@ export default function CategoryServicesPage() {
         </Dialog>
       </div>
 
-      {/* Simple Search */}
+      {}
       <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex gap-3">
@@ -325,7 +318,7 @@ export default function CategoryServicesPage() {
         </CardContent>
       </Card>
 
-      {/* Stats Cards */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200/50">
           <CardContent className="p-4">
@@ -352,12 +345,12 @@ export default function CategoryServicesPage() {
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-white" />
+                Rs
               </div>
               <div>
                 <p className="text-sm font-medium text-green-700">Avg. Price</p>
                 <p className="text-2xl font-bold text-green-800">
-                  $
+                  Rs.
                   {filteredServices.length > 0
                     ? (
                         filteredServices.reduce(
@@ -421,7 +414,7 @@ export default function CategoryServicesPage() {
         </Card>
       </div>
 
-      {/* Services Grid */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredServices.map((service) => (
           <Card
@@ -468,17 +461,16 @@ export default function CategoryServicesPage() {
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="w-4 h-4 text-green-500" />
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-green-600">
-                      $
+                      Rs.
                       {(service.price * (1 - service.discount / 100)).toFixed(
                         2
                       )}
                     </span>
                     {service.discount > 0 && (
                       <span className="text-xs text-muted-foreground line-through">
-                        ${service.price.toFixed(2)}
+                        Rs. {service.price.toFixed(2)}
                       </span>
                     )}
                   </div>
@@ -522,7 +514,7 @@ export default function CategoryServicesPage() {
         ))}
       </div>
 
-      {/* No Results */}
+      {}
       {filteredServices.length === 0 && !loading && (
         <Card className="p-12 text-center">
           <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -535,7 +527,7 @@ export default function CategoryServicesPage() {
         </Card>
       )}
 
-      {/* Pagination */}
+      {}
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -546,7 +538,7 @@ export default function CategoryServicesPage() {
         itemLabel="services"
       />
 
-      {/* Edit Dialog */}
+      {}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -576,7 +568,7 @@ export default function CategoryServicesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {}
       <ConfirmationModal
         isOpen={deleteConfirmation.isOpen}
         onClose={() =>

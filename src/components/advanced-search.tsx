@@ -127,7 +127,7 @@ export default function AdvancedSearch({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Basic Search */}
+        {}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
@@ -148,11 +148,11 @@ export default function AdvancedSearch({
           )}
         </div>
 
-        {/* Advanced Filters */}
+        {}
         {isExpanded && (
           <div className="space-y-4 pt-4 border-t border-border/50">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Category Filter */}
+              {}
               <div>
                 <Label className="text-sm font-medium">Category</Label>
                 <Select
@@ -175,7 +175,7 @@ export default function AdvancedSearch({
                 </Select>
               </div>
 
-              {/* Status Filter */}
+              {}
               <div>
                 <Label className="text-sm font-medium">Status</Label>
                 <Select
@@ -194,7 +194,7 @@ export default function AdvancedSearch({
                 </Select>
               </div>
 
-              {/* Sort Options */}
+              {}
               <div>
                 <Label className="text-sm font-medium">Sort By</Label>
                 <div className="flex gap-2">
@@ -233,10 +233,10 @@ export default function AdvancedSearch({
               </div>
             </div>
 
-            {/* Service and Package-specific filters */}
+            {}
             {(type === "services" || type === "packages") && (
               <div className="space-y-4">
-                {/* Price Range */}
+                {}
                 <div>
                   <Label className="text-sm font-medium">
                     Price Range: ${filters.priceRange[0]} - $
@@ -260,7 +260,7 @@ export default function AdvancedSearch({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Duration Filter */}
+                  {}
                   <div>
                     <Label className="text-sm font-medium">Duration</Label>
                     <Select
@@ -283,7 +283,7 @@ export default function AdvancedSearch({
                     </Select>
                   </div>
 
-                  {/* Privacy Filter */}
+                  {}
                   <div>
                     <Label className="text-sm font-medium">Service Type</Label>
                     <Select
@@ -313,7 +313,7 @@ export default function AdvancedSearch({
               </div>
             )}
 
-            {/* Action Buttons */}
+            {}
             <div className="flex gap-2 pt-4 border-t border-border/50">
               <Button
                 variant="outline"
@@ -334,7 +334,7 @@ export default function AdvancedSearch({
           </div>
         )}
 
-        {/* Active Filters Display */}
+        {}
         {getActiveFiltersCount() > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-border/50">
             {filters.searchTerm && (

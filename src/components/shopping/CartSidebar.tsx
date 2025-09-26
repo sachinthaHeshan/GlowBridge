@@ -25,22 +25,22 @@ export default function CartSidebar() {
   const { userData } = useAuth();
   const router = useRouter();
 
-  // Auth modal state
+
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const handleProceedToPayment = () => {
     if (userData) {
-      // User is authenticated, proceed to payment
+
       setIsCartOpen(false);
       router.push("/payment");
     } else {
-      // User not authenticated, show auth modal
+
       setAuthModalOpen(true);
     }
   };
 
   const handleAuthSuccess = () => {
-    // After successful authentication, proceed to payment
+
     setAuthModalOpen(false);
     setIsCartOpen(false);
     router.push("/payment");
@@ -50,16 +50,16 @@ export default function CartSidebar() {
 
   return (
     <>
-      {/* Backdrop */}
+      {}
       <div
         className="fixed inset-0 bg-background/50 backdrop-blur-sm z-40"
         onClick={() => setIsCartOpen(false)}
       />
 
-      {/* Sidebar */}
+      {}
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border z-50 shadow-lg">
         <div className="flex flex-col h-full">
-          {/* Header */}
+          {}
           <div className="flex items-center justify-between p-6 border-b border-border">
             <div className="flex items-center space-x-2">
               <ShoppingBag className="h-5 w-5 text-primary" />
@@ -81,7 +81,7 @@ export default function CartSidebar() {
             </Button>
           </div>
 
-          {/* Invalid Items Warning */}
+          {}
           {cartItems.some((item) => !item.originalId) && (
             <div className="p-4 bg-destructive/10 border-b border-destructive/20">
               <div className="flex items-center justify-between">
@@ -105,7 +105,7 @@ export default function CartSidebar() {
             </div>
           )}
 
-          {/* Cart Items */}
+          {}
           <div className="flex-1 overflow-y-auto p-6">
             {cartItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
@@ -126,7 +126,7 @@ export default function CartSidebar() {
                   <Card key={item.id} className="overflow-hidden">
                     <CardContent className="p-4">
                       <div className="flex space-x-4">
-                        {/* Product Image */}
+                        {}
                         <div className="flex-shrink-0">
                           <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center">
                             <span className="text-xs text-muted-foreground">
@@ -135,7 +135,7 @@ export default function CartSidebar() {
                           </div>
                         </div>
 
-                        {/* Product Info */}
+                        {}
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-medium text-foreground truncate">
                             {item.name}
@@ -144,7 +144,7 @@ export default function CartSidebar() {
                             LKR {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </p>
 
-                          {/* Quantity Controls */}
+                          {}
                           <div className="flex items-center justify-between mt-3">
                             <div className="flex items-center space-x-2">
                               <Button
@@ -184,7 +184,7 @@ export default function CartSidebar() {
                         </div>
                       </div>
 
-                      {/* Item Total */}
+                      {}
                       <div className="mt-3 pt-3 border-t border-border">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-muted-foreground">
@@ -202,10 +202,10 @@ export default function CartSidebar() {
             )}
           </div>
 
-          {/* Footer with Total and Checkout */}
+          {}
           {cartItems.length > 0 && (
             <div className="border-t border-border p-6 space-y-4">
-              {/* Order Summary */}
+              {}
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal:</span>
@@ -233,7 +233,7 @@ export default function CartSidebar() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {}
               <div className="space-y-2">
                 <Button
                   onClick={handleProceedToPayment}
@@ -256,7 +256,7 @@ export default function CartSidebar() {
         </div>
       </div>
 
-      {/* Auth Modal */}
+      {}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}

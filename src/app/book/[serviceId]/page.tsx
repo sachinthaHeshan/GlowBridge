@@ -27,7 +27,7 @@ export default async function SalonSelectionPage({
       distance: "2.5 km",
       rating: 4.9,
       reviews: 234,
-      price: "LKR 3,500",
+      price: "Rs. 3,500",
       image: "/elegant-beauty-salon.png",
       specialties: ["Hair", "Facial", "Bridal"],
       nextAvailable: "Today 2:00 PM",
@@ -41,7 +41,7 @@ export default async function SalonSelectionPage({
       distance: "4.1 km",
       rating: 4.8,
       reviews: 189,
-      price: "LKR 3,200",
+      price: "Rs. 3,200",
       image: "/modern-spa-salon-interior.jpg",
       specialties: ["Spa", "Massage", "Hair"],
       nextAvailable: "Tomorrow 10:00 AM",
@@ -55,7 +55,7 @@ export default async function SalonSelectionPage({
       distance: "6.8 km",
       rating: 4.7,
       reviews: 156,
-      price: "LKR 4,000",
+      price: "Rs. 4,000",
       image: "/luxury-beauty-salon.png",
       specialties: ["Nails", "Makeup", "Hair"],
       nextAvailable: "Today 4:30 PM",
@@ -66,7 +66,7 @@ export default async function SalonSelectionPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
@@ -89,7 +89,7 @@ export default async function SalonSelectionPage({
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Location and Filters */}
+        {}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
@@ -128,7 +128,7 @@ export default async function SalonSelectionPage({
           </div>
         </div>
 
-        {/* Salons List */}
+        {}
         <div className="space-y-6">
           {salons.map((salon) => (
             <Card
@@ -137,7 +137,7 @@ export default async function SalonSelectionPage({
             >
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
-                  {/* Salon Image */}
+                  {}
                   <div className="w-full md:w-48 h-32 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                     <Image
                       src={salon.image || "/placeholder.svg"}
@@ -148,7 +148,7 @@ export default async function SalonSelectionPage({
                     />
                   </div>
 
-                  {/* Salon Info */}
+                  {}
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -219,7 +219,7 @@ export default async function SalonSelectionPage({
           ))}
         </div>
 
-        {/* Map View Toggle */}
+        {}
         <div className="mt-8 text-center">
           <Button variant="outline" size="lg">
             <MapPin className="w-4 h-4 mr-2" />

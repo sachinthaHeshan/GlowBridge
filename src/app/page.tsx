@@ -13,45 +13,79 @@ import { Badge } from "@/components/ui/badge";
 import {
   Search,
   MapPin,
-  Star,
   Users,
   Scissors,
-  Sparkles,
   Heart,
-  Calendar,
   ShoppingBag,
+  LogOut,
+  User,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, userData, logout } = useAuth();
 
   const handleStartBooking = () => {
     if (!user) {
-      // Redirect to login page instead of showing modal
       window.location.href = "/login";
     } else {
-      window.location.href = "/services/hair";
+      window.location.href = "/services";
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+
+      window.location.reload();
+    } catch {}
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary-foreground" />
+                <Scissors className="w-5 h-5 text-primary-foreground" />
               </div>
               <h1 className="text-xl font-semibold text-foreground">
                 GlowBridge
               </h1>
             </div>
+            {}
+            <div className="flex md:hidden items-center gap-2">
+              {user && userData ? (
+                <div className="flex items-center gap-2">
+                  <Link href="/dashboard1">
+                    <Button variant="outline" size="sm">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (window.location.href = "/login")}
+                >
+                  Sign In
+                </Button>
+              )}
+            </div>
+
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 href="#"
@@ -77,12 +111,29 @@ export default function HomePage() {
               >
                 About
               </Link>
-              {user ? (
-                <Link href="/dashboard1">
-                  <Button variant="outline" size="sm">
-                    Dashboard
+              {user && userData ? (
+                <div className="flex items-center gap-3">
+                  <div className="hidden sm:flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">
+                      Welcome, {userData.name}
+                    </span>
+                  </div>
+                  <Link href="/dashboard1">
+                    <Button variant="outline" size="sm">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                  >
+                    <LogOut className="w-4 h-4 mr-1" />
+                    Logout
                   </Button>
-                </Link>
+                </div>
               ) : (
                 <Button
                   variant="outline"
@@ -96,7 +147,7 @@ export default function HomePage() {
           </div>
         </div>
       </header>
-      {/* Hero Section */}
+      {}
       <section className="py-16 px-4">
         <div className="container mx-auto text-center max-w-4xl">
           <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6 text-balance">
@@ -108,7 +159,7 @@ export default function HomePage() {
             salons. From haircuts to spa treatments, find your perfect match.
           </p>
 
-          {/* Search Bar */}
+          {}
           <div className="max-w-2xl mx-auto mb-12">
             <div className="flex gap-2 p-2 bg-card border border-border rounded-xl shadow-sm">
               <div className="flex-1 flex items-center gap-2 px-3">
@@ -137,7 +188,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">500+</div>
@@ -166,7 +217,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* Service Categories */}
+      {}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-12">
@@ -192,7 +243,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>From LKR 2,500</span>
+                    <span>From Rs. 2,500</span>
                     <Badge variant="secondary">Popular</Badge>
                   </div>
                 </CardContent>
@@ -203,7 +254,7 @@ export default function HomePage() {
               <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-border/50 hover:border-primary/20">
                 <CardHeader className="text-center pb-4">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                    <Sparkles className="w-8 h-8 text-primary" />
+                    <Scissors className="w-8 h-8 text-primary" />
                   </div>
                   <CardTitle className="text-lg">Facial Treatments</CardTitle>
                   <CardDescription>
@@ -212,7 +263,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>From LKR 3,500</span>
+                    <span>From Rs. 3,500</span>
                     <Badge variant="secondary">Trending</Badge>
                   </div>
                 </CardContent>
@@ -232,7 +283,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>From LKR 1,800</span>
+                    <span>From Rs. 1,800</span>
                     <Badge variant="secondary">New</Badge>
                   </div>
                 </CardContent>
@@ -252,7 +303,7 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>From LKR 4,500</span>
+                    <span>From Rs. 4,500</span>
                     <Badge variant="secondary">Premium</Badge>
                   </div>
                 </CardContent>
@@ -261,97 +312,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* Featured Salons
-      <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold text-foreground mb-4">
-              Featured Salons
-            </h3>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Top-rated salons in your area
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Elegance Beauty Studio",
-                location: "Colombo 03",
-                rating: 4.9,
-                reviews: 234,
-                image: "/elegant-beauty-salon.png",
-                specialties: ["Hair", "Facial", "Bridal"],
-              },
-              {
-                name: "Serenity Spa & Salon",
-                location: "Kandy",
-                rating: 4.8,
-                reviews: 189,
-                image: "/modern-spa-salon-interior.jpg",
-                specialties: ["Spa", "Massage", "Wellness"],
-              },
-              {
-                name: "Glamour Zone",
-                location: "Galle",
-                rating: 4.7,
-                reviews: 156,
-                image: "/luxury-beauty-salon.png",
-                specialties: ["Nails", "Makeup", "Hair"],
-              },
-            ].map((salon, index) => (
-              <Card
-                key={index}
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
-              >
-                <div className="aspect-video bg-muted relative overflow-hidden">
-                  <Image
-                    src={salon.image || "/placeholder.svg"}
-                    alt={salon.name}
-                    width={400}
-                    height={200}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{salon.name}</CardTitle>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                        <MapPin className="w-4 h-4" />
-                        {salon.location}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">
-                        {salon.rating}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        ({salon.reviews})
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {salon.specialties.map((specialty, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs">
-                        {specialty}
-                      </Badge>
-                    ))}
-                  </div>
-                  <Button className="w-full" size="sm">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Book Now
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section> */}
-      {/* CTA Section */}
+      {}
       <section className="py-16 px-4 bg-primary/5">
         <div className="container mx-auto text-center max-w-3xl">
           <h3 className="text-3xl font-bold text-foreground mb-4">
@@ -378,14 +340,14 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* Footer */}
+      {}
       <footer className="py-12 px-4 bg-card border-t border-border">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary-foreground" />
+                  <Scissors className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <h4 className="text-lg font-semibold">BeautyBook</h4>
               </div>

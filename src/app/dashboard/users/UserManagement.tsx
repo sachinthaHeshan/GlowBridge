@@ -66,7 +66,83 @@ export function UserManagement() {
     status: "active" as "active" | "inactive",
   });
 
-  // Load users from API
+  const [validationErrors, setValidationErrors] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+
+  const [touchedFields, setTouchedFields] = useState({
+    name: false,
+    email: false,
+    phone: false,
+  });
+
+  const validateField = (fieldName: string, value: string) => {
+    switch (fieldName) {
+      case "name":
+        if (!value.trim()) {
+          return "Full name is required";
+        }
+        if (value.trim().length < 2) {
+          return "Full name must be at least 2 characters";
+        }
+        return "";
+
+      case "email":
+        if (!value.trim()) {
+          return "Email is required";
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          return "Please enter a valid email address";
+        }
+        return "";
+
+      case "phone":
+        if (!value.trim()) {
+          return "Phone number is required";
+        }
+        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+        if (!phoneRegex.test(value.replace(/\s/g, ""))) {
+          return "Please enter a valid phone number";
+        }
+        return "";
+
+      default:
+        return "";
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {
+      name: validateField("name", formData.name),
+      email: validateField("email", formData.email),
+      phone: validateField("phone", formData.phone),
+    };
+
+    setValidationErrors(errors);
+    return !Object.values(errors).some((error) => error !== "");
+  };
+
+  const handleFieldChange = (fieldName: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [fieldName]: value }));
+
+    if (touchedFields[fieldName as keyof typeof touchedFields]) {
+      const error = validateField(fieldName, value);
+      setValidationErrors((prev) => ({ ...prev, [fieldName]: error }));
+    }
+  };
+
+  const handleFieldBlur = (fieldName: string) => {
+    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
+    const error = validateField(
+      fieldName,
+      formData[fieldName as keyof typeof formData] as string
+    );
+    setValidationErrors((prev) => ({ ...prev, [fieldName]: error }));
+  };
+
   const loadUsers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -75,19 +151,16 @@ export function UserManagement() {
       setTotalUsers(result.total);
       setTotalPages(result.totalPages);
     } catch (error) {
-      console.error("Failed to load users:", error);
       showApiErrorToast(error, "Failed to load users");
     } finally {
       setIsLoading(false);
     }
   }, [currentPage, itemsPerPage, roleFilter]);
 
-  // Load users on component mount and when page/filter changes
   useEffect(() => {
     loadUsers();
   }, [loadUsers]);
 
-  // Filter users locally for search (since API doesn't support search yet)
   const filteredUsers = useMemo(() => {
     if (!searchTerm) return users;
     return users.filter((user) => {
@@ -109,6 +182,16 @@ export function UserManagement() {
       role: UserRole.STAFF,
       status: "active",
     });
+    setValidationErrors({
+      name: "",
+      email: "",
+      phone: "",
+    });
+    setTouchedFields({
+      name: false,
+      email: false,
+      phone: false,
+    });
     setIsDialogOpen(true);
   };
 
@@ -121,23 +204,41 @@ export function UserManagement() {
       role: user.role,
       status: user.status,
     });
+    setValidationErrors({
+      name: "",
+      email: "",
+      phone: "",
+    });
+    setTouchedFields({
+      name: false,
+      email: false,
+      phone: false,
+    });
     setIsDialogOpen(true);
   };
 
   const handleSaveUser = async () => {
+    const isValid = validateForm();
+
+    if (!isValid) {
+      setTouchedFields({
+        name: true,
+        email: true,
+        phone: true,
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (editingUser) {
-        // Update existing user
         await updateUser(editingUser.id, formData);
       } else {
-        // Create new user
         await createUser(formData);
       }
       setIsDialogOpen(false);
-      await loadUsers(); // Reload users after save
+      await loadUsers();
     } catch (error) {
-      console.error("Failed to save user:", error);
       showApiErrorToast(
         error,
         editingUser ? "Failed to update user" : "Failed to create user"
@@ -152,9 +253,8 @@ export function UserManagement() {
 
     try {
       await deleteUser(id);
-      await loadUsers(); // Reload users after delete
+      await loadUsers();
     } catch (error) {
-      console.error("Failed to delete user:", error);
       showApiErrorToast(error, "Failed to delete user");
     }
   };
@@ -409,11 +509,20 @@ export function UserManagement() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => handleFieldChange("name", e.target.value)}
+                onBlur={() => handleFieldBlur("name")}
                 placeholder="Enter full name"
+                className={
+                  validationErrors.name && touchedFields.name
+                    ? "border-destructive"
+                    : ""
+                }
               />
+              {validationErrors.name && touchedFields.name && (
+                <p className="text-sm text-destructive">
+                  {validationErrors.name}
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -421,22 +530,40 @@ export function UserManagement() {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                onChange={(e) => handleFieldChange("email", e.target.value)}
+                onBlur={() => handleFieldBlur("email")}
                 placeholder="Enter email address"
+                className={
+                  validationErrors.email && touchedFields.email
+                    ? "border-destructive"
+                    : ""
+                }
               />
+              {validationErrors.email && touchedFields.email && (
+                <p className="text-sm text-destructive">
+                  {validationErrors.email}
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
                 id="phone"
                 value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
+                onChange={(e) => handleFieldChange("phone", e.target.value)}
+                onBlur={() => handleFieldBlur("phone")}
                 placeholder="Enter phone number"
+                className={
+                  validationErrors.phone && touchedFields.phone
+                    ? "border-destructive"
+                    : ""
+                }
               />
+              {validationErrors.phone && touchedFields.phone && (
+                <p className="text-sm text-destructive">
+                  {validationErrors.phone}
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="role">Role</Label>

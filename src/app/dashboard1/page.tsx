@@ -17,7 +17,7 @@ import {
   User,
   Phone,
   Mail,
-  Sparkles,
+  Scissors,
   ArrowLeft,
   Plus,
 } from "lucide-react";
@@ -33,7 +33,7 @@ export default function DashboardPage() {
       date: "March 20, 2024",
       time: "2:00 PM",
       duration: "60 min",
-      price: "LKR 3,500",
+      price: "Rs. 3,500",
       status: "confirmed",
       location: "Colombo 03",
     },
@@ -45,7 +45,7 @@ export default function DashboardPage() {
       date: "March 25, 2024",
       time: "10:30 AM",
       duration: "90 min",
-      price: "LKR 4,500",
+      price: "Rs. 4,500",
       status: "confirmed",
       location: "Kandy",
     },
@@ -60,7 +60,7 @@ export default function DashboardPage() {
       date: "March 10, 2024",
       time: "3:00 PM",
       duration: "75 min",
-      price: "LKR 2,800",
+      price: "Rs. 2,800",
       status: "completed",
       location: "Galle",
     },
@@ -72,7 +72,7 @@ export default function DashboardPage() {
       date: "February 28, 2024",
       time: "11:00 AM",
       duration: "120 min",
-      price: "LKR 8,500",
+      price: "Rs. 8,500",
       status: "completed",
       location: "Colombo 03",
     },
@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -99,7 +99,7 @@ export default function DashboardPage() {
               </Link>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary-foreground" />
+                  <Scissors className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <h1 className="text-xl font-semibold text-foreground">
                   My Dashboard
@@ -123,7 +123,7 @@ export default function DashboardPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Profile Sidebar */}
+          {}
           <div className="space-y-6">
             <Card>
               <CardHeader className="text-center">
@@ -180,9 +180,9 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Main Content */}
+          {}
           <div className="lg:col-span-3 space-y-8">
-            {/* Upcoming Appointments */}
+            {}
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-foreground">
@@ -298,7 +298,7 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Past Appointments */}
+            {}
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-foreground">

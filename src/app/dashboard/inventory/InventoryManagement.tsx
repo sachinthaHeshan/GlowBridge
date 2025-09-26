@@ -52,8 +52,6 @@ import {
   ApiError,
 } from "@/lib/productApi";
 import { showApiErrorToast } from "@/lib/errorToast";
-
-// Use Product interface from productApi
 type InventoryItem = Product;
 
 export function InventoryManagement() {
@@ -64,16 +62,11 @@ export function InventoryManagement() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Default salon ID - in a real app, this would come from user context or route params
-  const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55"; 
+
+  const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
 
   const [formData, setFormData] = useState({
     name: "",
-    category: "hair-care" as
-      | "hair-care"
-      | "skin-care"
-      | "tools"
-      | "accessories",
     quantity: 0,
     price: 0,
     status: "in-stock" as "in-stock" | "low-stock" | "out-of-stock",
@@ -84,9 +77,8 @@ export function InventoryManagement() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // Fetch products on component mount
+
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -95,7 +87,6 @@ export function InventoryManagement() {
         const products = await fetchSalonProducts(salonId);
         setItems(products);
       } catch (error) {
-        console.error("Failed to fetch products:", error);
         if (error instanceof ApiError) {
           setError(error.message);
           showApiErrorToast(error, "Failed to load products");
@@ -118,7 +109,6 @@ export function InventoryManagement() {
     setEditingItem(null);
     setFormData({
       name: "",
-      category: "hair-care",
       quantity: 0,
       price: 0,
       status: "in-stock",
@@ -133,7 +123,6 @@ export function InventoryManagement() {
     setEditingItem(item);
     setFormData({
       name: item.name,
-      category: item.category,
       quantity: item.quantity,
       price: item.price,
       status: item.status,
@@ -150,10 +139,9 @@ export function InventoryManagement() {
       setError(null);
 
       if (editingItem) {
-        // Update existing item
+
         const updatedItem = await updateProduct(editingItem.id, {
           name: formData.name,
-          category: formData.category,
           quantity: formData.quantity,
           price: formData.price,
           description: formData.description,
@@ -165,10 +153,9 @@ export function InventoryManagement() {
           items.map((item) => (item.id === editingItem.id ? updatedItem : item))
         );
       } else {
-        // Create new item
+
         const newItem = await createProduct({
           name: formData.name,
-          category: formData.category,
           quantity: formData.quantity,
           price: formData.price,
           status: formData.status,
@@ -183,7 +170,6 @@ export function InventoryManagement() {
 
       setIsDialogOpen(false);
     } catch (error) {
-      console.error("Failed to save product:", error);
       if (error instanceof ApiError) {
         setError(error.message);
         showApiErrorToast(
@@ -208,7 +194,6 @@ export function InventoryManagement() {
       await deleteProduct(id);
       setItems(items.filter((item) => item.id !== id));
     } catch (error) {
-      console.error("Failed to delete product:", error);
       if (error instanceof ApiError) {
         setError(error.message);
         showApiErrorToast(error, "Failed to delete product");
@@ -237,25 +222,21 @@ export function InventoryManagement() {
 
   const filterItems = (items: InventoryItem[]) => {
     return items.filter((item) => {
-      // Search term filter
+
       const matchesSearch = item.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
-      // Category filter
-      const matchesCategory =
-        selectedCategory === "all" || item.category === selectedCategory;
 
-      // Price range filter
       const matchesPrice =
         (!priceRange.min || item.price >= Number(priceRange.min)) &&
         (!priceRange.max || item.price <= Number(priceRange.max));
 
-      return matchesSearch && matchesCategory && matchesPrice;
+      return matchesSearch && matchesPrice;
     });
   };
 
-  // Loading state
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -279,7 +260,7 @@ export function InventoryManagement() {
     );
   }
 
-  // Error state
+
   if (error && items.length === 0) {
     return (
       <div className="space-y-6">
@@ -311,7 +292,7 @@ export function InventoryManagement() {
     );
   }
 
-  // Inventory management view
+
   return (
     <div className="space-y-6">
       {}
@@ -326,17 +307,9 @@ export function InventoryManagement() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={handleAddItem}
-          className="bg-primary hover:bg-primary/90"
-          disabled={saving}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Item
-        </Button>
       </div>
 
-      {/* Stats Cards  need to change*/}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -355,9 +328,8 @@ export function InventoryManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            
             <div className="text-2xl font-bold text-green-500">
-              {items.filter((i) => i.status === "in-stock").length} 
+              {items.filter((i) => i.status === "in-stock").length}
             </div>
           </CardContent>
         </Card>
@@ -387,14 +359,14 @@ export function InventoryManagement() {
         </Card>
       </div>
 
-      {/* Search and Filters Card */}
+      {}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Search and Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 md:grid-cols-4">
-            {/* Search Bar */}
+          <div className="grid gap-6 md:grid-cols-3">
+            {}
             <div>
               <Label htmlFor="search">Search Items</Label>
               <Input
@@ -406,27 +378,6 @@ export function InventoryManagement() {
               />
             </div>
 
-            {/* Category Filter */}
-            <div>
-              <Label htmlFor="category-filter">Category</Label>
-              <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="hair-care">Hair Care</SelectItem>
-                  <SelectItem value="skin-care">Skin Care</SelectItem>
-                  <SelectItem value="tools">Tools</SelectItem>
-                  <SelectItem value="accessories">Accessories</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Price Range Filter */}
             <div>
               <Label>Price Range</Label>
               <div className="flex items-center space-x-2 mt-1">
@@ -450,13 +401,12 @@ export function InventoryManagement() {
               </div>
             </div>
 
-            {/* Clear Filters Button */}
+            {}
             <div className="flex items-end">
               <Button
                 variant="outline"
                 onClick={() => {
                   setSearchTerm("");
-                  setSelectedCategory("all");
                   setPriceRange({ min: "", max: "" });
                 }}
                 className="w-full"
@@ -468,38 +418,37 @@ export function InventoryManagement() {
         </CardContent>
       </Card>
 
-      {/* Inventory Table */}
+      {}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Inventory Items</CardTitle>
             <CardDescription>Manage your products and supplies</CardDescription>
           </div>
-          <Button
-            onClick={() => {
-              // Add PDF generation logic here
-              console.log("Generate PDF clicked");
-            }}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Generate PDF
-          </Button>
-           <Button
-          onClick={handleAddItem}
-          className="bg-primary hover:bg-primary/90"
-          disabled={saving}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Item
-        </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={() => {
+              }}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Generate PDF
+            </Button>
+            <Button
+              onClick={handleAddItem}
+              className="bg-primary hover:bg-primary/90"
+              disabled={saving}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Item</TableHead>
-                <TableHead>Category</TableHead>
                 <TableHead className="text-right">Price</TableHead>
                 <TableHead className="text-center">Quantity</TableHead>
                 <TableHead className="text-center">Status</TableHead>
@@ -518,11 +467,8 @@ export function InventoryManagement() {
                       <div className="font-medium">{item.name}</div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{item.category}</Badge>
-                  </TableCell>
                   <TableCell className="text-right">
-                    ${item.price.toFixed(2)}
+                    Rs.{item.price.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-center">{item.quantity}</TableCell>
                   <TableCell className="text-center">
@@ -557,7 +503,7 @@ export function InventoryManagement() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Item Dialog */}
+      {}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -583,25 +529,6 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(
-                  value: "hair-care" | "skin-care" | "tools" | "accessories"
-                ) => setFormData({ ...formData, category: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hair-care">Hair Care</SelectItem>
-                  <SelectItem value="skin-care">Skin Care</SelectItem>
-                  <SelectItem value="tools">Tools</SelectItem>
-                  <SelectItem value="accessories">Accessories</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
               <Label htmlFor="quantity">Quantity</Label>
               <Input
                 id="quantity"
@@ -617,7 +544,7 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Price (Rs.)</Label> {}
               <Input
                 id="price"
                 type="number"

@@ -15,8 +15,6 @@ import { Plus, Edit, Trash2, Clock, DollarSign, Package } from "lucide-react";
 import AdvancedSearch from "@/components/advanced-search";
 import ServiceForm from "@/components/service-form";
 import ConfirmationModal from "@/components/confirmation-modal";
-
-// Mock data for services
 const mockServices = [
   {
     id: 1,
@@ -105,7 +103,7 @@ export default function ServicesPage() {
   }) => {
     let filtered = [...services];
 
-    // Search term filter
+
     if (filters.searchTerm) {
       filtered = filtered.filter(
         (service) =>
@@ -121,21 +119,21 @@ export default function ServicesPage() {
       );
     }
 
-    // Category filter
+
     if (filters.category) {
       filtered = filtered.filter(
         (service) => service.category === filters.category
       );
     }
 
-    // Status filter
+
     if (filters.status) {
       filtered = filtered.filter(
         (service) => service.status === filters.status
       );
     }
 
-    // Price range filter
+
     if (filters.priceRange[0] > 0 || filters.priceRange[1] < 500) {
       filtered = filtered.filter(
         (service) =>
@@ -144,21 +142,21 @@ export default function ServicesPage() {
       );
     }
 
-    // Duration filter
+
     if (filters.duration) {
       filtered = filtered.filter(
         (service) => service.duration === filters.duration
       );
     }
 
-    // Privacy filter
+
     if (filters.isPrivate !== null) {
       filtered = filtered.filter(
         (service) => service.isPrivate === filters.isPrivate
       );
     }
 
-    // Sort
+
     filtered.sort((a, b) => {
       let aValue: string | number;
       let bValue: string | number;
@@ -173,7 +171,7 @@ export default function ServicesPage() {
         aValue = a.name.toLowerCase();
         bValue = b.name.toLowerCase();
       } else {
-        // Default to name sorting for unknown sortBy values
+
         aValue = a.name.toLowerCase();
         bValue = b.name.toLowerCase();
       }
@@ -275,10 +273,10 @@ export default function ServicesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Service Management
           </h1>
           <p className="text-muted-foreground mt-2">
@@ -305,14 +303,14 @@ export default function ServicesPage() {
         </Dialog>
       </div>
 
-      {/* Advanced Search */}
+      {}
       <AdvancedSearch
         onSearch={handleSearch}
         onReset={handleResetSearch}
         type="services"
       />
 
-      {/* Stats Cards */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200/50">
           <CardContent className="p-4">
@@ -344,7 +342,7 @@ export default function ServicesPage() {
               <div>
                 <p className="text-sm font-medium text-blue-700">Avg. Price</p>
                 <p className="text-2xl font-bold text-blue-800">
-                  $
+                  Rs.
                   {(
                     filteredServices.reduce((sum, s) => sum + s.finalPrice, 0) /
                       filteredServices.length || 0
@@ -398,7 +396,7 @@ export default function ServicesPage() {
         </Card>
       </div>
 
-      {/* Services Grid */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredServices.map((service) => (
           <Card
@@ -444,11 +442,11 @@ export default function ServicesPage() {
                   <DollarSign className="w-4 h-4 text-green-500" />
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-green-600">
-                      ${service.finalPrice.toFixed(2)}
+                      Rs.{service.finalPrice.toFixed(2)}
                     </span>
                     {service.discount > 0 && (
                       <span className="text-xs text-muted-foreground line-through">
-                        ${service.price.toFixed(2)}
+                        Rs.{service.price.toFixed(2)}
                       </span>
                     )}
                   </div>
@@ -492,7 +490,7 @@ export default function ServicesPage() {
         ))}
       </div>
 
-      {/* No Results */}
+      {}
       {filteredServices.length === 0 && (
         <Card className="p-12 text-center">
           <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -505,7 +503,7 @@ export default function ServicesPage() {
         </Card>
       )}
 
-      {/* Edit Dialog */}
+      {}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -533,7 +531,7 @@ export default function ServicesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {}
       <ConfirmationModal
         isOpen={deleteConfirmation.isOpen}
         onClose={() =>

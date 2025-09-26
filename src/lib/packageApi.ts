@@ -1,8 +1,4 @@
-// Package API functions for backend integration
-
 import { Service } from "./categoryApi";
-
-// Backend package structure (reflects actual API response)
 interface BackendPackage {
   id: string;
   salon_id: string;
@@ -19,8 +15,6 @@ interface BackendPackage {
   created_at?: string;
   updated_at?: string;
 }
-
-// Frontend package structure (matching component interface)
 export interface Package {
   id: string;
   name: string;
@@ -38,8 +32,6 @@ export interface Package {
   createdAt?: string;
   updatedAt?: string;
 }
-
-// Create package payload for backend
 interface CreatePackagePayload {
   salon_id?: string;
   name: string;
@@ -48,8 +40,6 @@ interface CreatePackagePayload {
   service_ids: string[];
   discount?: number;
 }
-
-// Update package payload for backend
 interface UpdatePackagePayload {
   name?: string;
   description?: string;
@@ -57,8 +47,6 @@ interface UpdatePackagePayload {
   service_ids: string[];
   discount?: number;
 }
-
-// API Response types
 interface PackagesResponse {
   data: BackendPackage[];
   total?: number;
@@ -78,8 +66,6 @@ interface DeleteResponse {
   message: string;
   success?: boolean;
 }
-
-// Helper function to calculate package pricing
 const calculatePackagePricing = (
   services: Service[],
   discount: number
@@ -88,8 +74,6 @@ const calculatePackagePricing = (
   const finalPrice = totalPrice - (totalPrice * discount) / 100;
   return { totalPrice, finalPrice };
 };
-
-// Transform backend package to frontend package
 const transformBackendPackage = (backendPackage: BackendPackage): Package => {
   const services = backendPackage.services || [];
   const { totalPrice, finalPrice } =
@@ -118,8 +102,6 @@ const transformBackendPackage = (backendPackage: BackendPackage): Package => {
     updatedAt: backendPackage.updated_at,
   };
 };
-
-// Transform frontend package to backend payload
 const transformToBackendPayload = (packageData: {
   name: string;
   description: string;
@@ -137,8 +119,6 @@ const transformToBackendPayload = (packageData: {
     discount: parseFloat(packageData.discount) || 0,
   };
 };
-
-// API Error class
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -149,8 +129,6 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
-
-// Generic API request function
 const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
@@ -192,8 +170,6 @@ const apiRequest = async (
     );
   }
 };
-
-// Paginated packages result
 export interface PaginatedPackagesResult {
   packages: Package[];
   total: number;
@@ -201,8 +177,6 @@ export interface PaginatedPackagesResult {
   limit: number;
   totalPages: number;
 }
-
-// Fetch all packages with pagination and filtering
 export const fetchPackages = async (
   page: number = 1,
   limit: number = 10,
@@ -228,8 +202,6 @@ export const fetchPackages = async (
       Math.ceil((response.total || response.data.length) / limit),
   };
 };
-
-// Fetch all packages (without pagination)
 export const fetchAllPackages = async (
   name?: string,
   salonId?: string
@@ -247,8 +219,6 @@ export const fetchAllPackages = async (
   const response = (await apiRequest(endpoint)) as PackagesResponse;
   return response.data.map(transformBackendPackage);
 };
-
-// Search packages by name
 export const searchPackagesByName = async (
   name: string
 ): Promise<Package[]> => {
@@ -257,14 +227,10 @@ export const searchPackagesByName = async (
   )) as PackagesResponse;
   return response.data.map(transformBackendPackage);
 };
-
-// Fetch public packages only
 export const fetchPublicPackages = async (): Promise<Package[]> => {
   const response = (await apiRequest(`/packages/public`)) as PackagesResponse;
   return response.data.map(transformBackendPackage);
 };
-
-// Fetch packages for a specific salon
 export const fetchSalonPackages = async (
   salonId: string
 ): Promise<Package[]> => {
@@ -273,8 +239,6 @@ export const fetchSalonPackages = async (
   )) as PackagesResponse;
   return response.data.map(transformBackendPackage);
 };
-
-// Fetch package by ID
 export const fetchPackageById = async (id: string): Promise<Package> => {
   const response = (await apiRequest(`/packages/${id}`)) as PackageResponse;
   const packageData = response.package || response.data;
@@ -283,8 +247,6 @@ export const fetchPackageById = async (id: string): Promise<Package> => {
   }
   return transformBackendPackage(packageData);
 };
-
-// Create new package
 export const createPackage = async (packageData: {
   name: string;
   description: string;
@@ -306,8 +268,6 @@ export const createPackage = async (packageData: {
   }
   return transformBackendPackage(createdPackage);
 };
-
-// Update package
 export const updatePackage = async (
   id: string,
   packageData: {
@@ -330,18 +290,16 @@ export const updatePackage = async (
   if (packageData.discount !== undefined)
     payload.discount = parseFloat(packageData.discount) || 0;
 
-  // Update the package
+
   await apiRequest(`/packages/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 
-  // Fetch the complete updated package data with services
+
   const refreshedPackage = await fetchPackageById(id);
   return refreshedPackage;
 };
-
-// Delete package
 export const deletePackage = async (
   id: string
 ): Promise<{ message: string }> => {
@@ -351,8 +309,6 @@ export const deletePackage = async (
 
   return { message: response.message };
 };
-
-// Toggle package public status
 export const togglePackagePublicStatus = async (
   id: string
 ): Promise<Package> => {
