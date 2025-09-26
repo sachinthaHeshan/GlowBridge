@@ -72,6 +72,117 @@ export function SalonManagement() {
     status: "active" as "active" | "inactive",
   });
 
+  const [validationErrors, setValidationErrors] = useState({
+    name: "",
+    bio: "",
+    location: "",
+    contact_number: "",
+  });
+
+  // Validation functions
+  const validateName = (name: string): string => {
+    if (!name.trim()) {
+      return "Salon name is required";
+    }
+    if (name.trim().length < 2) {
+      return "Salon name must be at least 2 characters long";
+    }
+    if (name.trim().length > 100) {
+      return "Salon name must be less than 100 characters";
+    }
+    return "";
+  };
+
+  const validateBio = (bio: string): string => {
+    if (!bio.trim()) {
+      return "Description is required";
+    }
+    if (bio.trim().length < 10) {
+      return "Description must be at least 10 characters long";
+    }
+    if (bio.trim().length > 500) {
+      return "Description must be less than 500 characters";
+    }
+    return "";
+  };
+
+  const validateLocation = (location: string): string => {
+    if (!location.trim()) {
+      return "Location is required";
+    }
+    if (location.trim().length < 5) {
+      return "Location must be at least 5 characters long";
+    }
+    if (location.trim().length > 200) {
+      return "Location must be less than 200 characters";
+    }
+    return "";
+  };
+
+  const validateContactNumber = (contactNumber: string): string => {
+    if (!contactNumber.trim()) {
+      return "Contact number is required";
+    }
+
+    // Remove all non-digit characters for validation
+    const cleanNumber = contactNumber.replace(/\D/g, "");
+
+    if (cleanNumber.length < 10) {
+      return "Contact number must be at least 10 digits";
+    }
+    if (cleanNumber.length > 15) {
+      return "Contact number must be less than 15 digits";
+    }
+
+    // Basic phone number pattern (supports international formats)
+    const phonePattern = /^[\+]?[0-9\s\-\(\)]{10,15}$/;
+    if (!phonePattern.test(contactNumber.trim())) {
+      return "Please enter a valid contact number";
+    }
+
+    return "";
+  };
+
+  const validateForm = (): boolean => {
+    const errors = {
+      name: validateName(formData.name),
+      bio: validateBio(formData.bio),
+      location: validateLocation(formData.location),
+      contact_number: validateContactNumber(formData.contact_number),
+    };
+
+    setValidationErrors(errors);
+
+    // Return true if no errors
+    return !Object.values(errors).some((error) => error !== "");
+  };
+
+  const validateField = (
+    fieldName: keyof typeof validationErrors,
+    value: string
+  ) => {
+    let error = "";
+
+    switch (fieldName) {
+      case "name":
+        error = validateName(value);
+        break;
+      case "bio":
+        error = validateBio(value);
+        break;
+      case "location":
+        error = validateLocation(value);
+        break;
+      case "contact_number":
+        error = validateContactNumber(value);
+        break;
+    }
+
+    setValidationErrors((prev) => ({
+      ...prev,
+      [fieldName]: error,
+    }));
+  };
 
   const loadSalons = async (page: number = 1, limit: number = 10) => {
     try {
@@ -91,7 +202,6 @@ export function SalonManagement() {
     }
   };
 
-
   useEffect(() => {
     loadSalons();
   }, []);
@@ -106,6 +216,13 @@ export function SalonManagement() {
       contact_number: "",
       status: "active",
     });
+    // Clear validation errors
+    setValidationErrors({
+      name: "",
+      bio: "",
+      location: "",
+      contact_number: "",
+    });
     setIsDialogOpen(true);
   };
 
@@ -119,16 +236,27 @@ export function SalonManagement() {
       contact_number: salon.contact_number,
       status: salon.status as "active" | "inactive",
     });
+    // Clear validation errors
+    setValidationErrors({
+      name: "",
+      bio: "",
+      location: "",
+      contact_number: "",
+    });
     setIsDialogOpen(true);
   };
 
   const handleSaveSalon = async () => {
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+
     const result = await handleFormSubmissionWithToast(
       async () => {
         setSubmitting(true);
 
         if (editingSalon) {
-
           const updatedSalon = await updateSalon(editingSalon.id, formData);
           setSalons(
             salons.map((salon) =>
@@ -137,9 +265,7 @@ export function SalonManagement() {
           );
           return updatedSalon;
         } else {
-
           const newSalon = await createSalon(formData);
-
           await loadSalons(pagination.page, pagination.limit);
           return newSalon;
         }
@@ -364,8 +490,19 @@ export function SalonManagement() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
+                onBlur={(e) => validateField("name", e.target.value)}
                 placeholder="Enter salon name"
+                className={
+                  validationErrors.name
+                    ? "border-red-500 focus:border-red-500"
+                    : ""
+                }
               />
+              {validationErrors.name && (
+                <p className="text-sm text-red-500 mt-1">
+                  {validationErrors.name}
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="type">Salon Type</Label>
@@ -406,8 +543,22 @@ export function SalonManagement() {
                 onChange={(e) =>
                   setFormData({ ...formData, bio: e.target.value })
                 }
+                onBlur={(e) => validateField("bio", e.target.value)}
                 placeholder="Enter salon description"
+                className={
+                  validationErrors.bio
+                    ? "border-red-500 focus:border-red-500"
+                    : ""
+                }
               />
+              <div className="flex justify-between items-center">
+                {validationErrors.bio && (
+                  <p className="text-sm text-red-500">{validationErrors.bio}</p>
+                )}
+                <p className="text-xs text-muted-foreground ml-auto">
+                  {formData.bio.length}/500 characters
+                </p>
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="location">Location</Label>
@@ -417,8 +568,19 @@ export function SalonManagement() {
                 onChange={(e) =>
                   setFormData({ ...formData, location: e.target.value })
                 }
+                onBlur={(e) => validateField("location", e.target.value)}
                 placeholder="Enter full address/location"
+                className={
+                  validationErrors.location
+                    ? "border-red-500 focus:border-red-500"
+                    : ""
+                }
               />
+              {validationErrors.location && (
+                <p className="text-sm text-red-500 mt-1">
+                  {validationErrors.location}
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="contact_number">Contact Number</Label>
@@ -428,8 +590,19 @@ export function SalonManagement() {
                 onChange={(e) =>
                   setFormData({ ...formData, contact_number: e.target.value })
                 }
+                onBlur={(e) => validateField("contact_number", e.target.value)}
                 placeholder="Enter contact number"
+                className={
+                  validationErrors.contact_number
+                    ? "border-red-500 focus:border-red-500"
+                    : ""
+                }
               />
+              {validationErrors.contact_number && (
+                <p className="text-sm text-red-500 mt-1">
+                  {validationErrors.contact_number}
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="status">Status</Label>
@@ -457,7 +630,13 @@ export function SalonManagement() {
             >
               Cancel
             </Button>
-            <Button onClick={handleSaveSalon} disabled={submitting}>
+            <Button
+              onClick={handleSaveSalon}
+              disabled={
+                submitting ||
+                Object.values(validationErrors).some((error) => error !== "")
+              }
+            >
               {submitting && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               )}
