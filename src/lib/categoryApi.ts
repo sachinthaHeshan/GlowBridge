@@ -1,4 +1,3 @@
-
 interface BackendCategory {
   id: number;
   name: string;
@@ -14,7 +13,7 @@ interface BackendService {
   is_public: boolean;
   discount: number;
   is_completed: boolean;
-  categories: BackendCategory[];
+  categories?: BackendCategory[];
 }
 export interface Category {
   id: string;
@@ -117,9 +116,9 @@ const transformBackendService = (backendService: BackendService): Service => {
     is_public: backendService.is_public,
     discount: backendService.discount,
     is_completed: backendService.is_completed,
-    categories: backendService.categories.map((cat) =>
-      transformBackendCategory(cat)
-    ),
+    categories: backendService.categories
+      ? backendService.categories.map((cat) => transformBackendCategory(cat))
+      : [],
   };
 };
 export class ApiError extends Error {
@@ -199,8 +198,6 @@ export const fetchCategories = async (
   if (is_active !== undefined) endpoint += `&is_active=${is_active}`;
 
   const response = (await apiRequest(endpoint)) as CategoriesResponse;
-
-
 
   return {
     categories: response.data.map((cat) => transformBackendCategory(cat)),
@@ -374,11 +371,37 @@ export const fetchServicesBySalon = async (
 export const fetchServicesByCategory = async (
   categoryId: string
 ): Promise<Service[]> => {
-  const response = (await apiRequest(`/services/category/${categoryId}`)) as {
-    data: BackendService[];
-    total: number;
-  };
-  return response.data.map(transformBackendService);
+  const response = await apiRequest(`/services/category/${categoryId}`);
+
+  // Debug: Log the response structure
+  console.log("API Response:", response);
+  console.log("Response type:", typeof response);
+  console.log("Is array:", Array.isArray(response));
+
+  // Handle different possible response structures
+  let services: BackendService[];
+
+  if (Array.isArray(response)) {
+    services = response as BackendService[];
+  } else if (response && typeof response === "object" && "data" in response) {
+    services = (response as any).data as BackendService[];
+  } else if (
+    response &&
+    typeof response === "object" &&
+    "services" in response
+  ) {
+    services = (response as any).services as BackendService[];
+  } else {
+    console.error("Unexpected response structure:", response);
+    throw new Error("Invalid response structure from services API");
+  }
+
+  if (!Array.isArray(services)) {
+    console.error("Services is not an array:", services);
+    throw new Error("Services data is not an array");
+  }
+
+  return services.map(transformBackendService);
 };
 export const fetchServiceById = async (id: string): Promise<Service> => {
   const response = (await apiRequest(`/services/${id}`)) as {
