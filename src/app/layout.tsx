@@ -9,9 +9,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const robotoMono = Roboto_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.app",
+  title: "GlowBridge",
+  
 };
 
 export default function RootLayout({
