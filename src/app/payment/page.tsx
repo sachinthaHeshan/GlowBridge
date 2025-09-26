@@ -395,7 +395,7 @@ export default function PaymentPage() {
               <Label htmlFor="cardholderName">Cardholder Name *</Label>
               <Input
                 id="cardholderName"
-                placeholder="John Doe"
+                placeholder="Enter name as on card"
                 value={formData.cardholderName}
                 onChange={(e) =>
                   handleInputChange("cardholderName", e.target.value)
@@ -412,7 +412,7 @@ export default function PaymentPage() {
               <Label htmlFor="cardNumber">Card Number *</Label>
               <Input
                 id="cardNumber"
-                placeholder="1234 5678 9012 3456"
+                placeholder="XXXX XXXX XXXX XXXX"
                 value={formData.cardNumber}
                 onChange={(e) =>
                   handleInputChange(
@@ -455,7 +455,7 @@ export default function PaymentPage() {
                 <Label htmlFor="cvv">CVV *</Label>
                 <Input
                   id="cvv"
-                  placeholder="123"
+                  placeholder="XXX"
                   value={formData.cvv}
                   onChange={(e) =>
                     handleInputChange("cvv", e.target.value.replace(/\D/g, ""))
@@ -723,7 +723,7 @@ export default function PaymentPage() {
                         </p>
                       </div>
                       <span className="text-sm font-medium text-foreground">
-                        Rs. {(item.price * item.quantity * 365).toFixed(2)}
+                        LKR {(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   ))}
@@ -733,7 +733,7 @@ export default function PaymentPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal:</span>
                     <span className="text-foreground">
-                      Rs. {(cartTotal * 365).toFixed(2)}
+                      LKR {cartTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -743,14 +743,14 @@ export default function PaymentPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax (10%):</span>
                     <span className="text-foreground">
-                      Rs. {(taxAmount * 365).toFixed(2)}
+                      LKR {taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="border-t border-border pt-2">
                     <div className="flex justify-between font-semibold text-lg">
                       <span className="text-foreground">Total:</span>
                       <span className="text-primary">
-                        Rs. {(finalTotal * 365).toFixed(2)}
+                        LKR {finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
