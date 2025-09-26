@@ -368,10 +368,18 @@ export const fetchServicesBySalon = async (
   };
   return response.data.map(transformBackendService);
 };
+// Define possible response types for fetchServicesByCategory
+type ServiceCategoryResponse =
+  | BackendService[]
+  | { data: BackendService[] }
+  | { services: BackendService[] };
+
 export const fetchServicesByCategory = async (
   categoryId: string
 ): Promise<Service[]> => {
-  const response = await apiRequest(`/services/category/${categoryId}`);
+  const response = (await apiRequest(
+    `/services/category/${categoryId}`
+  )) as ServiceCategoryResponse;
 
   // Debug: Log the response structure
   console.log("API Response:", response);
@@ -382,15 +390,15 @@ export const fetchServicesByCategory = async (
   let services: BackendService[];
 
   if (Array.isArray(response)) {
-    services = response as BackendService[];
+    services = response;
   } else if (response && typeof response === "object" && "data" in response) {
-    services = (response as any).data as BackendService[];
+    services = response.data;
   } else if (
     response &&
     typeof response === "object" &&
     "services" in response
   ) {
-    services = (response as any).services as BackendService[];
+    services = response.services;
   } else {
     console.error("Unexpected response structure:", response);
     throw new Error("Invalid response structure from services API");
