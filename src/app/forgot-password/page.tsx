@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
       await resetPassword(email);
       setEmailSent(true);
     } catch {
-      // Error handling is done in the AuthContext
+
     } finally {
       setIsLoading(false);
     }
@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-blue-100 shadow-xl">
         <div className="p-8">
-          {/* Header */}
+          {}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
             </form>
           )}
 
-          {/* Footer */}
+          {}
           <div className="mt-8 text-center">
             <Link
               href="/login"

@@ -1,13 +1,9 @@
-// Category and Service API functions for backend integration
 
-// Backend category structure (reflects actual API response)
 interface BackendCategory {
   id: number;
   name: string;
   description: string;
 }
-
-// Backend service structure (reflects actual API response)
 interface BackendService {
   id: string;
   salon_id: string;
@@ -20,16 +16,12 @@ interface BackendService {
   is_completed: boolean;
   categories: BackendCategory[];
 }
-
-// Frontend category structure (matching component interface)
 export interface Category {
   id: string;
   name: string;
   description: string;
   is_active: boolean;
 }
-
-// Frontend service structure (matching component interface)
 export interface Service {
   id: string;
   salon_id: string;
@@ -42,22 +34,16 @@ export interface Service {
   is_completed: boolean;
   categories: Category[];
 }
-
-// Create category payload for backend
 interface CreateCategoryPayload {
   name: string;
   description?: string;
   is_active?: boolean;
 }
-
-// Update category payload for backend
 interface UpdateCategoryPayload {
   name?: string;
   description?: string;
   is_active?: boolean;
 }
-
-// Create service payload for backend
 interface CreateServicePayload {
   salon_id: string;
   name: string;
@@ -69,8 +55,6 @@ interface CreateServicePayload {
   is_completed?: boolean;
   category_ids: number[];
 }
-
-// Update service payload for backend
 interface UpdateServicePayload {
   salon_id?: string;
   name?: string;
@@ -82,8 +66,6 @@ interface UpdateServicePayload {
   is_completed?: boolean;
   category_ids?: number[];
 }
-
-// API Response types
 interface CategoriesResponse {
   data: BackendCategory[];
   total: number;
@@ -114,20 +96,16 @@ interface DeleteResponse {
   success: boolean;
   message: string;
 }
-
-// Transform backend category to frontend category
 const transformBackendCategory = (
   backendCategory: BackendCategory
 ): Category => {
   return {
-    id: backendCategory.id.toString(), // Convert number to string
+    id: backendCategory.id.toString(),
     name: backendCategory.name,
     description: backendCategory.description,
-    is_active: true, // Default to active since not provided by backend
+    is_active: true,
   };
 };
-
-// Transform backend service to frontend service
 const transformBackendService = (backendService: BackendService): Service => {
   return {
     id: backendService.id,
@@ -144,8 +122,6 @@ const transformBackendService = (backendService: BackendService): Service => {
     ),
   };
 };
-
-// API Error class
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -156,8 +132,6 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
-
-// Generic API request function
 const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
@@ -199,8 +173,6 @@ const apiRequest = async (
     );
   }
 };
-
-// Paginated categories result
 export interface PaginatedCategoriesResult {
   categories: Category[];
   total: number;
@@ -208,8 +180,6 @@ export interface PaginatedCategoriesResult {
   limit: number;
   totalPages: number;
 }
-
-// Paginated services result
 export interface PaginatedServicesResult {
   services: Service[];
   total: number;
@@ -217,10 +187,6 @@ export interface PaginatedServicesResult {
   limit: number;
   totalPages: number;
 }
-
-// ========== CATEGORY API FUNCTIONS ==========
-
-// Fetch all categories with pagination and filtering
 export const fetchCategories = async (
   page: number = 1,
   limit: number = 10,
@@ -234,8 +200,8 @@ export const fetchCategories = async (
 
   const response = (await apiRequest(endpoint)) as CategoriesResponse;
 
-  // For now, we'll set serviceCount to 0
-  // This can be fetched separately or enhanced later
+
+
   return {
     categories: response.data.map((cat) => transformBackendCategory(cat)),
     total: response.total,
@@ -244,8 +210,6 @@ export const fetchCategories = async (
     totalPages: response.totalPages,
   };
 };
-
-// Fetch active categories only
 export const fetchActiveCategories = async (
   page: number = 1,
   limit: number = 10
@@ -262,22 +226,16 @@ export const fetchActiveCategories = async (
     totalPages: response.totalPages,
   };
 };
-
-// Fetch category by ID
 export const fetchCategoryById = async (id: string): Promise<Category> => {
   const response = (await apiRequest(`/categories/${id}`)) as CategoryResponse;
   return transformBackendCategory(response.category);
 };
-
-// Find category by name
 export const findCategoryByName = async (name: string): Promise<Category> => {
   const response = (await apiRequest(
     `/categories/name/${encodeURIComponent(name)}`
   )) as { success: boolean; data: BackendCategory };
   return transformBackendCategory(response.data);
 };
-
-// Create new category
 export const createCategory = async (categoryData: {
   name: string;
   description?: string;
@@ -296,8 +254,6 @@ export const createCategory = async (categoryData: {
 
   return transformBackendCategory(response.category);
 };
-
-// Update category
 export const updateCategory = async (
   id: string,
   categoryData: {
@@ -321,8 +277,6 @@ export const updateCategory = async (
 
   return transformBackendCategory(response.category);
 };
-
-// Delete category
 export const deleteCategory = async (
   id: string
 ): Promise<{ message: string }> => {
@@ -332,8 +286,6 @@ export const deleteCategory = async (
 
   return { message: response.message };
 };
-
-// Toggle category status
 export const toggleCategoryStatus = async (id: string): Promise<Category> => {
   const response = (await apiRequest(`/categories/${id}/toggle-status`, {
     method: "PATCH",
@@ -341,10 +293,6 @@ export const toggleCategoryStatus = async (id: string): Promise<Category> => {
 
   return transformBackendCategory(response.data);
 };
-
-// ========== SERVICE API FUNCTIONS ==========
-
-// Fetch all services with pagination and filtering
 export const fetchServices = async (
   page: number = 1,
   limit: number = 10,
@@ -372,8 +320,6 @@ export const fetchServices = async (
     totalPages: response.totalPages,
   };
 };
-
-// Fetch public services
 export const fetchPublicServices = async (
   page: number = 1,
   limit: number = 10,
@@ -395,8 +341,6 @@ export const fetchPublicServices = async (
     totalPages: response.totalPages,
   };
 };
-
-// Fetch completed services
 export const fetchCompletedServices = async (
   page: number = 1,
   limit: number = 10,
@@ -418,8 +362,6 @@ export const fetchCompletedServices = async (
     totalPages: response.totalPages,
   };
 };
-
-// Fetch services by salon
 export const fetchServicesBySalon = async (
   salonId: string
 ): Promise<Service[]> => {
@@ -429,8 +371,6 @@ export const fetchServicesBySalon = async (
   };
   return response.data.map(transformBackendService);
 };
-
-// Fetch services by category
 export const fetchServicesByCategory = async (
   categoryId: string
 ): Promise<Service[]> => {
@@ -440,8 +380,6 @@ export const fetchServicesByCategory = async (
   };
   return response.data.map(transformBackendService);
 };
-
-// Fetch service by ID
 export const fetchServiceById = async (id: string): Promise<Service> => {
   const response = (await apiRequest(`/services/${id}`)) as {
     service: BackendService;
@@ -457,8 +395,6 @@ export const fetchServiceById = async (id: string): Promise<Service> => {
 
   return transformBackendService(response.service);
 };
-
-// Create new service
 export const createService = async (serviceData: {
   salon_id: string;
   name: string;
@@ -489,8 +425,6 @@ export const createService = async (serviceData: {
 
   return transformBackendService(response.service);
 };
-
-// Update service
 export const updateService = async (
   id: string,
   serviceData: {
@@ -531,8 +465,6 @@ export const updateService = async (
 
   return transformBackendService(response.service);
 };
-
-// Delete service
 export const deleteService = async (
   id: string
 ): Promise<{ message: string }> => {
@@ -542,8 +474,6 @@ export const deleteService = async (
 
   return { message: response.message };
 };
-
-// Toggle service public status
 export const toggleServicePublicStatus = async (
   id: string
 ): Promise<Service> => {
@@ -553,8 +483,6 @@ export const toggleServicePublicStatus = async (
 
   return transformBackendService(response.data);
 };
-
-// Toggle service completed status
 export const toggleServiceCompletedStatus = async (
   id: string
 ): Promise<Service> => {
@@ -564,8 +492,6 @@ export const toggleServiceCompletedStatus = async (
 
   return transformBackendService(response.data);
 };
-
-// Update service categories
 export const updateServiceCategories = async (
   id: string,
   category_ids: number[]

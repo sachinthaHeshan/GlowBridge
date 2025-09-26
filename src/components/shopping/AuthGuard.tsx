@@ -29,7 +29,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     setAuthModalOpen(true);
   };
 
-  // Show loading state
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -41,28 +41,28 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // If user is authenticated, show the protected content
+
   if (user && userData) {
     return <>{children}</>;
   }
 
-  // Show authentication required screen
+
   return (
     <>
       <div className="min-h-screen bg-background">
-        {/* Navigation Header */}
+        {}
         <div className="bg-card border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6">
-                {/* Brand Logo */}
+                {}
                 <div className="flex items-center space-x-2">
                   <ShoppingBag className="h-6 w-6 text-primary" />
                   <span className="text-xl font-bold font-heading text-foreground">
                     Glow<span className="text-primary">Bridge</span>
                   </span>
                 </div>
-                {/* Back Link */}
+                {}
                 <Link
                   href="/"
                   className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -75,7 +75,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
           </div>
         </div>
 
-        {/* Auth Required Content */}
+        {}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-12">
             <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -90,7 +90,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             </p>
           </div>
 
-          {/* Auth Buttons */}
+          {}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <Button
               onClick={() => openAuthModal("signup")}
@@ -109,7 +109,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             </Button>
           </div>
 
-          {/* Features Grid */}
+          {}
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             <Card>
               <CardContent className="p-6 text-center">
@@ -155,7 +155,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             </Card>
           </div>
 
-          {/* Benefits List */}
+          {}
           <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
             <CardContent className="p-8">
               <h3 className="text-xl font-semibold text-foreground mb-6 text-center">
@@ -202,13 +202,13 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         </div>
       </div>
 
-      {/* Auth Modal */}
+      {}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         defaultMode={authMode}
         onSuccess={() => {
-          // Modal will close automatically, and AuthGuard will re-render to show protected content
+
         }}
       />
     </>

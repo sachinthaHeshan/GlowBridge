@@ -47,7 +47,7 @@ export default function SignupPage() {
       );
       router.push("/");
     } catch {
-      // Error handling is done in the AuthContext
+
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +57,7 @@ export default function SignupPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-blue-100 shadow-xl">
         <div className="p-8">
-          {/* Header */}
+          {}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
@@ -72,7 +72,7 @@ export default function SignupPage() {
             </p>
           </div>
 
-          {/* Form */}
+          {}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label

@@ -8,7 +8,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-blue-100 shadow-xl">
         <div className="p-8 text-center">
-          {/* Header */}
+          {}
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
               <Scissors className="h-8 w-8 text-white" />

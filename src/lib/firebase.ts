@@ -14,8 +14,6 @@ const firebaseConfig = {
     process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "123456789",
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:123456789:web:abcdef",
 };
-
-// Validate required environment variables
 const isValidConfig = () => {
   return (
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
@@ -28,18 +26,12 @@ const isValidConfig = () => {
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
-
-// Only initialize Firebase on the client side and when config is valid
 if (typeof window !== "undefined" && isValidConfig()) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     auth = getAuth(app);
-  } catch (error) {
-    console.error("Firebase initialization error:", error);
-  }
+  } catch {}
 }
-
-// Export with proper error handling
 const getFirebaseAuth = (): Auth => {
   if (!auth) {
     throw new Error(

@@ -34,7 +34,7 @@ export default function SalonLandingPage() {
     }
   }, [user, loading, router]);
 
-  // Show loading while checking auth
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -49,7 +49,7 @@ export default function SalonLandingPage() {
   }
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -86,7 +86,7 @@ export default function SalonLandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
+      {}
       <section className="relative py-20 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-muted/10"></div>
         <div className="container mx-auto px-4 relative z-10">
@@ -125,7 +125,7 @@ export default function SalonLandingPage() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
       </section>
 
-      {/* Features Section */}
+      {}
       <section id="features" className="py-20 bg-card">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -198,7 +198,7 @@ export default function SalonLandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {}
       <section id="pricing" className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -212,7 +212,7 @@ export default function SalonLandingPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Free Plan */}
+            {}
             <Card className="border-border hover:shadow-xl transition-all duration-300">
               <CardHeader className="text-center pb-8">
                 <CardTitle className="font-heading text-2xl text-card-foreground">
@@ -252,7 +252,7 @@ export default function SalonLandingPage() {
               </CardContent>
             </Card>
 
-            {/* Pro Plan */}
+            {}
             <Card className="border-primary shadow-xl scale-105 relative">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <Badge className="bg-primary text-primary-foreground px-4 py-1">
@@ -299,7 +299,7 @@ export default function SalonLandingPage() {
               </CardContent>
             </Card>
 
-            {/* Diamond Plan */}
+            {}
             <Card className="border-border hover:shadow-xl transition-all duration-300">
               <CardHeader className="text-center pb-8">
                 <CardTitle className="font-heading text-2xl text-card-foreground">
@@ -344,7 +344,7 @@ export default function SalonLandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
+      {}
       <section id="testimonials" className="py-20 bg-card">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -408,7 +408,7 @@ export default function SalonLandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {}
       <section className="py-20 bg-primary">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-5xl font-bold font-heading text-primary-foreground mb-6">
@@ -424,7 +424,7 @@ export default function SalonLandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
+      {}
       <footer className="bg-card border-t border-border py-12">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">

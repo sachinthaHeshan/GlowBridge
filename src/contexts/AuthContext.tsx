@@ -10,11 +10,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "react-hot-toast";
-import {
-  fetchUserByFirebaseUID,
-  fetchUserByEmail,
-  createUser,
-} from "@/lib/userApi";
+import { fetchUserByEmail, createUser } from "@/lib/userApi";
 import { UserCookies, UserCookieData } from "@/lib/cookies";
 
 interface AuthContextType {
@@ -48,13 +44,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if we're on the client side and Firebase is available
     if (typeof window === "undefined") {
       setLoading(false);
       return;
     }
 
-    // Load user data from cookies on initialization
     const savedUserData = UserCookies.getUserData();
     if (savedUserData) {
       setUserData(savedUserData);
@@ -65,7 +59,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
         setUser(user);
 
-        // If user is signed out but we have cookie data, clear it
         if (!user && savedUserData) {
           UserCookies.clearAllUserCookies();
           setUserData(null);
@@ -75,8 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       return unsubscribe;
-    } catch (error) {
-      console.warn("Firebase not configured:", error);
+    } catch {
       setLoading(false);
       return;
     }
@@ -91,12 +83,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password
       );
 
-      // Fetch user details from database using email instead of Firebase UID
       try {
-        // Use the user's email to find them in the database
         const dbUser = await fetchUserByEmail(firebaseUser.email || email);
 
-        // Convert to cookie data format
         const userCookieData: UserCookieData = {
           id: dbUser.id,
           name: dbUser.name,
@@ -108,17 +97,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           salonId: dbUser.salonId,
         };
 
-        // Store user data in cookies
         UserCookies.setUserData(userCookieData);
         setUserData(userCookieData);
 
         toast.success("Welcome back!");
-      } catch (dbError) {
-        // If we can't fetch user details from DB, this is a critical error
-        // Don't proceed with fallback that uses Firebase UID as user ID
-        console.error("Failed to fetch user details from database:", dbError);
-
-        // Sign out from Firebase since we can't proceed with incomplete data
+      } catch {
         await signOut(firebaseAuth);
 
         toast.error(
@@ -143,17 +126,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     password: string
   ) => {
     try {
-      // Use createUser method which handles both Firebase and database user creation
       const dbUser = await createUser({
         name,
         email,
         phone,
-        role: "customer", // Default role for marketplace users
+        role: "customer",
         status: "active",
-        password, // Pass password to createUser for Firebase user creation
+        password,
       });
 
-      // Convert to cookie data format
       const userCookieData: UserCookieData = {
         id: dbUser.id,
         name: dbUser.name,
@@ -165,7 +146,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         salonId: dbUser.salonId,
       };
 
-      // Store user data in cookies
       UserCookies.setUserData(userCookieData);
       setUserData(userCookieData);
 
@@ -173,7 +153,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: unknown) {
       let errorMessage = "Failed to create account";
 
-      // Handle common error cases
       if (error instanceof Error) {
         if (
           error.message.includes("email already exists") ||
@@ -206,7 +185,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const firebaseAuth = auth();
       await signOut(firebaseAuth);
 
-      // Clear all user-related cookies
       UserCookies.clearAllUserCookies();
       setUserData(null);
 

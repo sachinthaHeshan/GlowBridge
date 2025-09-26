@@ -1,6 +1,4 @@
-// Product API functions for backend integration
 
-// Backend product structure (reflects actual API response)
 interface BackendProduct {
   id: string;
   salon_id: string;
@@ -11,8 +9,6 @@ interface BackendProduct {
   is_public: boolean;
   discount: number;
 }
-
-// Frontend product structure (matching component interface)
 export interface Product {
   id: string;
   name: string;
@@ -26,8 +22,6 @@ export interface Product {
   isPublic: boolean;
   discount: number;
 }
-
-// Create product payload for backend
 interface CreateProductPayload {
   salon_id: string;
   name: string;
@@ -37,8 +31,6 @@ interface CreateProductPayload {
   is_public: boolean;
   discount: number;
 }
-
-// Update product payload for backend
 interface UpdateProductPayload {
   name?: string;
   description?: string;
@@ -47,8 +39,6 @@ interface UpdateProductPayload {
   is_public?: boolean;
   discount?: number;
 }
-
-// API Response types
 interface ProductsResponse {
   data: BackendProduct[];
   total: number;
@@ -65,8 +55,6 @@ interface ProductResponse {
 interface DeleteResponse {
   message: string;
 }
-
-// Helper function to determine category based on product name/description
 const determineCategory = (
   name: string,
   description?: string
@@ -99,8 +87,6 @@ const determineCategory = (
   }
   return "accessories";
 };
-
-// Helper function to determine status based on quantity
 const determineStatus = (
   quantity: number
 ): "in-stock" | "low-stock" | "out-of-stock" => {
@@ -108,8 +94,6 @@ const determineStatus = (
   if (quantity <= 5) return "low-stock";
   return "in-stock";
 };
-
-// Transform backend product to frontend product
 const transformBackendProduct = (backendProduct: BackendProduct): Product => {
   return {
     id: backendProduct.id,
@@ -121,15 +105,13 @@ const transformBackendProduct = (backendProduct: BackendProduct): Product => {
     quantity: backendProduct.available_quantity,
     price: backendProduct.price,
     status: determineStatus(backendProduct.available_quantity),
-    lastUpdated: new Date().toISOString().split("T")[0], // Default to today since backend doesn't have lastUpdated
+    lastUpdated: new Date().toISOString().split("T")[0],
     salonId: backendProduct.salon_id,
     description: backendProduct.description,
     isPublic: backendProduct.is_public,
     discount: backendProduct.discount,
   };
 };
-
-// Transform frontend product to backend payload
 const transformToBackendPayload = (product: {
   name: string;
   quantity: number;
@@ -150,8 +132,6 @@ const transformToBackendPayload = (product: {
     discount: product.discount ?? 0,
   };
 };
-
-// API Error class
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -162,8 +142,6 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
-
-// Generic API request function
 const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
@@ -203,8 +181,6 @@ const apiRequest = async (
     );
   }
 };
-
-// Paginated products result
 export interface PaginatedProductsResult {
   products: Product[];
   total: number;
@@ -212,8 +188,6 @@ export interface PaginatedProductsResult {
   limit: number;
   totalPages: number;
 }
-
-// Fetch all products with pagination and filtering
 export const fetchProducts = async (
   page: number = 1,
   limit: number = 10,
@@ -238,8 +212,6 @@ export const fetchProducts = async (
     totalPages: response.totalPages,
   };
 };
-
-// Fetch products for a specific salon
 export const fetchSalonProducts = async (
   salonId: string
 ): Promise<Product[]> => {
@@ -249,17 +221,13 @@ export const fetchSalonProducts = async (
   };
   return response.data.map((product) => ({
     ...transformBackendProduct(product),
-    salonId: salonId, // Ensure salonId is set for frontend state
+    salonId: salonId,
   }));
 };
-
-// Fetch product by ID
 export const fetchProductById = async (id: string): Promise<Product> => {
   const response = (await apiRequest(`/products/${id}`)) as ProductResponse;
   return transformBackendProduct(response.product);
 };
-
-// Fetch all public products
 export const fetchPublicProducts = async (): Promise<Product[]> => {
   const response = (await apiRequest(`/products/public`)) as {
     data: BackendProduct[];
@@ -267,8 +235,6 @@ export const fetchPublicProducts = async (): Promise<Product[]> => {
   };
   return response.data.map(transformBackendProduct);
 };
-
-// Create new product
 export const createProduct = async (productData: {
   name: string;
   quantity: number;
@@ -288,8 +254,6 @@ export const createProduct = async (productData: {
 
   return transformBackendProduct(response.product);
 };
-
-// Update product
 export const updateProduct = async (
   id: string,
   productData: {
@@ -322,8 +286,6 @@ export const updateProduct = async (
 
   return transformBackendProduct(response.product);
 };
-
-// Delete product
 export const deleteProduct = async (
   id: string
 ): Promise<{ message: string }> => {

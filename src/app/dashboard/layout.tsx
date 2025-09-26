@@ -27,7 +27,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export const navigation = [
+const navigation = [
   {
     href: "/dashboard/salons",
     name: "Salon Management",
@@ -97,16 +97,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    } catch {}
   };
 
   const filteredNavigation = navigation.filter((item) => {
-    if (item.permission.length === 0) return true; // Show items with no permission restriction
-    if (!userData?.role) return false; // Hide items if no user data
+    if (item.permission.length === 0) return true;
+    if (!userData?.role) return false;
 
-    // Convert string role to UserRole enum for comparison
     const userRoleEnum = Object.values(UserRole).find(
       (role) => role === userData.role
     ) as UserRole;
@@ -117,7 +114,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
-        {/* Mobile sidebar backdrop */}
+        {}
         {sidebarOpen && (
           <div
             className="fixed inset-0 z-40 bg-black/20 lg:hidden"
@@ -125,7 +122,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           />
         )}
 
-        {/* Sidebar */}
+        {}
         <div
           className={cn(
             "fixed inset-y-0 left-0 z-50 w-64 bg-white/80 backdrop-blur-xl border-r border-blue-100 shadow-xl transform transition-transform duration-200 ease-in-out lg:translate-x-0",
@@ -133,7 +130,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           )}
         >
           <div className="flex h-full flex-col">
-            {/* Header */}
+            {}
             <div className="flex items-center justify-between p-6 border-b border-blue-100">
               <div className="flex items-center space-x-3">
                 <div>
@@ -153,7 +150,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
             </div>
 
-            {/* Navigation */}
+            {}
             <nav className="flex-1 p-4 space-y-2">
               {filteredNavigation.map((item) => {
                 const Icon = item.icon;
@@ -197,9 +194,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
 
-        {/* Main content */}
+        {}
         <div className="lg:pl-64">
-          {/* Top bar */}
+          {}
           <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-blue-100 shadow-sm">
             <div className="flex items-center justify-between px-6 py-4">
               <Button
@@ -216,7 +213,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   {navigation.find((item) => item.href === pathname)?.name}
                 </div>
 
-                {/* User Menu */}
+                {}
                 <div className="flex items-center space-x-3">
                   <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
                     <User className="h-4 w-4" />
@@ -239,7 +236,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </header>
 
-          {/* Page content */}
+          {}
           <main className="p-6">{children}</main>
         </div>
       </div>

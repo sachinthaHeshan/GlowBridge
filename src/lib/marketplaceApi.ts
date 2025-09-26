@@ -1,11 +1,7 @@
-// Marketplace API functions optimized for the shopping interface
-
 import { fetchProducts, Product as BackendProduct } from "./productApi";
-
-// Marketplace-specific product interface that matches the current Marketplace component
 export interface MarketplaceProduct {
   id: number;
-  originalId: string; // Keep the original UUID for backend operations
+  originalId: string;
   name: string;
   description: string;
   price: number;
@@ -16,27 +12,23 @@ export interface MarketplaceProduct {
   inStock: boolean;
   salon: string;
 }
-
-// Transform backend product to marketplace product
 const transformToMarketplaceProduct = (
   backendProduct: BackendProduct
 ): MarketplaceProduct => {
   return {
-    id: parseInt(backendProduct.id) || Math.floor(Math.random() * 10000), // Convert string ID to number for compatibility
-    originalId: backendProduct.id, // Keep the original UUID
+    id: parseInt(backendProduct.id) || Math.floor(Math.random() * 10000),
+    originalId: backendProduct.id,
     name: backendProduct.name,
     description: backendProduct.description || "Premium beauty product",
     price: backendProduct.price,
     category: getCategoryDisplayName(backendProduct.category),
-    rating: 4.5 + Math.random() * 0.5, // Generate rating between 4.5-5.0
-    reviews: Math.floor(Math.random() * 200) + 50, // Generate review count 50-250
-    image: "/api/placeholder/300/300", // Placeholder image
+    rating: 4.5 + Math.random() * 0.5,
+    reviews: Math.floor(Math.random() * 200) + 50,
+    image: "/api/placeholder/300/300",
     inStock: backendProduct.status !== "out-of-stock",
-    salon: `Salon ${backendProduct.salonId.slice(0, 8)}`, // Generate salon name from ID
+    salon: `Salon ${backendProduct.salonId.slice(0, 8)}`,
   };
 };
-
-// Convert backend category to display name
 const getCategoryDisplayName = (category: string): string => {
   const categoryMap: { [key: string]: string } = {
     "hair-care": "Hair Care",
@@ -46,8 +38,6 @@ const getCategoryDisplayName = (category: string): string => {
   };
   return categoryMap[category] || "Beauty";
 };
-
-// Marketplace-specific paginated result
 export interface MarketplacePaginatedResult {
   products: MarketplaceProduct[];
   total: number;
@@ -55,8 +45,6 @@ export interface MarketplacePaginatedResult {
   limit: number;
   totalPages: number;
 }
-
-// Fetch products for marketplace with marketplace-specific transformations
 export const fetchMarketplaceProducts = async (
   page: number = 1,
   limit: number = 10,
@@ -69,15 +57,14 @@ export const fetchMarketplaceProducts = async (
     const result = await fetchProducts(
       page,
       limit,
-      undefined, // salonId
-      true, // isPublic - only fetch public products for marketplace
+      undefined,
+      true,
       minPrice,
       maxPrice
     );
 
     let products = result.products.map(transformToMarketplaceProduct);
 
-    // Apply search filter if provided
     if (search) {
       const searchLower = search.toLowerCase();
       products = products.filter(
@@ -88,7 +75,6 @@ export const fetchMarketplaceProducts = async (
       );
     }
 
-    // Apply category filter if provided and not "All"
     if (category && category !== "All") {
       products = products.filter((product) => product.category === category);
     }
@@ -100,9 +86,7 @@ export const fetchMarketplaceProducts = async (
       limit: result.limit,
       totalPages: result.totalPages,
     };
-  } catch (error) {
-    console.error("Error fetching marketplace products:", error);
-    // Return empty result on error to allow graceful fallback
+  } catch {
     return {
       products: [],
       total: 0,

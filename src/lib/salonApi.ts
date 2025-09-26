@@ -1,8 +1,4 @@
-// Salon API functions for backend integration
-
 import { SalonType } from "@/constraint";
-
-// Backend salon structure (reflects actual API response)
 interface BackendSalon {
   id: string;
   name: string;
@@ -14,8 +10,6 @@ interface BackendSalon {
   created_at: string;
   updated_at: string;
 }
-
-// Frontend salon structure (matching component interface)
 export interface Salon {
   id: string;
   name: string;
@@ -27,8 +21,6 @@ export interface Salon {
   created_at?: string;
   updated_at?: string;
 }
-
-// Create salon payload for backend
 interface CreateSalonPayload {
   name: string;
   type: string;
@@ -37,8 +29,6 @@ interface CreateSalonPayload {
   contact_number: string;
   status?: string;
 }
-
-// Update salon payload for backend
 interface UpdateSalonPayload {
   name?: string;
   type?: string;
@@ -47,8 +37,6 @@ interface UpdateSalonPayload {
   contact_number?: string;
   status?: string;
 }
-
-// API Response types for paginated salons list
 interface SalonsResponse {
   data: BackendSalon[];
   total: number;
@@ -64,15 +52,11 @@ interface SalonResponse {
 interface DeleteResponse {
   message: string;
 }
-
-// Map SalonType enum to backend API type
 const mapSalonTypeToBackendType = (salonType: SalonType): string => {
-  return salonType; // Direct mapping since enum values match expected backend values
+  return salonType;
 };
-
-// Map backend API type to SalonType enum
 const mapBackendTypeToSalonType = (backendType: string): SalonType => {
-  // Handle common API type variations
+
   const typeMapping: Record<string, SalonType> = {
     salon: SalonType.SALON,
     "Hair & Makeup": SalonType.MAKEUP_SALON,
@@ -87,8 +71,6 @@ const mapBackendTypeToSalonType = (backendType: string): SalonType => {
 
   return typeMapping[backendType] || SalonType.SALON;
 };
-
-// Transform backend salon to frontend salon
 const transformBackendSalon = (backendSalon: BackendSalon): Salon => {
   return {
     id: backendSalon.id,
@@ -102,8 +84,6 @@ const transformBackendSalon = (backendSalon: BackendSalon): Salon => {
     updated_at: backendSalon.updated_at,
   };
 };
-
-// API Error class
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -114,8 +94,6 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
-
-// Generic API request function
 const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
@@ -155,8 +133,6 @@ const apiRequest = async (
     );
   }
 };
-
-// Fetch all salons with pagination support
 export const fetchSalons = async (
   page: number = 1,
   limit: number = 10
@@ -178,14 +154,10 @@ export const fetchSalons = async (
     totalPages: response.totalPages,
   };
 };
-
-// Fetch salon by ID
 export const fetchSalonById = async (id: string): Promise<Salon> => {
   const response = (await apiRequest(`/salons/${id}`)) as SalonResponse;
   return transformBackendSalon(response.salon);
 };
-
-// Create new salon
 export const createSalon = async (salonData: {
   name: string;
   type: SalonType;
@@ -210,8 +182,6 @@ export const createSalon = async (salonData: {
 
   return transformBackendSalon(response.salon);
 };
-
-// Update salon
 export const updateSalon = async (
   id: string,
   salonData: {
@@ -240,8 +210,6 @@ export const updateSalon = async (
 
   return transformBackendSalon(response.salon);
 };
-
-// Delete salon
 export const deleteSalon = async (id: string): Promise<{ message: string }> => {
   return (await apiRequest(`/salons/${id}`, {
     method: "DELETE",

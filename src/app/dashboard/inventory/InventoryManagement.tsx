@@ -52,8 +52,6 @@ import {
   ApiError,
 } from "@/lib/productApi";
 import { showApiErrorToast } from "@/lib/errorToast";
-
-// Use Product interface from productApi
 type InventoryItem = Product;
 
 export function InventoryManagement() {
@@ -64,7 +62,7 @@ export function InventoryManagement() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Default salon ID - in a real app, this would come from user context or route params
+
   const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
 
   const [formData, setFormData] = useState({
@@ -80,7 +78,7 @@ export function InventoryManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
 
-  // Fetch products on component mount
+
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -89,7 +87,6 @@ export function InventoryManagement() {
         const products = await fetchSalonProducts(salonId);
         setItems(products);
       } catch (error) {
-        console.error("Failed to fetch products:", error);
         if (error instanceof ApiError) {
           setError(error.message);
           showApiErrorToast(error, "Failed to load products");
@@ -142,7 +139,7 @@ export function InventoryManagement() {
       setError(null);
 
       if (editingItem) {
-        // Update existing item
+
         const updatedItem = await updateProduct(editingItem.id, {
           name: formData.name,
           quantity: formData.quantity,
@@ -156,7 +153,7 @@ export function InventoryManagement() {
           items.map((item) => (item.id === editingItem.id ? updatedItem : item))
         );
       } else {
-        // Create new item
+
         const newItem = await createProduct({
           name: formData.name,
           quantity: formData.quantity,
@@ -173,7 +170,6 @@ export function InventoryManagement() {
 
       setIsDialogOpen(false);
     } catch (error) {
-      console.error("Failed to save product:", error);
       if (error instanceof ApiError) {
         setError(error.message);
         showApiErrorToast(
@@ -198,7 +194,6 @@ export function InventoryManagement() {
       await deleteProduct(id);
       setItems(items.filter((item) => item.id !== id));
     } catch (error) {
-      console.error("Failed to delete product:", error);
       if (error instanceof ApiError) {
         setError(error.message);
         showApiErrorToast(error, "Failed to delete product");
@@ -227,12 +222,12 @@ export function InventoryManagement() {
 
   const filterItems = (items: InventoryItem[]) => {
     return items.filter((item) => {
-      // Search term filter
+
       const matchesSearch = item.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
-      // Price range filter
+
       const matchesPrice =
         (!priceRange.min || item.price >= Number(priceRange.min)) &&
         (!priceRange.max || item.price <= Number(priceRange.max));
@@ -241,7 +236,7 @@ export function InventoryManagement() {
     });
   };
 
-  // Loading state
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -265,7 +260,7 @@ export function InventoryManagement() {
     );
   }
 
-  // Error state
+
   if (error && items.length === 0) {
     return (
       <div className="space-y-6">
@@ -297,7 +292,7 @@ export function InventoryManagement() {
     );
   }
 
-  // Inventory management view
+
   return (
     <div className="space-y-6">
       {}
@@ -314,7 +309,7 @@ export function InventoryManagement() {
         </div>
       </div>
 
-      {/* Stats Cards  need to change*/}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -364,14 +359,14 @@ export function InventoryManagement() {
         </Card>
       </div>
 
-      {/* Search and Filters Card */}
+      {}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Search and Filters</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-3">
-            {/* Search Bar */}
+            {}
             <div>
               <Label htmlFor="search">Search Items</Label>
               <Input
@@ -406,7 +401,7 @@ export function InventoryManagement() {
               </div>
             </div>
 
-            {/* Clear Filters Button */}
+            {}
             <div className="flex items-end">
               <Button
                 variant="outline"
@@ -423,7 +418,7 @@ export function InventoryManagement() {
         </CardContent>
       </Card>
 
-      {/* Inventory Table */}
+      {}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -433,7 +428,6 @@ export function InventoryManagement() {
           <div className="flex items-center space-x-2">
             <Button
               onClick={() => {
-                console.log("Generate PDF clicked");
               }}
               className="bg-primary hover:bg-primary/90"
             >
@@ -509,7 +503,7 @@ export function InventoryManagement() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Item Form View*/}
+      {}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -550,7 +544,7 @@ export function InventoryManagement() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="price">Price (Rs.)</Label> {/*update*/}
+              <Label htmlFor="price">Price (Rs.)</Label> {}
               <Input
                 id="price"
                 type="number"

@@ -70,7 +70,7 @@ export default function AppointmentBookingPage({
     params.then(async ({ serviceId }) => {
       setServiceId(serviceId);
 
-      // Fetch service details
+
       try {
         setServiceLoading(true);
         setServiceError(null);
@@ -81,7 +81,6 @@ export default function AppointmentBookingPage({
           amount: serviceData.price.toString(),
         }));
       } catch (error) {
-        console.error("Error fetching service:", error);
         setServiceError(
           error instanceof Error
             ? error.message
@@ -94,7 +93,7 @@ export default function AppointmentBookingPage({
     });
   }, [params]);
 
-  // Calculate end time based on start time and service duration
+
   useEffect(() => {
     if (formData.startTime && service?.duration) {
       const [hours, minutes] = formData.startTime.split(":").map(Number);
@@ -150,7 +149,7 @@ export default function AppointmentBookingPage({
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    // Clear error when user starts typing
+
     if (errors[field]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -197,12 +196,11 @@ export default function AppointmentBookingPage({
       setIsSubmitted(true);
       toast.success("Appointment booked successfully!");
 
-      // Redirect to confirmation page after a short delay
+
       setTimeout(() => {
         router.push("/confirmation");
       }, 2000);
     } catch (error) {
-      console.error("Error creating appointment:", error);
       toast.error(
         error instanceof Error
           ? error.message
@@ -213,7 +211,7 @@ export default function AppointmentBookingPage({
     }
   };
 
-  // Show loading state while fetching service
+
   if (serviceLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -248,7 +246,7 @@ export default function AppointmentBookingPage({
     );
   }
 
-  // Show error state if service failed to load
+
   if (serviceError || !service) {
     return (
       <div className="min-h-screen bg-background">
@@ -320,7 +318,7 @@ export default function AppointmentBookingPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
@@ -342,7 +340,7 @@ export default function AppointmentBookingPage({
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-8">
-          {/* Service Summary */}
+          {}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -374,7 +372,7 @@ export default function AppointmentBookingPage({
             </CardContent>
           </Card>
 
-          {/* User Info */}
+          {}
           {userData && (
             <Card>
               <CardHeader>
@@ -403,7 +401,7 @@ export default function AppointmentBookingPage({
             </Card>
           )}
 
-          {/* Appointment Form */}
+          {}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -413,7 +411,7 @@ export default function AppointmentBookingPage({
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Date Selection */}
+                {}
                 <div className="space-y-2">
                   <Label htmlFor="date">Appointment Date *</Label>
                   <Input
@@ -429,7 +427,7 @@ export default function AppointmentBookingPage({
                   )}
                 </div>
 
-                {/* Time Selection */}
+                {}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="startTime">Start Time *</Label>
@@ -458,7 +456,7 @@ export default function AppointmentBookingPage({
                   </div>
                 </div>
 
-                {/* Payment Type */}
+                {}
                 <div className="space-y-2">
                   <Label htmlFor="paymentType">Payment Method *</Label>
                   <Select
@@ -516,7 +514,7 @@ export default function AppointmentBookingPage({
                   )}
                 </div>
 
-                {/* Notes */}
+                {}
                 <div className="space-y-2">
                   <Label htmlFor="note">Additional Notes</Label>
                   <Textarea
@@ -535,7 +533,7 @@ export default function AppointmentBookingPage({
                   </div>
                 </div>
 
-                {/* Submit Button */}
+                {}
                 <div className="pt-4">
                   <Button
                     type="submit"
@@ -550,7 +548,7 @@ export default function AppointmentBookingPage({
             </CardContent>
           </Card>
 
-          {/* Summary */}
+          {}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

@@ -241,13 +241,10 @@ export const fetchUserById = async (id: string): Promise<User> => {
 
 export const fetchUserByEmail = async (email: string): Promise<User> => {
   try {
-    console.log(`Searching for user with email: ${email}`);
-
     try {
       const directResponse = await apiRequest(
         `/users?page=1&limit=1&email=${encodeURIComponent(email)}`
       );
-      console.log("Trying direct email search...", directResponse);
 
       const response = directResponse as PaginatedUsersResponse;
       if (response.data && response.data.length > 0) {
@@ -255,41 +252,25 @@ export const fetchUserByEmail = async (email: string): Promise<User> => {
           (u) => u.email.toLowerCase() === email.toLowerCase()
         );
         if (user) {
-          console.log(
-            `Found user via direct search: ${user.first_name} ${user.last_name}`
-          );
           return transformBackendUser(user);
         }
       }
-    } catch (directError) {
-      console.log(
-        "Direct email search failed, falling back to pagination:",
-        directError
-      );
-    }
+    } catch {}
 
     let page = 1;
     const limit = 100;
 
     while (true) {
-      console.log(`Fetching users page ${page} with limit ${limit}`);
       const result = await fetchUsers(page, limit);
-      console.log(
-        `Found ${result.users.length} users on page ${page}/${result.totalPages}`
-      );
 
       const userWithEmail = result.users.find(
         (user) => user.email.toLowerCase() === email.toLowerCase()
       );
 
       if (userWithEmail) {
-        console.log(
-          `Found user: ${userWithEmail.name} (${userWithEmail.email})`
-        );
         return userWithEmail;
       }
 
-      // If we've checked all pages and no more users exist, user not found
       if (page >= result.totalPages || result.users.length === 0) {
         break;
       }
@@ -297,10 +278,8 @@ export const fetchUserByEmail = async (email: string): Promise<User> => {
       page++;
     }
 
-    console.log(`User with email ${email} not found after checking all pages`);
     throw new ApiError(`User with email ${email} not found`, 404);
   } catch (error) {
-    console.error(`Error in fetchUserByEmail:`, error);
     if (error instanceof ApiError) {
       throw error;
     }
@@ -421,7 +400,6 @@ export const createUserDirect = async (userData: {
   return transformBackendUser(response.user);
 };
 
-// Update user
 export const updateUser = async (
   id: string,
   userData: {
@@ -434,14 +412,12 @@ export const updateUser = async (
 ): Promise<User> => {
   const payload: UpdateUserPayload = {};
 
-  // Handle name update
   if (userData.name) {
     const nameParts = userData.name.trim().split(" ");
     payload.first_name = nameParts[0] || "";
     payload.last_name = nameParts.slice(1).join(" ") || "";
   }
 
-  // Handle other fields
   if (userData.email) payload.email = userData.email;
   if (userData.phone) payload.contact_number = userData.phone;
   if (userData.role) payload.role = mapUserRoleToBackendRole(userData.role);
@@ -454,14 +430,12 @@ export const updateUser = async (
   return transformBackendUser(response.user);
 };
 
-// Delete user
 export const deleteUser = async (id: string): Promise<{ message: string }> => {
   return (await apiRequest(`/users/${id}`, {
     method: "DELETE",
   })) as DeleteResponse;
 };
 
-// Fetch staff availability
 export const fetchStaffAvailability = async (): Promise<
   StaffAvailabilityItem[]
 > => {
@@ -471,12 +445,10 @@ export const fetchStaffAvailability = async (): Promise<
   return response.data;
 };
 
-// Update staff availability
 export const updateStaffAvailability = async (
   availabilityId: string,
   updateData: UpdateStaffAvailabilityPayload
 ): Promise<{ message: string }> => {
-  // Send payload directly - API expects HH:MM format
   const response = (await apiRequest(`/staff-availability/${availabilityId}`, {
     method: "PUT",
     body: JSON.stringify(updateData),

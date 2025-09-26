@@ -18,7 +18,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   }, [user, loading, router]);
 
-  // Show loading state while checking authentication
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -32,11 +32,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // If not authenticated, don't render anything (will redirect)
+
   if (!user) {
     return null;
   }
 
-  // User is authenticated, render the protected content
+
   return <>{children}</>;
 }

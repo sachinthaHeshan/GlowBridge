@@ -1,24 +1,20 @@
-// Appointment API functions for backend integration
 
-// Appointment payload structure based on the provided API format
 export interface CreateAppointmentPayload {
   user_id: string;
   note: string;
   service_id: string;
-  start_at: string; // ISO date string
-  end_at: string; // ISO date string
+  start_at: string;
+  end_at: string;
   payment_type: "cash" | "card" | "online";
   amount: number;
 }
-
-// Service structure based on API response
 export interface Service {
   id: string;
   salon_id: string;
   is_completed: boolean;
   name: string;
   description: string;
-  duration: string; // API returns as string
+  duration: string;
   price: number;
   is_public: boolean;
   discount: number;
@@ -28,8 +24,6 @@ export interface Service {
     description: string;
   }>;
 }
-
-// Nested user data from API response
 export interface AppointmentUser {
   id: string;
   first_name: string;
@@ -37,16 +31,12 @@ export interface AppointmentUser {
   email: string;
   contact_number: string;
 }
-
-// Nested service data from API response
 export interface AppointmentService {
   id: string;
   name: string;
   description: string;
   duration: string;
 }
-
-// Appointment response structure with nested data
 export interface Appointment {
   id: string;
   user_id: string;
@@ -63,8 +53,6 @@ export interface Appointment {
   user: AppointmentUser;
   service: AppointmentService;
 }
-
-// All appointments API response structure
 export interface AllAppointmentsResponse {
   success: boolean;
   message: string;
@@ -74,8 +62,6 @@ export interface AllAppointmentsResponse {
   limit: number;
   totalPages: number;
 }
-
-// API Response types
 interface ServiceResponse {
   success: boolean;
   data: Service;
@@ -88,8 +74,6 @@ interface AppointmentResponse {
 interface AppointmentsResponse {
   appointments: Appointment[];
 }
-
-// API Error class
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -100,8 +84,6 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
-
-// Generic API request function
 const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
@@ -141,8 +123,6 @@ const apiRequest = async (
     );
   }
 };
-
-// Fetch service by ID
 export const fetchServiceById = async (serviceId: string): Promise<Service> => {
   const response = (await apiRequest(
     `/services/${serviceId}`
@@ -154,8 +134,6 @@ export const fetchServiceById = async (serviceId: string): Promise<Service> => {
 
   return response.data;
 };
-
-// Create new appointment
 export const createAppointment = async (
   appointmentData: CreateAppointmentPayload
 ): Promise<Appointment> => {
@@ -166,8 +144,6 @@ export const createAppointment = async (
 
   return response.appointment;
 };
-
-// Fetch appointments for a user
 export const fetchUserAppointments = async (
   userId: string
 ): Promise<Appointment[]> => {
@@ -176,8 +152,6 @@ export const fetchUserAppointments = async (
   )) as AppointmentsResponse;
   return response.appointments;
 };
-
-// Fetch appointment by ID
 export const fetchAppointmentById = async (
   id: string
 ): Promise<Appointment> => {
@@ -186,8 +160,6 @@ export const fetchAppointmentById = async (
   )) as AppointmentResponse;
   return response.appointment;
 };
-
-// Update appointment
 export const updateAppointment = async (
   id: string,
   appointmentData: Partial<CreateAppointmentPayload>
@@ -199,8 +171,6 @@ export const updateAppointment = async (
 
   return response.appointment;
 };
-
-// Cancel appointment
 export const cancelAppointment = async (
   id: string
 ): Promise<{ message: string }> => {
@@ -208,13 +178,11 @@ export const cancelAppointment = async (
     method: "DELETE",
   })) as { message: string };
 };
-
-// Update appointment status
 export const updateAppointmentStatus = async (
   id: string,
   status: "upcoming" | "in_progress" | "completed"
 ): Promise<Appointment> => {
-  // Use the correct API endpoint without the `/api_g` prefix for this specific endpoint
+
   const url = `/api_g/appointments/${id}/status`;
 
   const config: RequestInit = {
@@ -259,13 +227,11 @@ export const updateAppointmentStatus = async (
     );
   }
 };
-
-// Fetch all appointments with pagination
 export const fetchAllAppointments = async (
   limit: number = 100,
   page: number = 1
 ): Promise<AllAppointmentsResponse> => {
-  // Use the correct API endpoint without the `/api_g` prefix for this specific endpoint
+
   const url = `/api_g/appointments?limit=${limit}&page=${page}`;
 
   const config: RequestInit = {

@@ -43,8 +43,6 @@ interface AppointmentData {
   upcoming: Appointment[];
   past: Appointment[];
 }
-
-// Helper function to format time from ISO string
 const formatTime = (isoString: string): string => {
   const date = new Date(isoString);
   return date.toLocaleTimeString("en-US", {
@@ -53,8 +51,6 @@ const formatTime = (isoString: string): string => {
     hour12: true,
   });
 };
-
-// Helper function to calculate duration
 const calculateDuration = (startAt: string, endAt: string): string => {
   const start = new Date(startAt);
   const end = new Date(endAt);
@@ -69,8 +65,6 @@ const calculateDuration = (startAt: string, endAt: string): string => {
     return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   }
 };
-
-// Helper function to categorize appointments by backend status
 const categorizeAppointments = (
   appointments: Appointment[]
 ): AppointmentData => {
@@ -92,7 +86,7 @@ const categorizeAppointments = (
         categorized.past.push(appointment);
         break;
       default:
-        // Default to upcoming if status is unknown
+
         categorized.upcoming.push(appointment);
         break;
     }
@@ -171,7 +165,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
                   {formatTime(appointment.startTime)} -{" "}
                   {formatTime(appointment.endTime)}
                 </div>
-                {/* <span>Staff: {appointment.staffMember}</span> */}
+                {}
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                 <span>${appointment.amount}</span>
@@ -212,33 +206,33 @@ export default function StaffAppointmentsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Transform API appointment to component appointment
+
   const transformAppointment = (
     apiAppointment: ApiAppointment
   ): Appointment => {
-    // Use nested user and service data directly from API response
+
     const customerName =
       `${apiAppointment.user.first_name} ${apiAppointment.user.last_name}`.trim();
 
     return {
       id: apiAppointment.id,
       customerName: customerName,
-      customerAvatar: "/placeholder.svg", // Default avatar
+      customerAvatar: "/placeholder.svg",
       service: apiAppointment.service.name,
       startTime: apiAppointment.start_at,
       endTime: apiAppointment.end_at,
-      status: apiAppointment.status, // Use backend status directly
+      status: apiAppointment.status,
       duration: calculateDuration(
         apiAppointment.start_at,
         apiAppointment.end_at
       ),
-      staffMember: "Staff Member", // This would need to be added to API response when staff assignment is implemented
+      staffMember: "Staff Member",
       amount: apiAppointment.amount,
       is_paid: apiAppointment.is_paid,
     };
   };
 
-  // Fetch appointments from API
+
   const fetchAppointments = useCallback(async () => {
     try {
       setLoading(true);
@@ -247,17 +241,16 @@ export default function StaffAppointmentsPage() {
       const response = await fetchAllAppointments(100, 1);
 
       if (response.success && response.data) {
-        // Transform all appointments (no longer async since we have all data)
+
         const transformedAppointments = response.data.map(transformAppointment);
 
-        // Categorize appointments
+
         const categorized = categorizeAppointments(transformedAppointments);
         setAppointmentsData(categorized);
       } else {
         throw new Error(response.message || "Failed to fetch appointments");
       }
     } catch (error) {
-      console.error("Error fetching appointments:", error);
       setError(
         error instanceof Error ? error.message : "Failed to load appointments"
       );
@@ -266,12 +259,12 @@ export default function StaffAppointmentsPage() {
     }
   }, []);
 
-  // Load appointments on component mount
+
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  // Error component
+
   const ErrorCard = ({ message }: { message: string }) => (
     <Card>
       <CardContent className="p-4">

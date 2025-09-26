@@ -21,7 +21,6 @@ import { Search, Clock, ArrowLeft, Filter, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchPublicServices, Service } from "@/lib/categoryApi";
-import router from "next/router";
 
 export default function ServiceCategoryPage() {
   const [allServices, setAllServices] = useState<Service[]>([]);
@@ -33,11 +32,9 @@ export default function ServiceCategoryPage() {
   const [error, setError] = useState<string | null>(null);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Apply filters to the current service list
   const applyFilters = useCallback(() => {
     let filtered = allServices;
 
-    // Apply search filter
     if (searchTerm && searchTerm.trim()) {
       filtered = filtered.filter(
         (service) =>
@@ -46,7 +43,6 @@ export default function ServiceCategoryPage() {
       );
     }
 
-    // Apply price range filter
     if (priceRange && priceRange !== "all") {
       filtered = filtered.filter((service) => {
         const price =
@@ -67,7 +63,6 @@ export default function ServiceCategoryPage() {
       });
     }
 
-    // Apply duration filter
     if (duration && duration !== "all") {
       filtered = filtered.filter((service) => {
         const durationMinutes = parseInt(service.duration);
@@ -88,28 +83,20 @@ export default function ServiceCategoryPage() {
     setFilteredServices(filtered);
   }, [allServices, searchTerm, priceRange, duration]);
 
-  // Fetch services from API (only when needed)
   const fetchServicesData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await fetchPublicServices(
-        1,
-        100, // Fetch more services to allow for better filtering
-        undefined, // salon_id
-        undefined // category_id
-      );
+      const result = await fetchPublicServices(1, 100, undefined, undefined);
 
       setAllServices(result.services);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch services. Please try again.");
-      console.error("Error fetching services:", err);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Debounced search function - just update search term, filtering will happen automatically
   const debouncedSearch = useCallback((searchValue: string) => {
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
@@ -119,12 +106,10 @@ export default function ServiceCategoryPage() {
     }, 300);
   }, []);
 
-  // Fetch data only once on mount
   useEffect(() => {
     fetchServicesData();
   }, [fetchServicesData]);
 
-  // Apply filters whenever any filter criteria changes
   useEffect(() => {
     applyFilters();
   }, [applyFilters]);
@@ -150,7 +135,7 @@ export default function ServiceCategoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
@@ -170,7 +155,7 @@ export default function ServiceCategoryPage() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Search and Filters */}
+        {}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
@@ -213,7 +198,7 @@ export default function ServiceCategoryPage() {
           </div>
         </div>
 
-        {/* Loading State */}
+        {}
         {loading && (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -221,7 +206,7 @@ export default function ServiceCategoryPage() {
           </div>
         )}
 
-        {/* Error State */}
+        {}
         {error && (
           <div className="text-center py-12">
             <p className="text-red-500 mb-4">{error}</p>
@@ -231,7 +216,7 @@ export default function ServiceCategoryPage() {
           </div>
         )}
 
-        {/* Services Grid */}
+        {}
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredServices.length === 0 ? (
@@ -323,55 +308,7 @@ export default function ServiceCategoryPage() {
           </div>
         )}
 
-        {/* Popular Combinations */}
-        {/* <section className="mt-16">
-          <h3 className="text-2xl font-bold text-foreground mb-6">
-            Popular Combinations
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="border-primary/20 bg-primary/5">
-              <CardHeader>
-                <CardTitle className="text-lg">Hair Care Package</CardTitle>
-                <CardDescription>Cut + Color + Treatment</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="text-sm text-muted-foreground line-through">
-                      LKR 27,000
-                    </div>
-                    <div className="text-lg font-semibold text-primary">
-                      LKR 22,000
-                    </div>
-                    <div className="text-sm text-green-600">Save LKR 5,000</div>
-                  </div>
-                  <Button>Book Package</Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20 bg-primary/5">
-              <CardHeader>
-                <CardTitle className="text-lg">Bridal Special</CardTitle>
-                <CardDescription>Hair + Makeup + Trial</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="text-sm text-muted-foreground line-through">
-                      LKR 35,000
-                    </div>
-                    <div className="text-lg font-semibold text-primary">
-                      LKR 28,000
-                    </div>
-                    <div className="text-sm text-green-600">Save LKR 7,000</div>
-                  </div>
-                  <Button>Book Package</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section> */}
+        {}
       </div>
     </div>
   );

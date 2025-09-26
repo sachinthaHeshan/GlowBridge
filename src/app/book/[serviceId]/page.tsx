@@ -66,7 +66,7 @@ export default async function SalonSelectionPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
@@ -89,7 +89,7 @@ export default async function SalonSelectionPage({
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Location and Filters */}
+        {}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
@@ -128,7 +128,7 @@ export default async function SalonSelectionPage({
           </div>
         </div>
 
-        {/* Salons List */}
+        {}
         <div className="space-y-6">
           {salons.map((salon) => (
             <Card
@@ -137,7 +137,7 @@ export default async function SalonSelectionPage({
             >
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
-                  {/* Salon Image */}
+                  {}
                   <div className="w-full md:w-48 h-32 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                     <Image
                       src={salon.image || "/placeholder.svg"}
@@ -148,7 +148,7 @@ export default async function SalonSelectionPage({
                     />
                   </div>
 
-                  {/* Salon Info */}
+                  {}
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -219,7 +219,7 @@ export default async function SalonSelectionPage({
           ))}
         </div>
 
-        {/* Map View Toggle */}
+        {}
         <div className="mt-8 text-center">
           <Button variant="outline" size="lg">
             <MapPin className="w-4 h-4 mr-2" />

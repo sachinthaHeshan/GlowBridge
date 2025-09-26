@@ -19,14 +19,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Clock, User, Edit, Save, X } from "lucide-react";
+import { Clock, Edit, Save, X } from "lucide-react";
 
 interface DaySchedule {
   enabled: boolean;
   start: string;
   end: string;
-  availabilityId?: string; // ID for updating this specific day's availability
-  dayOfWeek: number; // 1-7 for API calls
+  availabilityId?: string;
+  dayOfWeek: number;
 }
 
 type DayOfWeek =
@@ -37,8 +37,6 @@ type DayOfWeek =
   | "friday"
   | "saturday"
   | "sunday";
-
-// Map day number to day name (API uses 1-7 for Mon-Sun)
 const dayNumberToName: Record<number, DayOfWeek> = {
   1: "monday",
   2: "tuesday",
@@ -61,19 +59,15 @@ interface Staff {
   email: string;
   contact_number: string;
 }
-
-// Transform API data to UI format
 const transformStaffAvailability = (
   apiData: StaffAvailabilityItem[]
 ): Staff[] => {
-  // Group by staff member
   const staffMap = new Map<string, Staff>();
 
   apiData.forEach((item) => {
     const staffId = item.salon_staff_id;
 
     if (!staffMap.has(staffId)) {
-      // Initialize staff member
       const emptySchedule: Record<DayOfWeek, DaySchedule> = {
         monday: { enabled: false, start: "09:00", end: "17:00", dayOfWeek: 1 },
         tuesday: { enabled: false, start: "09:00", end: "17:00", dayOfWeek: 2 },
@@ -102,7 +96,7 @@ const transformStaffAvailability = (
       staffMap.set(staffId, {
         id: staffId,
         name: `${item.first_name} ${item.last_name}`,
-        avatar: "", // No avatar in API response
+        avatar: "",
         role: item.role,
         salon: item.salon_name,
         schedule: emptySchedule,
@@ -113,14 +107,13 @@ const transformStaffAvailability = (
       });
     }
 
-    // Update schedule for this day
     const staff = staffMap.get(staffId)!;
     const dayName = dayNumberToName[item.day_of_week];
 
     if (dayName) {
       staff.schedule[dayName] = {
         enabled: item.is_available,
-        start: item.start_time.substring(0, 5), // Convert "HH:MM:SS" to "HH:MM"
+        start: item.start_time.substring(0, 5),
         end: item.end_time.substring(0, 5),
         availabilityId: item.id,
         dayOfWeek: item.day_of_week,
@@ -128,7 +121,6 @@ const transformStaffAvailability = (
     }
   });
 
-  // Calculate total hours for each staff member
   staffMap.forEach((staff) => {
     let totalHours = 0;
     Object.values(staff.schedule).forEach((day) => {
@@ -178,14 +170,12 @@ function StaffScheduleCard({
     setSaveError(null);
 
     try {
-      // Find changed days and update them
       const updatePromises: Promise<{ message: string }>[] = [];
 
       daysOfWeek.forEach((day) => {
         const originalDay = staff.schedule[day.key];
         const editedDay = editedSchedule[day.key];
 
-        // Check if this day has changes
         const hasChanges =
           originalDay.enabled !== editedDay.enabled ||
           originalDay.start !== editedDay.start ||
@@ -205,16 +195,13 @@ function StaffScheduleCard({
         }
       });
 
-      // Wait for all updates to complete
       if (updatePromises.length > 0) {
         await Promise.all(updatePromises);
-        console.log("Successfully updated schedule for", staff.name);
-        onUpdate(); // Refresh the data
+        onUpdate();
       }
 
       setIsEditing(false);
-    } catch (error) {
-      console.error("Error updating schedule:", error);
+    } catch {
       setSaveError("Failed to save changes. Please try again.");
     } finally {
       setIsSaving(false);
@@ -404,8 +391,7 @@ export default function WorkingHoursPage() {
       const apiData = await fetchStaffAvailability();
       const transformedData = transformStaffAvailability(apiData);
       setStaffWorkingHours(transformedData);
-    } catch (err) {
-      console.error("Error fetching staff availability:", err);
+    } catch {
       setError("Failed to load staff availability data");
     } finally {
       setLoading(false);
@@ -458,7 +444,7 @@ export default function WorkingHoursPage() {
           </div>
           <Button
             onClick={() => window.location.reload()}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            className="bg-primary hover:bg-primary/90"
           >
             Retry
           </Button>
@@ -478,36 +464,32 @@ export default function WorkingHoursPage() {
             Manage working days and hours for all staff members
           </p>
         </div>
-        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-          <User className="h-4 w-4 mr-2" />
-          Add New Staff
-        </Button>
       </div>
 
-      {/* Summary Cards */}
+      {}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Staff
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900">
+            <div className="text-2xl font-bold text-foreground">
               {staffWorkingHours.length}
             </div>
-            <p className="text-xs text-blue-600">Active members</p>
+            <p className="text-xs text-muted-foreground">Active members</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Average Hours
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-900">
+            <div className="text-2xl font-bold text-foreground">
               {Math.round(
                 staffWorkingHours.reduce(
                   (acc, staff) => acc + staff.totalHours,
@@ -516,30 +498,30 @@ export default function WorkingHoursPage() {
               )}
               h
             </div>
-            <p className="text-xs text-green-600">Per week</p>
+            <p className="text-xs text-muted-foreground">Per week</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Hours
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-900">
+            <div className="text-2xl font-bold text-foreground">
               {staffWorkingHours.reduce(
                 (acc, staff) => acc + staff.totalHours,
                 0
               )}
               h
             </div>
-            <p className="text-xs text-purple-600">This week</p>
+            <p className="text-xs text-muted-foreground">This week</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Staff Schedule Cards */}
+      {}
       <div className="space-y-6">
         {staffWorkingHours.length > 0 ? (
           staffWorkingHours.map((staff) => (
@@ -555,7 +537,7 @@ export default function WorkingHoursPage() {
               <p className="text-gray-500">No staff availability data found.</p>
               <Button
                 onClick={() => window.location.reload()}
-                className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="mt-4 bg-primary hover:bg-primary/90"
               >
                 Refresh
               </Button>

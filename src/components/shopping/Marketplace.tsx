@@ -44,23 +44,19 @@ export default function Marketplace() {
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<number[]>([]);
 
-  // API state
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const [totalPages, setTotalPages] = useState(1); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [currentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const [productsPerPage] = useState(12);
 
-  // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
   const { addToCart, cartCount, setIsCartOpen } = useShoppingCart();
   const { userData, logout } = useAuth();
 
-  // Load products from API
   const loadProducts = useCallback(async () => {
     try {
       setProductsLoading(true);
@@ -76,23 +72,19 @@ export default function Marketplace() {
       );
 
       setProducts(result.products);
-      setTotalPages(result.totalPages);
       setTotalProducts(result.total);
-    } catch (err) {
-      console.error("Failed to load products:", err);
+    } catch {
       setError("Failed to load products. Please try again.");
     } finally {
       setProductsLoading(false);
     }
   }, [currentPage, productsPerPage, selectedCategory, priceRange, searchQuery]);
 
-  // Load products on component mount and when filters change
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
 
   const filteredProducts = useMemo(() => {
-    // Sort products client-side since API doesn't support sorting yet
     const sortedProducts = [...products];
     switch (sortBy) {
       case "price-low":
@@ -137,19 +129,19 @@ export default function Marketplace() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation Header */}
+      {}
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
-              {/* Brand Logo */}
+              {}
               <div className="flex items-center space-x-2">
                 <Scissors className="h-6 w-6 text-primary" />
                 <span className="text-xl font-bold font-heading text-foreground">
                   Glow<span className="text-primary">Bridge</span>
                 </span>
               </div>
-              {/* Back Link */}
+              {}
               <Link
                 href="/"
                 className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -176,7 +168,7 @@ export default function Marketplace() {
                 )}
               </Button>
 
-              {/* User Info / Auth */}
+              {}
               {userData ? (
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
@@ -217,7 +209,7 @@ export default function Marketplace() {
         </div>
       </div>
 
-      {/* Hero Section */}
+      {}
       <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
@@ -232,7 +224,7 @@ export default function Marketplace() {
         </div>
       </div>
 
-      {/* Search and Filters Header */}
+      {}
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col space-y-4">
@@ -253,7 +245,7 @@ export default function Marketplace() {
               </div>
             </div>
 
-            {/* Search Bar */}
+            {}
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -284,7 +276,7 @@ export default function Marketplace() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
-          {/* Filters Sidebar */}
+          {}
           <div
             className={`md:block ${
               showFilters ? "block" : "hidden"
@@ -295,7 +287,7 @@ export default function Marketplace() {
                 <CardTitle className="text-lg">Filters</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Category Filter */}
+                {}
                 <div>
                   <h3 className="font-medium text-foreground mb-3">Category</h3>
                   <div className="space-y-2">
@@ -340,7 +332,7 @@ export default function Marketplace() {
                   </div>
                 </div>
 
-                {/* Stock Filter */}
+                {}
                 <div>
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
@@ -395,7 +387,7 @@ export default function Marketplace() {
                     className="group hover:shadow-lg transition-shadow duration-200"
                   >
                     <CardContent className="p-0">
-                      {/* Product Image */}
+                      {}
                       <div className="relative overflow-hidden rounded-t-lg">
                         <div className="aspect-square bg-muted flex items-center justify-center">
                           <span className="text-muted-foreground text-sm">
@@ -423,7 +415,7 @@ export default function Marketplace() {
                         )}
                       </div>
 
-                      {/* Product Info */}
+                      {}
                       <div className="p-4 space-y-3">
                         <div>
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -437,7 +429,7 @@ export default function Marketplace() {
                           </p>
                         </div>
 
-                        {/* Rating */}
+                        {}
                         <div className="flex items-center space-x-1">
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
@@ -456,7 +448,7 @@ export default function Marketplace() {
                           </span>
                         </div>
 
-                        {/* Price and Add to Cart */}
+                        {}
                         <div className="flex items-center justify-between">
                           <span className="text-lg font-bold text-primary">
                             Rs.{product.price}
@@ -485,14 +477,12 @@ export default function Marketplace() {
         </div>
       </div>
 
-      {/* Auth Modal */}
+      {}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         defaultMode={authMode}
-        onSuccess={() => {
-          // Modal will close automatically on success
-        }}
+        onSuccess={() => {}}
       />
     </div>
   );

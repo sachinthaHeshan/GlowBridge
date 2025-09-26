@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -123,7 +123,7 @@ export default function DashboardPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Profile Sidebar */}
+          {}
           <div className="space-y-6">
             <Card>
               <CardHeader className="text-center">
@@ -180,9 +180,9 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Main Content */}
+          {}
           <div className="lg:col-span-3 space-y-8">
-            {/* Upcoming Appointments */}
+            {}
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-foreground">
@@ -298,7 +298,7 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Past Appointments */}
+            {}
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-foreground">

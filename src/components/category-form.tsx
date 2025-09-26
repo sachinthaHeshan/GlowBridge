@@ -103,7 +103,7 @@ export default function CategoryForm({
         </div>
       </div>
 
-      {/* Live Preview */}
+      {}
       {formData.name && (
         <div>
           <Label className="text-sm font-medium">Live Preview</Label>

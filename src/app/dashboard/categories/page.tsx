@@ -55,7 +55,7 @@ export default function CategoriesPage() {
   const router = useRouter();
   const limit = 10;
 
-  // Load categories from API
+
   const loadCategories = async (page: number = 1, search?: string) => {
     try {
       setLoading(true);
@@ -68,19 +68,18 @@ export default function CategoriesPage() {
       setTotalPages(result.totalPages);
       setTotal(result.total);
     } catch (error) {
-      console.error("Failed to load categories:", error);
       showApiErrorToast(error, "Failed to load categories");
     } finally {
       setLoading(false);
     }
   };
 
-  // Load initial data
+
   useEffect(() => {
     loadCategories(1);
   }, []);
 
-  // Handle search with debouncing
+
   const handleSearch = useCallback(() => {
     setCurrentPage(1);
     loadCategories(1, searchTerm || undefined);
@@ -92,7 +91,7 @@ export default function CategoriesPage() {
     loadCategories(1);
   };
 
-  // Handle Enter key press in search input
+
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleSearch();
@@ -117,10 +116,9 @@ export default function CategoriesPage() {
       });
 
       setIsAddDialogOpen(false);
-      // Reload categories to get updated data
+
       await loadCategories(currentPage, searchTerm || undefined);
     } catch (error) {
-      console.error("Failed to create category:", error);
       showApiErrorToast(error, "Failed to create category");
     } finally {
       setActionLoading(false);
@@ -148,10 +146,9 @@ export default function CategoriesPage() {
 
       setIsEditDialogOpen(false);
       setEditingCategory(null);
-      // Reload categories to get updated data
+
       await loadCategories(currentPage, searchTerm || undefined);
     } catch (error) {
-      console.error("Failed to update category:", error);
       showApiErrorToast(error, "Failed to update category");
     } finally {
       setActionLoading(false);
@@ -170,10 +167,9 @@ export default function CategoriesPage() {
       await deleteCategory(deleteConfirmation.categoryId);
 
       setDeleteConfirmation({ isOpen: false, categoryId: null });
-      // Reload categories to get updated data
+
       await loadCategories(currentPage, searchTerm || undefined);
     } catch (error) {
-      console.error("Failed to delete category:", error);
       showApiErrorToast(error, "Failed to delete category");
     } finally {
       setActionLoading(false);
@@ -184,7 +180,7 @@ export default function CategoriesPage() {
     router.push(`/dashboard/categories/${category.id}/services`);
   };
 
-  // Removed service count calculation since we're not fetching individual counts
+
 
   if (loading) {
     return (
@@ -199,7 +195,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -230,7 +226,7 @@ export default function CategoriesPage() {
         </Dialog>
       </div>
 
-      {/* Simple Search */}
+      {}
       <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex gap-3">
@@ -260,7 +256,7 @@ export default function CategoriesPage() {
         </CardContent>
       </Card>
 
-      {/* Stats Cards */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200/50">
           <CardContent className="p-4">
@@ -301,7 +297,7 @@ export default function CategoriesPage() {
         </Card>
       </div>
 
-      {/* Categories Grid */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCategories.map((category) => (
           <Card
@@ -378,7 +374,7 @@ export default function CategoriesPage() {
         ))}
       </div>
 
-      {/* No Results */}
+      {}
       {filteredCategories.length === 0 && !loading && (
         <Card className="p-12 text-center">
           <FolderOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -391,7 +387,7 @@ export default function CategoriesPage() {
         </Card>
       )}
 
-      {/* Pagination */}
+      {}
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -402,7 +398,7 @@ export default function CategoriesPage() {
         itemLabel="categories"
       />
 
-      {/* Edit Dialog */}
+      {}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -426,7 +422,7 @@ export default function CategoriesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {}
       <ConfirmationModal
         isOpen={deleteConfirmation.isOpen}
         onClose={() =>

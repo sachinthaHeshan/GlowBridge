@@ -13,11 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Search,
   MapPin,
-  Star,
   Users,
   Scissors,
   Heart,
-  Calendar,
   ShoppingBag,
   LogOut,
   User,
@@ -31,7 +29,6 @@ export default function HomePage() {
 
   const handleStartBooking = () => {
     if (!user) {
-      // Redirect to login page instead of showing modal
       window.location.href = "/login";
     } else {
       window.location.href = "/services";
@@ -41,16 +38,14 @@ export default function HomePage() {
   const handleLogout = async () => {
     try {
       await logout();
-      // Optionally redirect or refresh the page
+
       window.location.reload();
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    } catch {}
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -62,7 +57,7 @@ export default function HomePage() {
                 GlowBridge
               </h1>
             </div>
-            {/* Mobile menu for authenticated users */}
+            {}
             <div className="flex md:hidden items-center gap-2">
               {user && userData ? (
                 <div className="flex items-center gap-2">
@@ -152,7 +147,7 @@ export default function HomePage() {
           </div>
         </div>
       </header>
-      {/* Hero Section */}
+      {}
       <section className="py-16 px-4">
         <div className="container mx-auto text-center max-w-4xl">
           <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6 text-balance">
@@ -164,7 +159,7 @@ export default function HomePage() {
             salons. From haircuts to spa treatments, find your perfect match.
           </p>
 
-          {/* Search Bar */}
+          {}
           <div className="max-w-2xl mx-auto mb-12">
             <div className="flex gap-2 p-2 bg-card border border-border rounded-xl shadow-sm">
               <div className="flex-1 flex items-center gap-2 px-3">
@@ -193,7 +188,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">500+</div>
@@ -222,7 +217,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* Service Categories */}
+      {}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-12">
@@ -317,97 +312,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* Featured Salons
-      <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold text-foreground mb-4">
-              Featured Salons
-            </h3>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Top-rated salons in your area
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Elegance Beauty Studio",
-                location: "Colombo 03",
-                rating: 4.9,
-                reviews: 234,
-                image: "/elegant-beauty-salon.png",
-                specialties: ["Hair", "Facial", "Bridal"],
-              },
-              {
-                name: "Serenity Spa & Salon",
-                location: "Kandy",
-                rating: 4.8,
-                reviews: 189,
-                image: "/modern-spa-salon-interior.jpg",
-                specialties: ["Spa", "Massage", "Wellness"],
-              },
-              {
-                name: "Glamour Zone",
-                location: "Galle",
-                rating: 4.7,
-                reviews: 156,
-                image: "/luxury-beauty-salon.png",
-                specialties: ["Nails", "Makeup", "Hair"],
-              },
-            ].map((salon, index) => (
-              <Card
-                key={index}
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
-              >
-                <div className="aspect-video bg-muted relative overflow-hidden">
-                  <Image
-                    src={salon.image || "/placeholder.svg"}
-                    alt={salon.name}
-                    width={400}
-                    height={200}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{salon.name}</CardTitle>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                        <MapPin className="w-4 h-4" />
-                        {salon.location}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">
-                        {salon.rating}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        ({salon.reviews})
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {salon.specialties.map((specialty, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs">
-                        {specialty}
-                      </Badge>
-                    ))}
-                  </div>
-                  <Button className="w-full" size="sm">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Book Now
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section> */}
-      {/* CTA Section */}
+      {}
       <section className="py-16 px-4 bg-primary/5">
         <div className="container mx-auto text-center max-w-3xl">
           <h3 className="text-3xl font-bold text-foreground mb-4">
@@ -434,7 +340,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      {/* Footer */}
+      {}
       <footer className="py-12 px-4 bg-card border-t border-border">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
