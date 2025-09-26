@@ -40,7 +40,7 @@ export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [priceRange, setPriceRange] = useState([0, 5000]);
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<number[]>([]);
 
@@ -48,8 +48,8 @@ export default function Marketplace() {
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1); // eslint-disable-line @typescript-eslint/no-unused-vars
-  const [totalPages, setTotalPages] = useState(1); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const [productsPerPage] = useState(12);
 
@@ -329,14 +329,14 @@ export default function Marketplace() {
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
-                      max={100}
+                      max={5000}
                       min={0}
-                      step={5}
+                      step={500}
                       className="w-full"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>${priceRange[0]}</span>
-                      <span>${priceRange[1]}</span>
+                      <span>LKR {priceRange[0].toLocaleString()}</span>
+                      <span>LKR {priceRange[1].toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -461,7 +461,7 @@ export default function Marketplace() {
                         {/* Price and Add to Cart */}
                         <div className="flex items-center justify-between">
                           <span className="text-lg font-bold text-primary">
-                            ${product.price}
+                            LKR {product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                           <Button
                             onClick={() => handleAddToCart(product)}

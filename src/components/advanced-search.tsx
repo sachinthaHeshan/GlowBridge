@@ -43,7 +43,7 @@ export default function AdvancedSearch({
     searchTerm: "",
     category: "",
     status: "",
-    priceRange: [0, 500] as [number, number],
+    priceRange: [0, 50000] as [number, number],
     duration: "",
     isPrivate: null as boolean | null,
     sortBy: "name",
@@ -78,7 +78,7 @@ export default function AdvancedSearch({
       searchTerm: "",
       category: "",
       status: "",
-      priceRange: [0, 500] as [number, number],
+      priceRange: [0, 50000] as [number, number],
       duration: "",
       isPrivate: null,
       sortBy: "name",
@@ -251,9 +251,9 @@ export default function AdvancedSearch({
                           value as [number, number]
                         )
                       }
-                      max={500}
+                      max={50000}
                       min={0}
-                      step={5}
+                      step={500}
                       className="w-full"
                     />
                   </div>
@@ -394,7 +394,7 @@ export default function AdvancedSearch({
                     size="sm"
                     className="ml-1 h-4 w-4 p-0"
                     onClick={() =>
-                      handleFilterChange("priceRange", [0, 500] as [
+                      handleFilterChange("priceRange", [0, 50000] as [
                         number,
                         number
                       ])
