@@ -15,9 +15,6 @@ import {
   MapPin,
   Phone,
   Mail,
-  Download,
-  Share2,
-  Home,
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
@@ -31,7 +28,7 @@ export default function ConfirmationPage() {
     date: "Today, March 15, 2024",
     time: "2:00 PM - 3:00 PM",
     duration: "60 min",
-    price: "LKR 3,500",
+    price: "Rs. 3,500",
     address: "123 Galle Road, Colombo 03",
     phone: "+94 11 234 5678",
     customerName: "John Doe",
@@ -43,7 +40,7 @@ export default function ConfirmationPage() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          {/* Success Header */}
+          {}
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
@@ -56,7 +53,7 @@ export default function ConfirmationPage() {
               confirmation to your email.
             </p>
           </div>
-          {/* Booking Details */}
+          {}
           <Card className="mb-6">
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -75,7 +72,7 @@ export default function ConfirmationPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Staff & Salon Info */}
+              {}
               <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
                 <Avatar className="w-12 h-12">
                   <AvatarImage src="/professional-female-hairstylist.png" />
@@ -95,7 +92,7 @@ export default function ConfirmationPage() {
                 </div>
               </div>
 
-              {/* Appointment Details */}
+              {}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-primary" />
@@ -119,7 +116,7 @@ export default function ConfirmationPage() {
                 </div>
               </div>
 
-              {/* Price */}
+              {}
               <div className="border-t border-border pt-4">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-medium text-foreground">
@@ -135,7 +132,7 @@ export default function ConfirmationPage() {
               </div>
             </CardContent>
           </Card>
-          {/* Contact Information */}
+          {}
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="text-lg">Contact Information</CardTitle>
@@ -184,55 +181,9 @@ export default function ConfirmationPage() {
               Back
             </Button>
           </Link>
-          {/* Action Buttons */}
-          {/* <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="flex-1" size="lg">
-                <Download className="w-4 h-4 mr-2" />
-                Download Confirmation
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 bg-transparent"
-                size="lg"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share Details
-              </Button>
-            </div>
+          {}
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button variant="outline" className="flex-1 bg-transparent">
-                Add to Calendar
-              </Button>
-              <Button variant="outline" className="flex-1 bg-transparent">
-                Reschedule
-              </Button>
-            </div>
-
-            <Link href="/" className="block">
-              <Button variant="ghost" className="w-full" size="lg">
-                <Home className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-          </div> */}
-          {/* Important Notes */}
-          {/* <Card className="mt-6 bg-blue-50 border-blue-200">
-            <CardContent className="p-4">
-              <h4 className="font-medium text-foreground mb-2">
-                Important Notes
-              </h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Please arrive 10 minutes before your appointment time</li>
-                <li>• Bring a valid ID for verification</li>
-                <li>
-                  • Cancellations must be made at least 2 hours in advance
-                </li>
-                <li>• Contact the salon directly for any changes or queries</li>
-              </ul>
-            </CardContent>
-          </Card> */}
+          {}
         </div>
       </div>
     </div>

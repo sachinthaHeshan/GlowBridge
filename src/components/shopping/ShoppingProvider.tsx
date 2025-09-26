@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface CartItem {
   id: number;
-  originalId: string; // Store the original UUID for backend operations
+  originalId: string;
   name: string;
   price: number;
   image: string;
@@ -17,7 +17,7 @@ interface ShoppingCartContextType {
   removeFromCart: (id: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
   clearCart: () => void;
-  clearInvalidItems: () => void; // NEW: Clear items without originalId
+  clearInvalidItems: () => void;
   cartCount: number;
   cartTotal: number;
   isCartOpen: boolean;
@@ -46,33 +46,27 @@ export function ShoppingCartProvider({ children }: ShoppingCartProviderProps) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem("glowbridge-cart");
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
-        // Migration: Filter out cart items that don't have originalId (from old version)
+
         const validCartItems = parsedCart.filter(
           (item: CartItem) =>
             item.originalId && typeof item.originalId === "string"
         );
 
-        // If we filtered out items, log a message
         if (validCartItems.length !== parsedCart.length) {
-          console.log("Migrated cart: removed items without originalId");
         }
 
         setCartItems(validCartItems);
-      } catch (error) {
-        console.error("Error loading cart from localStorage:", error);
-        // Clear invalid cart data
+      } catch {
         localStorage.removeItem("glowbridge-cart");
       }
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("glowbridge-cart", JSON.stringify(cartItems));
   }, [cartItems]);
@@ -97,7 +91,6 @@ export function ShoppingCartProvider({ children }: ShoppingCartProviderProps) {
       return [...prev, { ...item, quantity: item.quantity || 1 }];
     });
 
-    // Show cart panel when item is added
     setIsCartOpen(true);
   };
 

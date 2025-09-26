@@ -124,7 +124,7 @@ export default function PaymentPage() {
         }
         break;
 
-      case 2: // Payment Method
+      case 2:
         if (!formData.cardholderName) {
           newErrors.cardholderName = "Cardholder name is required";
           isValid = false;
@@ -723,7 +723,7 @@ export default function PaymentPage() {
                         </p>
                       </div>
                       <span className="text-sm font-medium text-foreground">
-                        LKR {(item.price * item.quantity * 365).toFixed(2)}
+                        Rs. {(item.price * item.quantity * 365).toFixed(2)}
                       </span>
                     </div>
                   ))}
@@ -733,7 +733,7 @@ export default function PaymentPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal:</span>
                     <span className="text-foreground">
-                      LKR {(cartTotal * 365).toFixed(2)}
+                      Rs. {(cartTotal * 365).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -743,14 +743,14 @@ export default function PaymentPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax (10%):</span>
                     <span className="text-foreground">
-                      LKR {(taxAmount * 365).toFixed(2)}
+                      Rs. {(taxAmount * 365).toFixed(2)}
                     </span>
                   </div>
                   <div className="border-t border-border pt-2">
                     <div className="flex justify-between font-semibold text-lg">
                       <span className="text-foreground">Total:</span>
                       <span className="text-primary">
-                        LKR {(finalTotal * 365).toFixed(2)}
+                        Rs. {(finalTotal * 365).toFixed(2)}
                       </span>
                     </div>
                   </div>

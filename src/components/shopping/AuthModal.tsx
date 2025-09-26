@@ -41,7 +41,6 @@ export default function AuthModal({
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp } = useAuth();
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -69,13 +68,10 @@ export default function AuthModal({
         );
       }
 
-      // Reset form and close modal on success
       setFormData({ name: "", email: "", phone: "", password: "" });
       onSuccess?.();
       onClose();
-    } catch (error) {
-      // Error handling is done in the AuthContext
-      console.error("Authentication error:", error);
+    } catch {
     } finally {
       setIsLoading(false);
     }

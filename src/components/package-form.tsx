@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Gift, IndianRupee, Calculator, Package, Loader2 } from "lucide-react";
+import { Gift, Calculator, Package, Loader2 } from "lucide-react";
 import {
   fetchServicesBySalon,
   fetchActiveCategories,
@@ -44,8 +44,6 @@ interface PackageFormProps {
   isEditing?: boolean;
   isSubmitting?: boolean;
 }
-
-// Salon ID constant
 const SALON_ID = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
 
 export default function PackageForm({
@@ -63,7 +61,7 @@ export default function PackageForm({
     isPrivate: initialData?.isPrivate || false,
   });
 
-  // Update form data when initialData changes (for edit mode)
+
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -83,19 +81,19 @@ export default function PackageForm({
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch services and categories on component mount
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Try to fetch salon-specific services first, fallback to all services
+
         let servicesData;
         try {
           servicesData = await fetchServicesBySalon(SALON_ID);
         } catch {
-          // If salon-specific fetch fails, try fetching all services
+
           const { fetchServices } = await import("@/lib/categoryApi");
-          const allServicesResponse = await fetchServices(1, 100); // Get first 100 services
+          const allServicesResponse = await fetchServices(1, 100);
           servicesData = allServicesResponse.services;
         }
 
@@ -114,7 +112,7 @@ export default function PackageForm({
   }, []);
 
   useEffect(() => {
-    // Calculate total price based on selected services
+
     const selectedServiceObjects = availableServices.filter((service) =>
       formData.selectedServices.includes(service.id)
     );
@@ -124,7 +122,7 @@ export default function PackageForm({
     );
     setTotalPrice(total);
 
-    // Calculate final price
+
     const discount = Number.parseFloat(formData.discount) || 0;
     const calculated = total - (total * discount) / 100;
     setFinalPrice(calculated);
@@ -184,7 +182,7 @@ export default function PackageForm({
     clearError("services");
   };
 
-  // Group services by category
+
   const servicesByCategory = categories.reduce((acc, category) => {
     const servicesInCategory = availableServices.filter((service) =>
       service.categories.some((cat) => cat.id === category.id)
@@ -251,7 +249,7 @@ export default function PackageForm({
         </div>
       </div>
 
-      {/* Service Selection */}
+      {}
       <div className="space-y-4">
         <div>
           <Label className="text-sm font-medium">
@@ -265,7 +263,7 @@ export default function PackageForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.keys(servicesByCategory).length === 0 ? (
             <div className="col-span-full">
-              {/* Show all services without category grouping */}
+              {}
               {availableServices.length > 0 ? (
                 <Card className="p-4">
                   <h4 className="font-medium text-sm text-gray-700 mb-3">
@@ -351,7 +349,7 @@ export default function PackageForm({
         </div>
       </div>
 
-      {/* Discount Section */}
+      {}
       {formData.selectedServices.length > 0 && (
         <div>
           <Label htmlFor="package-discount" className="text-sm font-medium">
@@ -376,7 +374,7 @@ export default function PackageForm({
         </div>
       )}
 
-      {/* Price Calculator */}
+      {}
       {formData.selectedServices.length > 0 && (
         <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200/50">
           <CardHeader className="pb-3">
@@ -401,7 +399,7 @@ export default function PackageForm({
                     Package Discount ({formData.discount}%):
                   </span>
                   <span className="font-medium text-red-600">
-                    -Rs. 
+                    -Rs.
                     {(
                       (totalPrice * Number.parseFloat(formData.discount)) /
                       100
@@ -431,7 +429,7 @@ export default function PackageForm({
         </Card>
       )}
 
-      {/* Privacy Toggle */}
+      {}
       <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
         <Switch
           id="package-private"
@@ -453,7 +451,7 @@ export default function PackageForm({
         </div>
       </div>
 
-      {/* Live Preview */}
+      {}
       {formData.name && formData.selectedServices.length > 0 && (
         <div>
           <Label className="text-sm font-medium">Live Preview</Label>
@@ -497,7 +495,6 @@ export default function PackageForm({
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <IndianRupee className="w-4 h-4 text-green-500" />
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-green-600">
                       Rs. {finalPrice.toFixed(2)}

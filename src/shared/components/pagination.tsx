@@ -8,7 +8,7 @@ interface PaginationProps {
   itemsPerPage: number;
   onPageChange: (page: number) => void;
   disabled?: boolean;
-  itemLabel?: string; // e.g., "users", "salons", "items"
+  itemLabel?: string;
 }
 
 export function Pagination({

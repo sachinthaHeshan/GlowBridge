@@ -17,7 +17,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, DollarSign, Calculator, Loader2 } from "lucide-react";
+import { Clock, Calculator, Loader2 } from "lucide-react";
 
 interface ServiceData {
   name: string;
@@ -43,8 +43,8 @@ interface ServiceFormProps {
   onSubmit: (data: ServiceData) => void;
   onCancel: () => void;
   isEditing?: boolean;
-  prefilledCategory?: string; // Added prefilled category prop
-  isLoading?: boolean; // Added loading state prop
+  prefilledCategory?: string;
+  isLoading?: boolean;
 }
 
 const categories = [
@@ -66,7 +66,7 @@ export default function ServiceForm({
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     description: initialData?.description || "",
-    category: initialData?.category || prefilledCategory || "", // Use prefilled category if provided
+    category: initialData?.category || prefilledCategory || "",
     duration: initialData?.duration || "",
     price: initialData?.price || "",
     discount: initialData?.discount || "",
@@ -186,7 +186,7 @@ export default function ServiceForm({
               setFormData({ ...formData, category: value });
               clearError("category");
             }}
-            disabled={!!prefilledCategory} // Disable category selection if prefilled
+            disabled={!!prefilledCategory}
           >
             <SelectTrigger className={errors.category ? "border-red-500" : ""}>
               <SelectValue placeholder="Select category" />
@@ -281,7 +281,7 @@ export default function ServiceForm({
         </div>
       </div>
 
-      {/* Price Calculator */}
+      {}
       {formData.price && (
         <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200/50">
           <CardHeader className="pb-3">
@@ -304,7 +304,7 @@ export default function ServiceForm({
                     Discount ({formData.discount}%):
                   </span>
                   <span className="font-medium text-red-600">
-                    -Rs. 
+                    -Rs.
                     {(
                       (Number.parseFloat(formData.price) *
                         Number.parseFloat(formData.discount)) /
@@ -327,7 +327,7 @@ export default function ServiceForm({
         </Card>
       )}
 
-      {/* Privacy Toggle */}
+      {}
       <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
         <Switch
           id="service-private"
@@ -349,7 +349,7 @@ export default function ServiceForm({
         </div>
       </div>
 
-      {/* Live Preview */}
+      {}
       {formData.name && formData.category && (
         <div>
           <Label className="text-sm font-medium">Live Preview</Label>
@@ -393,10 +393,9 @@ export default function ServiceForm({
                 )}
                 {formData.price && (
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="w-4 h-4 text-green-500" />
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-green-600">
-                        ${finalPrice.toFixed(2)}
+                        Rs.{finalPrice.toFixed(2)}
                       </span>
                       {formData.discount &&
                         Number.parseFloat(formData.discount) > 0 && (

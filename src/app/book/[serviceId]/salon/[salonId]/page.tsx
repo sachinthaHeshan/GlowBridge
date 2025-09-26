@@ -28,7 +28,7 @@ export default async function StaffSelectionPage({
       reviews: 156,
       specialties: ["Hair Cutting", "Color", "Styling"],
       nextAvailable: "Today 2:00 PM",
-      price: "LKR 3,500",
+      price: "Rs. 3,500",
       image: "/professional-female-hairstylist.png",
       isTopRated: true,
     },
@@ -41,7 +41,7 @@ export default async function StaffSelectionPage({
       reviews: 89,
       specialties: ["Hair Cutting", "Treatments"],
       nextAvailable: "Today 3:30 PM",
-      price: "LKR 3,200",
+      price: "Rs. 3,200",
       image: "/professional-male-hair-stylist.jpg",
       isTopRated: false,
     },
@@ -54,7 +54,7 @@ export default async function StaffSelectionPage({
       reviews: 45,
       specialties: ["Hair Cutting", "Basic Styling"],
       nextAvailable: "Tomorrow 10:00 AM",
-      price: "LKR 2,800",
+      price: "Rs. 2,800",
       image: "/placeholder-rrriq.png",
       isTopRated: false,
     },
@@ -62,7 +62,7 @@ export default async function StaffSelectionPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {}
       <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
@@ -85,7 +85,7 @@ export default async function StaffSelectionPage({
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Salon Info */}
+        {}
         <Card className="mb-8 bg-primary/5 border-primary/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -109,7 +109,7 @@ export default async function StaffSelectionPage({
           </CardContent>
         </Card>
 
-        {/* Staff Selection */}
+        {}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-2xl font-bold text-foreground">
@@ -127,7 +127,7 @@ export default async function StaffSelectionPage({
             >
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
-                  {/* Staff Photo */}
+                  {}
                   <div className="flex-shrink-0">
                     <Avatar className="w-20 h-20">
                       <AvatarImage
@@ -143,7 +143,7 @@ export default async function StaffSelectionPage({
                     </Avatar>
                   </div>
 
-                  {/* Staff Info */}
+                  {}
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -219,7 +219,7 @@ export default async function StaffSelectionPage({
           ))}
         </div>
 
-        {/* Any Staff Option */}
+        {}
         <Card className="mt-8 border-dashed border-2 border-border">
           <CardContent className="p-6 text-center">
             <h4 className="text-lg font-semibold text-foreground mb-2">

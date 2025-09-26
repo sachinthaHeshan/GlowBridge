@@ -8,7 +8,6 @@ import {
   Users,
   Menu,
   X,
-  Sparkles,
   FolderOpen,
   Gift,
   Clock,
@@ -28,6 +27,68 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+const navigation = [
+  {
+    href: "/dashboard/salons",
+    name: "Salon Management",
+    icon: Building2,
+    description: "Manage all salons",
+    permission: [UserRole.ADMIN],
+  },
+  {
+    href: "/dashboard/inventory",
+    name: "Inventory Management",
+    icon: Warehouse,
+    description: "Manage all inventory",
+    permission: [UserRole.SALON_OWNER],
+  },
+  {
+    href: "/dashboard/users",
+    name: "User Management",
+    icon: User,
+    description: "Manage salon users",
+    permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
+  },
+  {
+    name: "Categories",
+    href: "/dashboard/categories",
+    icon: FolderOpen,
+    gradient: "from-green-500 to-teal-600",
+    permission: [UserRole.SALON_OWNER],
+    description: "Service types",
+  },
+
+  {
+    name: "Packages",
+    href: "/dashboard/packages",
+    icon: Gift,
+    gradient: "from-orange-500 to-red-600",
+    permission: [UserRole.SALON_OWNER],
+    description: "Service bundles",
+  },
+  {
+    name: "Working Hours",
+    href: "/dashboard/working-hours",
+    icon: Clock,
+    permission: [UserRole.SALON_OWNER],
+    description: "Staff working hours",
+  },
+  {
+    name: "My Appointments",
+    href: "/dashboard/staff-dashboard",
+    permission: [UserRole.STAFF],
+    icon: LayoutDashboard,
+    description: "Staff overview",
+  },
+  {
+    name: "All Appointments",
+    href: "/dashboard/staff-appointments",
+    permission: [UserRole.SALON_OWNER],
+    icon: Users,
+    description: "All appointments",
+  },
+];
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
@@ -36,78 +97,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    } catch {}
   };
 
-  const navigation = [
-    {
-      href: "/dashboard/salons",
-      name: "Salon Management",
-      icon: Building2,
-      description: "Manage all salons",
-      permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
-    },
-    {
-      href: "/dashboard/inventory",
-      name: "Inventory Management",
-      icon: Warehouse,
-      description: "Manage all inventory",
-      permission: [UserRole.SALON_OWNER],
-    },
-    {
-      href: "/dashboard/users",
-      name: "User Management",
-      icon: User,
-      description: "Manage salon users",
-      permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
-    },
-    {
-      name: "Categories",
-      href: "/dashboard/categories",
-      icon: FolderOpen,
-      gradient: "from-green-500 to-teal-600",
-      permission: [UserRole.SALON_OWNER],
-      description: "Service types",
-    },
-
-    {
-      name: "Packages",
-      href: "/dashboard/packages",
-      icon: Gift,
-      gradient: "from-orange-500 to-red-600",
-      permission: [UserRole.SALON_OWNER],
-      description: "Service bundles",
-    },
-    {
-      name: "Working Hours",
-      href: "/dashboard/working-hours",
-      icon: Clock,
-      permission: [UserRole.SALON_OWNER],
-      description: "Staff working hours",
-    },
-    {
-      name: "My Appointments",
-      href: "/dashboard/staff-dashboard",
-      permission: [UserRole.STAFF],
-      icon: LayoutDashboard,
-      description: "Staff overview",
-    },
-    {
-      name: "All Appointments",
-      href: "/dashboard/staff-appointments",
-      permission: [UserRole.SALON_OWNER],
-      icon: Users,
-      description: "All appointments",
-    },
-  ];
-
   const filteredNavigation = navigation.filter((item) => {
-    if (item.permission.length === 0) return true; // Show items with no permission restriction
-    if (!userData?.role) return false; // Hide items if no user data
+    if (item.permission.length === 0) return true;
+    if (!userData?.role) return false;
 
-    // Convert string role to UserRole enum for comparison
     const userRoleEnum = Object.values(UserRole).find(
       (role) => role === userData.role
     ) as UserRole;
@@ -117,8 +113,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        {/* Mobile sidebar backdrop */}
+      <div className="min-h-screen bg-background">
+        {}
         {sidebarOpen && (
           <div
             className="fixed inset-0 z-40 bg-black/20 lg:hidden"
@@ -126,7 +122,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           />
         )}
 
-        {/* Sidebar */}
+        {}
         <div
           className={cn(
             "fixed inset-y-0 left-0 z-50 w-64 bg-white/80 backdrop-blur-xl border-r border-blue-100 shadow-xl transform transition-transform duration-200 ease-in-out lg:translate-x-0",
@@ -134,15 +130,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           )}
         >
           <div className="flex h-full flex-col">
-            {/* Header */}
+            {}
             <div className="flex items-center justify-between p-6 border-b border-blue-100">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
                 <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    Salon Admin
+                  <h1 className="text-xl font-bold text-foreground">
+                    GlowBridge
                   </h1>
                   <p className="text-sm text-gray-600">Management Dashboard</p>
                 </div>
@@ -157,7 +150,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
             </div>
 
-            {/* Navigation */}
+            {}
             <nav className="flex-1 p-4 space-y-2">
               {filteredNavigation.map((item) => {
                 const Icon = item.icon;
@@ -169,7 +162,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       className={cn(
                         "w-full justify-start h-auto p-4 text-left rounded-xl transition-all duration-200",
                         isActive
-                          ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-[1.02]"
+                          ? "bg-primary text-primary-foreground shadow-lg transform scale-[1.02]"
                           : "hover:bg-blue-50 hover:text-blue-700 hover:scale-[1.01]"
                       )}
                       onClick={() => setSidebarOpen(false)}
@@ -177,7 +170,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <Icon
                         className={cn(
                           "h-5 w-5 mr-3 flex-shrink-0",
-                          isActive ? "text-white" : "text-blue-600"
+                          isActive ? "text-primary-foreground" : "text-blue-600"
                         )}
                       />
                       <div>
@@ -185,7 +178,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         <div
                           className={cn(
                             "text-xs",
-                            isActive ? "text-blue-100" : "text-gray-500"
+                            isActive
+                              ? "text-primary-foreground/70"
+                              : "text-gray-500"
                           )}
                         >
                           {item.description}
@@ -199,9 +194,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
 
-        {/* Main content */}
+        {}
         <div className="lg:pl-64">
-          {/* Top bar */}
+          {}
           <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-blue-100 shadow-sm">
             <div className="flex items-center justify-between px-6 py-4">
               <Button
@@ -214,11 +209,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
 
               <div className="flex items-center space-x-4 w-full justify-between">
-                <div className="text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <div className="text-sm font-medium text-foreground">
                   {navigation.find((item) => item.href === pathname)?.name}
                 </div>
 
-                {/* User Menu */}
+                {}
                 <div className="flex items-center space-x-3">
                   <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
                     <User className="h-4 w-4" />
@@ -241,7 +236,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </header>
 
-          {/* Page content */}
+          {}
           <main className="p-6">{children}</main>
         </div>
       </div>

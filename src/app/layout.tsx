@@ -1,4 +1,4 @@
-// src/app/layout.tsx
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Roboto_Mono } from "next/font/google";
@@ -10,7 +10,6 @@ const robotoMono = Roboto_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   title: "GlowBridge",
-  
 };
 
 export default function RootLayout({
