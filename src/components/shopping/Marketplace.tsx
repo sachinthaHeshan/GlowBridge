@@ -47,7 +47,8 @@ export default function Marketplace() {
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const [productsPerPage] = useState(12);
 
@@ -322,12 +323,12 @@ export default function Marketplace() {
                       onValueChange={setPriceRange}
                       max={10000}
                       min={0}
-                      step={5}
+                      step={500}
                       className="w-full"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>Rs.{priceRange[0]}</span>
-                      <span>Rs.{priceRange[1]}</span>
+                      <span>LKR {priceRange[0].toLocaleString()}</span>
+                      <span>LKR {priceRange[1].toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -451,7 +452,7 @@ export default function Marketplace() {
                         {}
                         <div className="flex items-center justify-between">
                           <span className="text-lg font-bold text-primary">
-                            Rs.{product.price}
+                            LKR {product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                           <Button
                             onClick={() => handleAddToCart(product)}
