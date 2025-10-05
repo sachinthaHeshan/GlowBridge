@@ -151,20 +151,20 @@ const transformBackendOrder = (backendOrder: BackendOrder): Order => {
 };
 export const createOrder = async (
   payload: CreateOrderPayload
-): Promise<string> => {
-  (await apiRequest("/orders", {
+): Promise<BackendOrder> => {
+  const response = (await apiRequest("/orders", {
     method: "POST",
     body: JSON.stringify(payload),
-  })) as BackendOrder;
+  })) as { data: BackendOrder; message: string };
 
-  return "success";
+  return response.data;
 };
 export const createOrderFromCart = async (
   userId: string,
   cartItems: CreateOrderItem[],
   description: string,
   paymentType: string
-): Promise<string> => {
+): Promise<BackendOrder> => {
   return createOrder({
     user_id: userId,
     items: cartItems,
