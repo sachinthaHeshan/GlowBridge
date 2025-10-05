@@ -11,6 +11,7 @@ import {
   MapPin,
   ChevronRight,
   ChevronLeft,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useShoppingCart } from "@/components/shopping/ShoppingProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { createOrder, CreateOrderItem, ApiError } from "@/lib/orderApi";
+import { generateReceiptFromOrderData } from "@/lib/receiptGeneratorSimple";
 
 interface PaymentFormData {
   firstName: string;
@@ -43,6 +45,7 @@ interface PaymentResult {
   success: boolean;
   transactionId?: string;
   message: string;
+  orderId?: string;
 }
 
 const paymentSteps: PaymentStep[] = [
@@ -87,6 +90,36 @@ export default function PaymentPage() {
 
   const taxAmount = cartTotal * 0.1;
   const finalTotal = cartTotal + taxAmount;
+
+  // Receipt download handler
+  const handleDownloadReceipt = () => {
+    if (!paymentResult?.orderId) return;
+
+    const orderData = {
+      id: paymentResult.orderId,
+      transactionId: paymentResult.transactionId,
+      orderDate: new Date().toISOString(),
+      items: cartItems.map(item => ({
+        productName: item.name,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        totalPrice: item.price * item.quantity,
+      })),
+      totalAmount: finalTotal,
+      paymentType: formData.cardNumber ? `Credit Card ending in ${formData.cardNumber.slice(-4)}` : 'Credit Card',
+    };
+
+    const customerData = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: userData?.email || '',
+      address: formData.address,
+      city: formData.city,
+      postalCode: formData.postalCode,
+    };
+
+    generateReceiptFromOrderData(orderData, customerData, cartTotal, taxAmount);
+  };
 
   const handleInputChange = (field: keyof PaymentFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -222,7 +255,7 @@ export default function PaymentPage() {
       const description = `Complete beauty package order containing ${cartItems.length} item(s). Order placed via web payment for ${userData.email}.`;
 
       // Create order using the new API
-      await createOrder({
+      const orderData = await createOrder({
         user_id: userData.id,
         items: orderItems,
         description: description,
@@ -232,6 +265,8 @@ export default function PaymentPage() {
       return {
         success: true,
         message: "Payment processed and order created successfully!",
+        orderId: orderData.id,
+        transactionId: `TXN${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
       };
     } catch (error) {
       console.error("Order creation failed:", error);
@@ -269,11 +304,8 @@ export default function PaymentPage() {
       setPaymentResult(result);
 
       if (result.success) {
-        // Clear cart on successful order creation
-        setTimeout(() => {
-          clearCart();
-          router.push(`/products`);
-        }, 3000);
+        // Cart will be cleared when user manually navigates away from payment success page
+        // This allows them to download receipt and see order details
       }
     } catch {
       setPaymentResult({
@@ -505,26 +537,7 @@ export default function PaymentPage() {
     return v;
   };
 
-  if (cartItems.length === 0) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="text-center p-8">
-            <XCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              No Items to Checkout
-            </h2>
-            <p className="text-muted-foreground mb-4">
-              Your cart is empty. Add some products before proceeding to
-              payment.
-            </p>
-            <Button onClick={() => router.push("/")}>Back to Shopping</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
+  // Check for payment result first (before checking empty cart)
   if (paymentResult) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -544,9 +557,35 @@ export default function PaymentPage() {
                     Transaction ID: {paymentResult.transactionId}
                   </p>
                 )}
-                <p className="text-sm text-muted-foreground">
-                  Redirecting you back to the marketplace...
-                </p>
+                {paymentResult.orderId && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Order ID: {paymentResult.orderId}
+                  </p>
+                )}
+                
+                {/* Download Receipt Button */}
+                <div className="space-y-3 mb-4">
+                  <Button 
+                    onClick={handleDownloadReceipt}
+                    variant="outline"
+                    className="w-full"
+                    disabled={!paymentResult.orderId}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Receipt
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {
+                      // Clear cart when user manually navigates away
+                      clearCart();
+                      router.push('/products');
+                    }}
+                    className="w-full"
+                  >
+                    Continue Shopping
+                  </Button>
+                </div>
               </>
             ) : (
               <>
@@ -562,6 +601,26 @@ export default function PaymentPage() {
                 </Button>
               </>
             )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (cartItems.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="text-center p-8">
+            <XCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              No Items to Checkout
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Your cart is empty. Add some products before proceeding to
+              payment.
+            </p>
+            <Button onClick={() => router.push("/")}>Back to Shopping</Button>
           </CardContent>
         </Card>
       </div>
