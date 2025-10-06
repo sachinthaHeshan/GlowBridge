@@ -154,7 +154,7 @@ export function InventoryManagement() {
       isPublic: item.isPublic,
       discount: item.discount,
       image: null,
-      imagePreview: item.image || "",
+      imagePreview:   "",
     });
     setIsDialogOpen(true);
   };
