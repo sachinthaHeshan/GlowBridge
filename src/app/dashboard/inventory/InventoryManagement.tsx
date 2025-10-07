@@ -372,8 +372,8 @@ Report End
       
       // Create report generator instance
       const reportGenerator = new InventoryReportGenerator();
-      
-      // Generate and download the PDF report
+
+      // Download the PDF report
       reportGenerator.generateReport(filteredData, salonId, reportFilters);
       
       // Show success message
@@ -919,7 +919,7 @@ Report End
                     </Label>
                     <div className="relative">
                       <Input
-                        placeholder="Search product by name or SKU..."
+                        placeholder="Serach product by name "
                         value={productQuery}
                         onChange={(e) => {
                           setProductQuery(e.target.value);
@@ -927,7 +927,7 @@ Report End
                           setSelectedProductId(null);
                         }}
                         onFocus={() => setShowProductSuggestions(true)}
-                        className="h-11"
+                        className="h-11 border-2 border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400"
                       />
                       {showProductSuggestions && productQuery && (
                         <div className="absolute z-40 left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-auto">
