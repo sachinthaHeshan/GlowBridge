@@ -163,6 +163,12 @@ export class InventoryReportGenerator {
       if (filters.reportType === 'stock-usage') {
         this.addText(`Analysis Period: ${periodLabel}`, 10);
       }
+      // Include selected price range in the report header/summary when provided
+      if (filters.minPrice || filters.maxPrice) {
+        const min = filters.minPrice ? parseFloat(filters.minPrice).toFixed(2) : '0.00';
+        const max = filters.maxPrice ? parseFloat(filters.maxPrice).toFixed(2) : '\u221E';
+        this.addText(`Price Range: Rs.${min} - ${max}`, 10);
+      }
       this.yPosition += 10;
       
       this.addText('SUMMARY:', 12, true);

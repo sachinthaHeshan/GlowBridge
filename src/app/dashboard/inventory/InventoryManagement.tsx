@@ -821,7 +821,7 @@ Report End
                     setReportFilters({ ...reportFilters, reportType: value })
                   }
                 >
-                  <SelectTrigger className="h-12 border-2 border-blue-200 hover:border-blue-400 transition-colors">
+                  <SelectTrigger className="h-12 p-6 border-2 border-blue-200 hover:border-blue-400 transition-colors">
                     <SelectValue placeholder="Select report type" />
                   </SelectTrigger>
                   <SelectContent>
