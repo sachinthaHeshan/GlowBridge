@@ -50,7 +50,7 @@ export default function Marketplace() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [productsPerPage] = useState(12);
+  const [productsPerPage, setProductsPerPage] = useState(12);
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
@@ -74,6 +74,7 @@ export default function Marketplace() {
 
       setProducts(result.products);
       setTotalProducts(result.total);
+      setTotalPages(result.totalPages);
     } catch {
       setError("Failed to load products. Please try again.");
     } finally {
@@ -212,27 +213,47 @@ export default function Marketplace() {
 
       {}
       <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl font-bold text-foreground mb-3">
               Beauty & Wellness Marketplace
             </h1>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Discover premium beauty products and services from top-rated
-              salons and spas
+            <p className="text-base text-muted-foreground mb-4 max-w-xl mx-auto">
+              Discover premium beauty products from top-rated salons
             </p>
+            
+            {/* Quick stats */}
+            <div className="flex justify-center items-center space-x-8 text-sm text-muted-foreground">
+              <div className="flex items-center">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                {totalProducts} Products Available
+              </div>
+              <div className="flex items-center">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                Free Shipping
+              </div>
+              <div className="flex items-center">
+                <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                Trusted Salons
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {}
-      <div className="bg-card border-b border-border">
+      <div className="bg-card border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold text-foreground">
-                Products
-              </h2>
+              <div>
+                <h2 className="text-2xl font-semibold text-foreground">
+                  Products
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {totalProducts} products • Premium quality guaranteed
+                </p>
+              </div>
               <div className="flex items-center space-x-4">
                 <Button
                   variant="outline"
@@ -269,6 +290,20 @@ export default function Marketplace() {
                     </option>
                   ))}
                 </select>
+                
+                <select
+                  value={productsPerPage}
+                  onChange={(e) => {
+                    setProductsPerPage(Number(e.target.value));
+                    setCurrentPage(1); // Reset to first page when changing page size
+                  }}
+                  className="px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                >
+                  <option value={12}>12 per page</option>
+                  <option value={24}>24 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>All products</option>
+                </select>
               </div>
             </div>
           </div>
@@ -283,19 +318,25 @@ export default function Marketplace() {
               showFilters ? "block" : "hidden"
             } w-full md:w-64 space-y-6`}
           >
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Filters</CardTitle>
+            <Card className="shadow-lg border-0 bg-gradient-to-b from-background to-background/50">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center">
+                  <Filter className="h-5 w-5 mr-2 text-primary" />
+                  Filters
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {}
                 <div>
-                  <h3 className="font-medium text-foreground mb-3">Category</h3>
-                  <div className="space-y-2">
+                  <h3 className="font-medium text-foreground mb-4 flex items-center">
+                    <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                    Category
+                  </h3>
+                  <div className="space-y-3">
                     {categories.map((category) => (
                       <label
                         key={category}
-                        className="flex items-center space-x-2 cursor-pointer"
+                        className="flex items-center space-x-3 cursor-pointer group hover:bg-muted/50 p-2 rounded-md transition-colors"
                       >
                         <input
                           type="radio"
@@ -303,11 +344,16 @@ export default function Marketplace() {
                           value={category}
                           checked={selectedCategory === category}
                           onChange={(e) => setSelectedCategory(e.target.value)}
-                          className="text-primary focus:ring-primary"
+                          className="text-primary focus:ring-primary w-4 h-4"
                         />
-                        <span className="text-sm text-foreground">
+                        <span className="text-sm text-foreground group-hover:text-primary transition-colors">
                           {category}
                         </span>
+                        {selectedCategory === category && (
+                          <Badge variant="secondary" className="ml-auto text-xs">
+                            Selected
+                          </Badge>
+                        )}
                       </label>
                     ))}
                   </div>
@@ -375,30 +421,62 @@ export default function Marketplace() {
                 </Button>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  No products found matching your criteria.
-                </p>
+              <div className="text-center py-16 bg-gradient-to-b from-background to-muted/20 rounded-lg border-2 border-dashed border-muted">
+                <div className="max-w-md mx-auto">
+                  <div className="w-24 h-24 mx-auto mb-6 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Search className="h-12 w-12 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    No products found
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    Try adjusting your filters or search terms to find what you're looking for.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSelectedCategory("All");
+                        setSearchQuery("");
+                        setPriceRange([0, 10000]);
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                    <Button onClick={loadProducts}>
+                      Refresh Products
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
                   <Card
                     key={product.id}
-                    className="group hover:shadow-lg transition-shadow duration-200"
+                    className="group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-0 shadow-md bg-gradient-to-b from-background to-background/50 h-full flex flex-col"
                   >
-                    <CardContent className="p-0">
+                    <CardContent className="p-0 flex flex-col h-full">
                       {}
                       <div className="relative overflow-hidden rounded-t-lg">
-                        <div className="aspect-square bg-muted flex items-center justify-center">
-                          <span className="text-muted-foreground text-sm">
-                            Product Image
-                          </span>
+                        <div className="aspect-square bg-gradient-to-br from-primary/5 to-secondary/10 flex items-center justify-center relative">
+                          {/* Decorative pattern */}
+                          <div className="absolute inset-0 opacity-20">
+                            <div className="w-full h-full bg-gradient-to-br from-transparent via-primary/10 to-transparent"></div>
+                          </div>
+                          <div className="relative z-10 text-center">
+                            <div className="w-16 h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
+                              <Scissors className="h-8 w-8 text-primary" />
+                            </div>
+                            <span className="text-muted-foreground text-sm font-medium">
+                              {product.name}
+                            </span>
+                          </div>
                         </div>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                          className="absolute top-2 right-2 bg-background/90 hover:bg-background shadow-sm"
                           onClick={() => toggleWishlist(product.id)}
                         >
                           <Heart
@@ -410,70 +488,103 @@ export default function Marketplace() {
                           />
                         </Button>
                         {!product.inStock && (
-                          <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
-                            <Badge variant="secondary">Out of Stock</Badge>
+                          <div className="absolute inset-0 bg-background/70 flex items-center justify-center backdrop-blur-sm">
+                            <Badge variant="secondary" className="shadow-sm">Out of Stock</Badge>
+                          </div>
+                        )}
+                        {/* New badge for popular items */}
+                        {product.rating > 4.7 && (
+                          <div className="absolute top-2 left-2">
+                            <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-sm">
+                              ⭐ Popular
+                            </Badge>
                           </div>
                         )}
                       </div>
 
                       {}
-                      <div className="p-4 space-y-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                            {product.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {product.description}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            by {product.salon}
-                          </p>
-                        </div>
-
-                        {}
-                        <div className="flex items-center space-x-1">
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-3 w-3 ${
-                                  i < Math.floor(product.rating)
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-muted-foreground"
-                                }`}
-                              />
-                            ))}
+                      <div className="p-5 flex flex-col h-full">
+                        <div className="flex-grow space-y-4">
+                          <div>
+                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors text-lg">
+                              {product.name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {product.description}
+                            </p>
+                            <div className="flex items-center mt-2">
+                              <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
+                              <p className="text-xs text-muted-foreground">
+                                by {product.salon}
+                              </p>
+                            </div>
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {product.rating.toFixed(1)} ({product.reviews})
-                          </span>
                         </div>
 
-                        {}
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold text-primary">
-                            LKR {product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
+                        {/* Price and Action section - Fixed at bottom */}
+                        <div className="space-y-3 pt-4 border-t border-border mt-4">
+                          <div>
+                            <span className="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                              LKR {product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
                           <Button
                             onClick={() => handleAddToCart(product)}
                             disabled={!product.inStock}
                             size="sm"
-                            className="min-w-[100px]"
+                            className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-md"
                           >
                             <ShoppingCart className="h-4 w-4 mr-1" />
                             Add to Cart
                           </Button>
                         </div>
-
-                        <Badge variant="outline" className="text-xs">
-                          {product.category}
-                        </Badge>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
             )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center space-x-4 mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex items-center space-x-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className="min-w-[40px]"
+                    >
+                      {pageNum}
+                    </Button>
+                  ))}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+
+            {/* Products Count Display */}
+            <div className="text-center mt-4 text-sm text-muted-foreground">
+              Showing {products.length} of {totalProducts} products
+              {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+            </div>
           </div>
         </div>
       </div>
