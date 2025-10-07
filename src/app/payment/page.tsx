@@ -195,7 +195,7 @@ export default function PaymentPage() {
           newErrors.phone = "Phone number is required";
           isValid = false;
         } else if (!validatePhoneNumber(formData.phone)) {
-          newErrors.phone = "Please enter a valid Sri Lankan phone number";
+          newErrors.phone = "Please enter a valid phone number";
           isValid = false;
         }
         break;
@@ -219,7 +219,7 @@ export default function PaymentPage() {
           newErrors.cvv = "CVV is required";
           isValid = false;
         } else if (formData.cvv.length < 3) {
-          newErrors.cvv = "CVV must be at least 3 digits";
+          newErrors.cvv = "CVV must be 3 digits";
           isValid = false;
         }
         if (!formData.cardholderName.trim()) {
@@ -504,6 +504,7 @@ export default function PaymentPage() {
                           <Label htmlFor="firstName">First Name</Label>
                           <Input
                             id="firstName"
+                            placeholder="Enter the First Name"
                             value={formData.firstName}
                             onChange={(e) => handleInputChange("firstName", e.target.value)}
                             className={getInputClassName(!!errors.firstName)}
@@ -516,6 +517,7 @@ export default function PaymentPage() {
                           <Label htmlFor="lastName">Last Name</Label>
                           <Input
                             id="lastName"
+                            placeholder="Enter the Last Name"
                             value={formData.lastName}
                             onChange={(e) => handleInputChange("lastName", e.target.value)}
                             className={getInputClassName(!!errors.lastName)}
@@ -530,6 +532,7 @@ export default function PaymentPage() {
                         <Label htmlFor="address">Address</Label>
                         <Input
                           id="address"
+                          placeholder="Enter the Address"
                           value={formData.address}
                           onChange={(e) => handleInputChange("address", e.target.value)}
                           className={getInputClassName(!!errors.address)}
@@ -544,6 +547,7 @@ export default function PaymentPage() {
                           <Label htmlFor="city">City</Label>
                           <Input
                             id="city"
+                            placeholder="Enter the City"
                             value={formData.city}
                             onChange={(e) => handleInputChange("city", e.target.value)}
                             className={getInputClassName(!!errors.city)}
@@ -556,6 +560,7 @@ export default function PaymentPage() {
                           <Label htmlFor="postalCode">Postal Code</Label>
                           <Input
                             id="postalCode"
+                            placeholder="Enter the Posatal Code"
                             value={formData.postalCode}
                             onChange={(e) => handleInputChange("postalCode", e.target.value)}
                             className={getInputClassName(!!errors.postalCode)}
@@ -571,7 +576,7 @@ export default function PaymentPage() {
                         <Input
                           id="phone"
                           type="tel"
-                          placeholder="+94 77 123 4567"
+                          placeholder="Enter the Phone Nmuber"
                           value={formData.phone}
                           onChange={(e) => handleInputChange("phone", e.target.value)}
                           className={getInputClassName(!!errors.phone)}
@@ -595,7 +600,7 @@ export default function PaymentPage() {
                           id="cardNumber"
                           value={formData.cardNumber}
                           onChange={(e) => handleInputChange("cardNumber", formatCardNumber(e.target.value))}
-                          placeholder="1234 5678 9012 3456"
+                          placeholder="XXXX XXXX XXXX XXXX"
                           maxLength={19}
                           className={getInputClassName(!!errors.cardNumber)}
                         />
@@ -625,8 +630,8 @@ export default function PaymentPage() {
                             id="cvv"
                             value={formData.cvv}
                             onChange={(e) => handleInputChange("cvv", e.target.value.replace(/\D/g, ""))}
-                            placeholder="123"
-                            maxLength={4}
+                            placeholder="XXX"
+                            maxLength={3}
                             className={getInputClassName(!!errors.cvv)}
                           />
                           {errors.cvv && (
@@ -641,7 +646,7 @@ export default function PaymentPage() {
                           id="cardholderName"
                           value={formData.cardholderName}
                           onChange={(e) => handleInputChange("cardholderName", e.target.value)}
-                          placeholder="John Doe"
+                          placeholder="Enter the Cardholder's Name"
                           className={getInputClassName(!!errors.cardholderName)}
                         />
                         {errors.cardholderName && (
