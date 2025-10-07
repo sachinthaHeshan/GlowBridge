@@ -169,6 +169,10 @@ export class InventoryReportGenerator {
         const max = filters.maxPrice ? parseFloat(filters.maxPrice).toFixed(2) : '\u221E';
         this.addText(`Price Range: Rs.${min} - ${max}`, 10);
       }
+      // If the report is for a single selected product, include its name explicitly
+      if (data.length === 1) {
+        this.addText(`Selected Product: ${data[0].name}`, 10);
+      }
       this.yPosition += 10;
       
       this.addText('SUMMARY:', 12, true);

@@ -83,6 +83,10 @@ export function InventoryManagement() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  // Product picker for report: query + selected product id
+  const [productQuery, setProductQuery] = useState("");
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [showProductSuggestions, setShowProductSuggestions] = useState(false);
 
   // Report generation state
   const [reportFilters, setReportFilters] = useState({
@@ -255,16 +259,21 @@ export function InventoryManagement() {
   const getFilteredReportData = () => {
     let filteredItems = [...items];
 
+    // If a specific product is selected, return only that
+    if (selectedProductId) {
+      return filteredItems.filter((i) => i.id === selectedProductId);
+    }
+
     // Filter by stock level
     if (reportFilters.stockLevel && reportFilters.stockLevel !== "all") {
-      filteredItems = filteredItems.filter(item => item.status === reportFilters.stockLevel);
+      filteredItems = filteredItems.filter((item) => item.status === reportFilters.stockLevel);
     }
 
     // Filter by price range
     if (reportFilters.minPrice || reportFilters.maxPrice) {
       const minPrice = reportFilters.minPrice ? parseFloat(reportFilters.minPrice) : 0;
       const maxPrice = reportFilters.maxPrice ? parseFloat(reportFilters.maxPrice) : Infinity;
-      filteredItems = filteredItems.filter(item => item.price >= minPrice && item.price <= maxPrice);
+      filteredItems = filteredItems.filter((item) => item.price >= minPrice && item.price <= maxPrice);
     }
 
     return filteredItems;
@@ -903,6 +912,70 @@ Report End
                   </div>
 
                   {/* Price Range Filter */}
+                  {/* Product Search / Select */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-green-700 dark:text-green-400">
+                      Select Product
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        placeholder="Search product by name or SKU..."
+                        value={productQuery}
+                        onChange={(e) => {
+                          setProductQuery(e.target.value);
+                          setShowProductSuggestions(true);
+                          setSelectedProductId(null);
+                        }}
+                        onFocus={() => setShowProductSuggestions(true)}
+                        className="h-11"
+                      />
+                      {showProductSuggestions && productQuery && (
+                        <div className="absolute z-40 left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-auto">
+                          {items
+                            .filter((it) =>
+                              it.name.toLowerCase().includes(productQuery.toLowerCase()) ||
+                              (it.description || "").toLowerCase().includes(productQuery.toLowerCase()) ||
+                              it.id.toLowerCase().includes(productQuery.toLowerCase())
+                            )
+                            .slice(0, 8)
+                            .map((it) => (
+                              <div
+                                key={it.id}
+                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                                onMouseDown={(e) => {
+                                  // prevent blur before click
+                                  e.preventDefault();
+                                  setSelectedProductId(it.id);
+                                  setProductQuery(it.name);
+                                  setShowProductSuggestions(false);
+                                }}
+                              >
+                                <div>
+                                  <div className="font-medium">{it.name}</div>
+                                  <div className="text-xs text-muted-foreground">{it.description || it.id}</div>
+                                </div>
+                                <div className="text-sm text-muted-foreground">Rs.{it.price}</div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                      {selectedProductId && (
+                        <div className="mt-2 text-sm flex items-center gap-2">
+                          <Badge>{items.find((i) => i.id === selectedProductId)?.name}</Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedProductId(null);
+                              setProductQuery("");
+                            }}
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-green-700 dark:text-green-400">
                       Price Range (Rs.)
@@ -1000,6 +1073,14 @@ Report End
                       <span className="text-muted-foreground font-medium">Price Range:</span>
                       <span className="font-semibold text-orange-700 dark:text-orange-400">
                         {reportFilters.minPrice || "0"} - {reportFilters.maxPrice || "∞"} Rs.
+                      </span>
+                    </div>
+                  )}
+                  {selectedProductId && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-muted-foreground font-medium">Selected Product:</span>
+                      <span className="font-semibold text-orange-700 dark:text-orange-400">
+                        {items.find((i) => i.id === selectedProductId)?.name || selectedProductId}
                       </span>
                     </div>
                   )}
