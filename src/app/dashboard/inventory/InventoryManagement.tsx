@@ -42,6 +42,9 @@ import {
   Loader2,
   AlertCircle,
   FileText,
+  Download,
+  Filter,
+  Calendar,
 } from "lucide-react";
 import {
   Product,
@@ -52,15 +55,18 @@ import {
   ApiError,
 } from "@/lib/productApi";
 import { showApiErrorToast } from "@/lib/errorToast";
+import { InventoryReportGenerator } from "@/lib/reportGeneratorNew";
 type InventoryItem = Product;
 
 export function InventoryManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
 
   const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
@@ -77,6 +83,17 @@ export function InventoryManagement() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+
+  // Report generation state
+  const [reportFilters, setReportFilters] = useState({
+    reportType: "current-stock" as "current-stock" | "stock-usage",
+    category: "" as string,
+    stockLevel: "all" as "all" | "in-stock" | "low-stock" | "out-of-stock",
+    dateRange: {
+      from: "",
+      to: ""
+    }
+  });
 
 
   useEffect(() => {
@@ -234,6 +251,138 @@ export function InventoryManagement() {
 
       return matchesSearch && matchesPrice;
     });
+  };
+
+  // Report generation functions
+  const getFilteredReportData = () => {
+    let filteredItems = [...items];
+
+    // Filter by stock level
+    if (reportFilters.stockLevel && reportFilters.stockLevel !== "all") {
+      filteredItems = filteredItems.filter(item => item.status === reportFilters.stockLevel);
+    }
+
+    // Filter by category (if you have categories in your data structure)
+    // Note: Adding category filter - you might need to add category field to your Product type
+    if (reportFilters.category) {
+      // Assuming category might be in description or you'll add it later
+      filteredItems = filteredItems.filter(item => 
+        item.description?.toLowerCase().includes(reportFilters.category.toLowerCase())
+      );
+    }
+
+    return filteredItems;
+  };
+
+  const generateCurrentStockReport = (data: InventoryItem[]) => {
+    const reportContent = `
+INVENTORY CURRENT STOCK LEVEL REPORT
+Generated on: ${new Date().toLocaleString()}
+Salon ID: ${salonId}
+
+====================================================
+
+SUMMARY:
+- Total Items: ${data.length}
+- In Stock: ${data.filter(i => i.status === 'in-stock').length}
+- Low Stock: ${data.filter(i => i.status === 'low-stock').length}
+- Out of Stock: ${data.filter(i => i.status === 'out-of-stock').length}
+- Total Value: Rs.${data.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+
+====================================================
+
+DETAILED INVENTORY:
+
+${data.map(item => `
+Product: ${item.name}
+Price: Rs.${item.price.toFixed(2)}
+Quantity: ${item.quantity}
+Status: ${item.status.toUpperCase()}
+Discount: ${item.discount}%
+Description: ${item.description || 'N/A'}
+Total Value: Rs.${(item.price * item.quantity).toFixed(2)}
+---
+`).join('')}
+
+====================================================
+Report End
+`;
+    return reportContent;
+  };
+
+  const generateStockUsageReport = (data: InventoryItem[]) => {
+    // This is a simulated stock usage report
+    // In a real application, you would track actual usage data
+    const reportContent = `
+INVENTORY STOCK USAGE REPORT
+Generated on: ${new Date().toLocaleString()}
+Salon ID: ${salonId}
+Period: Last 30 days (simulated data)
+
+====================================================
+
+USAGE SUMMARY:
+- Total Products Monitored: ${data.length}
+- High Usage Items: ${data.filter(i => i.quantity < 10).length}
+- Medium Usage Items: ${data.filter(i => i.quantity >= 10 && i.quantity < 50).length}
+- Low Usage Items: ${data.filter(i => i.quantity >= 50).length}
+
+====================================================
+
+USAGE DETAILS:
+
+${data.map(item => {
+  // Simulate usage data based on current stock levels
+  const estimatedUsage = item.status === 'low-stock' ? 'High' : 
+                        item.status === 'out-of-stock' ? 'Critical' : 'Normal';
+  const simulatedDailyUsage = item.status === 'low-stock' ? Math.floor(item.quantity * 0.1) + 1 :
+                             item.status === 'out-of-stock' ? 'N/A' :
+                             Math.floor(item.quantity * 0.05) + 1;
+  
+  return `
+Product: ${item.name}
+Current Stock: ${item.quantity}
+Usage Level: ${estimatedUsage}
+Estimated Daily Usage: ${simulatedDailyUsage}
+Reorder Recommendation: ${item.quantity < 20 ? 'URGENT - Reorder required' : 'Normal monitoring'}
+---
+`;
+}).join('')}
+
+====================================================
+Report End
+`;
+    return reportContent;
+  };
+
+  const downloadReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const filteredData = getFilteredReportData();
+      
+      if (filteredData.length === 0) {
+        alert('No data available for the selected filters. Please adjust your filters and try again.');
+        return;
+      }
+      
+      // Create report generator instance
+      const reportGenerator = new InventoryReportGenerator();
+      
+      // Generate and download the PDF report
+      reportGenerator.generateReport(filteredData, salonId, reportFilters);
+      
+      // Show success message
+      setTimeout(() => {
+        alert('📄 Report generated successfully! Check your downloads folder.');
+      }, 500);
+      
+      setIsReportDialogOpen(false);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('❌ Error generating report. Please try again.');
+    } finally {
+      setGeneratingReport(false);
+    }
   };
 
 
@@ -427,12 +576,11 @@ export function InventoryManagement() {
           </div>
           <div className="flex items-center space-x-2">
             <Button
-              onClick={() => {
-              }}
+              onClick={() => setIsReportDialogOpen(true)}
               className="bg-primary hover:bg-primary/90"
             >
               <FileText className="h-4 w-4 mr-2" />
-              Generate PDF
+              Generate Report
             </Button>
             <Button
               onClick={handleAddItem}
@@ -638,6 +786,214 @@ export function InventoryManagement() {
                 </>
               ) : (
                 <>{editingItem ? "Update" : "Create"} Item</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Generation Dialog */}
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Generate Inventory Report
+            </DialogTitle>
+            <DialogDescription>
+              Configure your inventory report parameters and download as a professional PDF document.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-6 py-4">
+            {/* Report Type Selection */}
+            <div className="grid gap-3">
+              <Label htmlFor="reportType" className="text-sm font-medium">Report Type</Label>
+              <Select
+                value={reportFilters.reportType}
+                onValueChange={(value: "current-stock" | "stock-usage") =>
+                  setReportFilters({ ...reportFilters, reportType: value })
+                }
+              >
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select report type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="current-stock">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      <div>
+                        <div className="font-medium">Current Stock Level Report</div>
+                        <div className="text-xs text-muted-foreground">Detailed inventory status and quantities</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="stock-usage">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <div>
+                        <div className="font-medium">Sales & Usage Analysis Report</div>
+                        <div className="text-xs text-muted-foreground">Sales performance, usage patterns and reorder recommendations</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Stock Level Filter */}
+              <div className="grid gap-3">
+                <Label htmlFor="stockLevel" className="text-sm font-medium">Filter by Stock Level</Label>
+                <Select
+                  value={reportFilters.stockLevel}
+                  onValueChange={(value: "all" | "in-stock" | "low-stock" | "out-of-stock") =>
+                    setReportFilters({ ...reportFilters, stockLevel: value })
+                  }
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="All stock levels" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stock Levels</SelectItem>
+                    <SelectItem value="in-stock">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        In Stock Only
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="low-stock">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                        Low Stock Only
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="out-of-stock">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                        Out of Stock Only
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Category Filter */}
+              <div className="grid gap-3">
+                <Label htmlFor="category" className="text-sm font-medium">Filter by Category</Label>
+                <Input
+                  id="category"
+                  placeholder="Enter category keyword..."
+                  value={reportFilters.category}
+                  onChange={(e) =>
+                    setReportFilters({ ...reportFilters, category: e.target.value })
+                  }
+                  className="h-11"
+                />
+              </div>
+            </div>
+
+            {/* Date Range for Usage Report */}
+            {reportFilters.reportType === "stock-usage" && (
+              <div className="grid gap-3">
+                <Label className="text-sm font-medium">Sales Analysis Period</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Input
+                      type="date"
+                      value={reportFilters.dateRange.from}
+                      onChange={(e) =>
+                        setReportFilters({
+                          ...reportFilters,
+                          dateRange: { ...reportFilters.dateRange, from: e.target.value }
+                        })
+                      }
+                      className="h-11"
+                    />
+                    <p className="text-xs text-muted-foreground">From Date (optional)</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="date"
+                      value={reportFilters.dateRange.to}
+                      onChange={(e) =>
+                        setReportFilters({
+                          ...reportFilters,
+                          dateRange: { ...reportFilters.dateRange, to: e.target.value }
+                        })
+                      }
+                      className="h-11"
+                    />
+                    <p className="text-xs text-muted-foreground">To Date (optional)</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Leave blank to analyze last 30 days. Date range selection will be implemented in future updates.
+                </p>
+              </div>
+            )}
+
+            {/* Preview Information */}
+            <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+              <CardContent className="p-4">
+                <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
+                  <Filter className="h-4 w-4" />
+                  Report Preview
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Report Type:</span>
+                    <span className="font-medium">
+                      {reportFilters.reportType === 'current-stock' ? 'Current Stock Levels' : 'Sales & Usage Analysis'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Items to include:</span>
+                    <span className="font-medium text-primary">{getFilteredReportData().length} products</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Stock Level Filter:</span>
+                    <span className="font-medium">{reportFilters.stockLevel === 'all' ? 'All levels' : reportFilters.stockLevel}</span>
+                  </div>
+                  {reportFilters.category && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Category Filter:</span>
+                      <span className="font-medium">"{reportFilters.category}"</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Format:</span>
+                    <span className="font-medium">Professional PDF Document</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setIsReportDialogOpen(false)}
+              disabled={generatingReport}
+              className="px-6"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={downloadReport}
+              disabled={generatingReport || getFilteredReportData().length === 0}
+              className="bg-primary hover:bg-primary/90 px-6"
+            >
+              {generatingReport ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF Report
+                </>
               )}
             </Button>
           </div>
