@@ -791,235 +791,258 @@ Report End
 
       {/* Report Generation Dialog */}
       <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              Generate Inventory Report
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold">
+                Generate Inventory Report
+              </span>
             </DialogTitle>
-            <DialogDescription>
-              Configure your inventory report parameters and download as a professional PDF document.
+            <DialogDescription className="text-base">
+              Configure your report parameters and download as PDF
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-6 py-4">
+          <div className="grid gap-5 py-4">
             {/* Report Type Selection */}
-            <div className="grid gap-3">
-              <Label htmlFor="reportType" className="text-sm font-medium">Report Type</Label>
-              <Select
-                value={reportFilters.reportType}
-                onValueChange={(value: "current-stock" | "stock-usage") =>
-                  setReportFilters({ ...reportFilters, reportType: value })
-                }
-              >
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select report type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="current-stock">
-                    <div className="flex items-center gap-2">
-                      <Package className="h-4 w-4" />
-                      <div>
-                        <div className="font-medium">Current Stock Level Report</div>
-                        <div className="text-xs text-muted-foreground">Detailed inventory status and quantities</div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="stock-usage">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <div>
-                        <div className="font-medium">Sales & Usage Analysis Report</div>
-                        <div className="text-xs text-muted-foreground">Sales performance, usage patterns and reorder recommendations</div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Stock Level Filter */}
-              <div className="grid gap-3">
-                <Label htmlFor="stockLevel" className="text-sm font-medium">Filter by Stock Level</Label>
+            <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Report Type
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <Select
-                  value={reportFilters.stockLevel}
-                  onValueChange={(value: "all" | "in-stock" | "low-stock" | "out-of-stock") =>
-                    setReportFilters({ ...reportFilters, stockLevel: value })
+                  value={reportFilters.reportType}
+                  onValueChange={(value: "current-stock" | "stock-usage") =>
+                    setReportFilters({ ...reportFilters, reportType: value })
                   }
                 >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="All stock levels" />
+                  <SelectTrigger className="h-12 border-2 border-blue-200 hover:border-blue-400 transition-colors">
+                    <SelectValue placeholder="Select report type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Stock Levels</SelectItem>
-                    <SelectItem value="in-stock">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        In Stock Only
+                    <SelectItem value="current-stock" className="cursor-pointer">
+                      <div className="flex items-center gap-3 py-1">
+                        <div className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow-md">
+                          <Package className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-base">Current Stock Level Report</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">Inventory status and quantities</div>
+                        </div>
                       </div>
                     </SelectItem>
-                    <SelectItem value="low-stock">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                        Low Stock Only
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="out-of-stock">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                        Out of Stock Only
+                    <SelectItem value="stock-usage" className="cursor-pointer">
+                      <div className="flex items-center gap-3 py-1">
+                        <div className="p-2 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg shadow-md">
+                          <Calendar className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-base">Sales & Usage Analysis Report</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">Sales performance and reorder recommendations</div>
+                        </div>
                       </div>
                     </SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* Category Filter */}
-              <div className="grid gap-3">
-                <Label htmlFor="category" className="text-sm font-medium">Filter by Category</Label>
-                <Input
-                  id="category"
-                  placeholder="Enter category keyword..."
-                  value={reportFilters.category}
-                  onChange={(e) =>
-                    setReportFilters({ ...reportFilters, category: e.target.value })
-                  }
-                  className="h-11"
-                />
-              </div>
-            </div>
+            {/* Filters Section */}
+            <Card className="border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
+                  <div className="p-1.5 bg-gradient-to-br from-green-400 to-green-600 rounded-lg shadow-md">
+                    <Filter className="h-4 w-4 text-white" />
+                  </div>
+                  Filters
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Stock Level Filter */}
+                  <div className="space-y-2">
+                    <Label htmlFor="stockLevel" className="text-sm font-semibold text-green-700 dark:text-green-400">
+                      Stock Level
+                    </Label>
+                    <Select
+                      value={reportFilters.stockLevel}
+                      onValueChange={(value: "all" | "in-stock" | "low-stock" | "out-of-stock") =>
+                        setReportFilters({ ...reportFilters, stockLevel: value })
+                      }
+                    >
+                      <SelectTrigger className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors">
+                        <SelectValue placeholder="All stock levels" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="font-medium">All Stock Levels</SelectItem>
+                        <SelectItem value="in-stock">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500 shadow-md shadow-green-300"></div>
+                            <span className="font-medium">In Stock</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="low-stock">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-md shadow-yellow-300"></div>
+                            <span className="font-medium">Low Stock</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="out-of-stock">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500 shadow-md shadow-red-300"></div>
+                            <span className="font-medium">Out of Stock</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Category Filter */}
+                  <div className="space-y-2">
+                    <Label htmlFor="category" className="text-sm font-semibold text-green-700 dark:text-green-400">
+                      Category
+                    </Label>
+                    <Input
+                      id="category"
+                      placeholder="Filter by keyword..."
+                      value={reportFilters.category}
+                      onChange={(e) =>
+                        setReportFilters({ ...reportFilters, category: e.target.value })
+                      }
+                      className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Time Period Selection for Usage Report */}
             {reportFilters.reportType === "stock-usage" && (
-              <div className="grid gap-3">
-                <Label className="text-sm font-medium">Sales Analysis Period</Label>
-                <Select
-                  value={reportFilters.timePeriod}
-                  onValueChange={(value: "7" | "14" | "21" | "30" | "60" | "90") =>
-                    setReportFilters({ ...reportFilters, timePeriod: value })
-                  }
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Select time period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Last Week (7 days)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="14">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Last 2 Weeks (14 days)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="21">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Last 3 Weeks (21 days)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="30">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Last Month (30 days)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="60">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Last 2 Months (60 days)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="90">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Last 3 Months (90 days)
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Select the time period for sales analysis and performance metrics
-                </p>
-              </div>
+              <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-950/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold text-purple-700 dark:text-purple-400 flex items-center gap-2">
+                    <div className="p-1.5 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg shadow-md">
+                      <Calendar className="h-4 w-4 text-white" />
+                    </div>
+                    Analysis Period
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select
+                    value={reportFilters.timePeriod}
+                    onValueChange={(value: "7" | "14" | "21" | "30" | "60" | "90") =>
+                      setReportFilters({ ...reportFilters, timePeriod: value })
+                    }
+                  >
+                    <SelectTrigger className="h-12 border-2 border-purple-200 hover:border-purple-400 transition-colors">
+                      <SelectValue placeholder="Select time period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7" className="font-medium">📅 Last Week (7 days)</SelectItem>
+                      <SelectItem value="14" className="font-medium">📅 Last 2 Weeks (14 days)</SelectItem>
+                      <SelectItem value="21" className="font-medium">📅 Last 3 Weeks (21 days)</SelectItem>
+                      <SelectItem value="30" className="font-medium">📅 Last Month (30 days)</SelectItem>
+                      <SelectItem value="60" className="font-medium">📅 Last 2 Months (60 days)</SelectItem>
+                      <SelectItem value="90" className="font-medium">📅 Last 3 Months (90 days)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
             )}
 
-            {/* Preview Information */}
-            <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-              <CardContent className="p-4">
-                <h4 className="font-medium mb-3 flex items-center gap-2 text-primary">
-                  <Filter className="h-4 w-4" />
-                  Report Preview
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Report Type:</span>
-                    <span className="font-medium">
-                      {reportFilters.reportType === 'current-stock' ? 'Current Stock Levels' : 'Sales & Usage Analysis'}
+            {/* Preview Section */}
+            <Card className="border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-all bg-gradient-to-br from-orange-50 via-amber-50/50 to-yellow-50/30 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-yellow-950/10">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-bold text-orange-700 dark:text-orange-400 flex items-center gap-2">
+                  <div className="p-2 bg-gradient-to-br from-orange-400 to-amber-600 rounded-lg shadow-lg">
+                    <FileText className="h-5 w-5 text-white" />
+                  </div>
+                  📊 Report Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm space-y-3 bg-white/60 dark:bg-gray-900/30 p-4 rounded-lg border border-orange-200/50">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-muted-foreground font-medium">Report Type:</span>
+                    <span className="font-semibold text-orange-700 dark:text-orange-400">
+                      {reportFilters.reportType === "current-stock"
+                        ? "📦 Current Stock Level"
+                        : "📈 Sales & Usage Analysis"}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Items to include:</span>
-                    <span className="font-medium text-primary">{getFilteredReportData().length} products</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Stock Level Filter:</span>
-                    <span className="font-medium">{reportFilters.stockLevel === 'all' ? 'All levels' : reportFilters.stockLevel}</span>
-                  </div>
-                  {reportFilters.category && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Category Filter:</span>
-                      <span className="font-medium">"{reportFilters.category}"</span>
-                    </div>
-                  )}
-                  {reportFilters.reportType === 'stock-usage' && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Analysis Period:</span>
-                      <span className="font-medium">
-                        {reportFilters.timePeriod === '7' ? 'Last Week' :
-                         reportFilters.timePeriod === '14' ? 'Last 2 Weeks' :
-                         reportFilters.timePeriod === '21' ? 'Last 3 Weeks' :
-                         reportFilters.timePeriod === '30' ? 'Last Month' :
-                         reportFilters.timePeriod === '60' ? 'Last 2 Months' :
-                         'Last 3 Months'}
+                  {reportFilters.stockLevel !== "all" && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-muted-foreground font-medium">Stock Level:</span>
+                      <span className="font-semibold capitalize text-orange-700 dark:text-orange-400">
+                        {reportFilters.stockLevel.replace("-", " ")}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Format:</span>
-                    <span className="font-medium">Professional PDF Document</span>
+                  {reportFilters.category && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-muted-foreground font-medium">Category Filter:</span>
+                      <span className="font-semibold text-orange-700 dark:text-orange-400">
+                        "{reportFilters.category}"
+                      </span>
+                    </div>
+                  )}
+                  {reportFilters.reportType === "stock-usage" && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-muted-foreground font-medium">Period:</span>
+                      <span className="font-semibold text-orange-700 dark:text-orange-400">
+                        {reportFilters.timePeriod === "7"
+                          ? "Last Week (7 days)"
+                          : reportFilters.timePeriod === "14"
+                          ? "Last 2 Weeks (14 days)"
+                          : reportFilters.timePeriod === "21"
+                          ? "Last 3 Weeks (21 days)"
+                          : reportFilters.timePeriod === "30"
+                          ? "Last Month (30 days)"
+                          : reportFilters.timePeriod === "60"
+                          ? "Last 2 Months (60 days)"
+                          : "Last 3 Months (90 days)"}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-3 border-t-2 border-orange-300/50">
+                    <span className="text-muted-foreground font-semibold">Total Items:</span>
+                    <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                      {getFilteredReportData().length} items
+                    </span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t">
+          <div className="flex justify-end space-x-3 pt-6 border-t-2 border-gradient-to-r from-blue-200 to-purple-200">
             <Button
               variant="outline"
               onClick={() => setIsReportDialogOpen(false)}
               disabled={generatingReport}
-              className="px-6"
+              className="h-11 px-6 border-2 hover:border-red-400 hover:bg-red-50 transition-all"
             >
               Cancel
             </Button>
             <Button
               onClick={downloadReport}
               disabled={generatingReport || getFilteredReportData().length === 0}
-              className="bg-primary hover:bg-primary/90 px-6"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all font-semibold h-11 px-6"
             >
               {generatingReport ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   Generating PDF...
                 </>
               ) : (
                 <>
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-5 w-5 mr-2" />
                   Download PDF Report
                 </>
               )}
