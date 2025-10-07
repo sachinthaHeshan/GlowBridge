@@ -2,7 +2,8 @@ import jsPDF from 'jspdf';
 
 export interface ReportFilters {
   reportType: "current-stock" | "stock-usage";
-  category: string;
+  minPrice: string;
+  maxPrice: string;
   stockLevel: "all" | "in-stock" | "low-stock" | "out-of-stock";
   timePeriod: "7" | "14" | "21" | "30" | "60" | "90";
 }

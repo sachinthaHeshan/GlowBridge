@@ -87,7 +87,8 @@ export function InventoryManagement() {
   // Report generation state
   const [reportFilters, setReportFilters] = useState({
     reportType: "current-stock" as "current-stock" | "stock-usage",
-    category: "" as string,
+    minPrice: "" as string,
+    maxPrice: "" as string,
     stockLevel: "all" as "all" | "in-stock" | "low-stock" | "out-of-stock",
     timePeriod: "30" as "7" | "14" | "21" | "30" | "60" | "90"
   });
@@ -259,13 +260,11 @@ export function InventoryManagement() {
       filteredItems = filteredItems.filter(item => item.status === reportFilters.stockLevel);
     }
 
-    // Filter by category (if you have categories in your data structure)
-    // Note: Adding category filter - you might need to add category field to your Product type
-    if (reportFilters.category) {
-      // Assuming category might be in description or you'll add it later
-      filteredItems = filteredItems.filter(item => 
-        item.description?.toLowerCase().includes(reportFilters.category.toLowerCase())
-      );
+    // Filter by price range
+    if (reportFilters.minPrice || reportFilters.maxPrice) {
+      const minPrice = reportFilters.minPrice ? parseFloat(reportFilters.minPrice) : 0;
+      const maxPrice = reportFilters.maxPrice ? parseFloat(reportFilters.maxPrice) : Infinity;
+      filteredItems = filteredItems.filter(item => item.price >= minPrice && item.price <= maxPrice);
     }
 
     return filteredItems;
@@ -903,20 +902,32 @@ Report End
                     </Select>
                   </div>
 
-                  {/* Category Filter */}
+                  {/* Price Range Filter */}
                   <div className="space-y-2">
-                    <Label htmlFor="category" className="text-sm font-semibold text-green-700 dark:text-green-400">
-                      Category
+                    <Label className="text-sm font-semibold text-green-700 dark:text-green-400">
+                      Price Range (Rs.)
                     </Label>
-                    <Input
-                      id="category"
-                      placeholder="Filter by keyword..."
-                      value={reportFilters.category}
-                      onChange={(e) =>
-                        setReportFilters({ ...reportFilters, category: e.target.value })
-                      }
-                      className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
-                    />
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder="Min"
+                        value={reportFilters.minPrice}
+                        onChange={(e) =>
+                          setReportFilters({ ...reportFilters, minPrice: e.target.value })
+                        }
+                        className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
+                      />
+                      <span className="text-muted-foreground">-</span>
+                      <Input
+                        type="number"
+                        placeholder="Max"
+                        value={reportFilters.maxPrice}
+                        onChange={(e) =>
+                          setReportFilters({ ...reportFilters, maxPrice: e.target.value })
+                        }
+                        className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -984,11 +995,11 @@ Report End
                       </span>
                     </div>
                   )}
-                  {reportFilters.category && (
+                  {(reportFilters.minPrice || reportFilters.maxPrice) && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-muted-foreground font-medium">Category Filter:</span>
+                      <span className="text-muted-foreground font-medium">Price Range:</span>
                       <span className="font-semibold text-orange-700 dark:text-orange-400">
-                        "{reportFilters.category}"
+                        {reportFilters.minPrice || "0"} - {reportFilters.maxPrice || "∞"} Rs.
                       </span>
                     </div>
                   )}
