@@ -1041,29 +1041,31 @@ Report End
             )}
 
             {/* Preview Section */}
-            <Card className="border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-all bg-gradient-to-br from-orange-50 via-amber-50/50 to-yellow-50/30 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-yellow-950/10">
+            <Card className="border-l-4 border-l-orange-500">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-bold text-orange-700 dark:text-orange-400 flex items-center gap-2">
-                  <div className="p-2 bg-gradient-to-br from-orange-400 to-amber-600 rounded-lg shadow-lg">
-                    <FileText className="h-5 w-5 text-white" />
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-3">
+                  <div className="p-2 bg-orange-500 rounded-lg shadow-sm">
+                    <FileText className="h-4 w-4 text-white" />
                   </div>
-                  📊 Report Summary
+                  <span className="text-base font-semibold text-orange-600">
+                    Report Summary
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm space-y-3 bg-white/60 dark:bg-gray-900/30 p-4 rounded-lg border border-orange-200/50">
+                <div className="border-2 border-orange-200/50 rounded-md p-4 bg-white/60 dark:bg-gray-900/20 text-sm space-y-2.5">
                   <div className="flex justify-between items-center py-1">
                     <span className="text-muted-foreground font-medium">Report Type:</span>
-                    <span className="font-semibold text-orange-700 dark:text-orange-400">
+                    <span className="font-medium text-foreground">
                       {reportFilters.reportType === "current-stock"
-                        ? "📦 Current Stock Level"
-                        : "📈 Sales & Usage Analysis"}
+                        ? "Current Stock Level"
+                        : "Sales & Usage Analysis"}
                     </span>
                   </div>
                   {reportFilters.stockLevel !== "all" && (
                     <div className="flex justify-between items-center py-1">
                       <span className="text-muted-foreground font-medium">Stock Level:</span>
-                      <span className="font-semibold capitalize text-orange-700 dark:text-orange-400">
+                      <span className="font-medium capitalize text-foreground">
                         {reportFilters.stockLevel.replace("-", " ")}
                       </span>
                     </div>
@@ -1071,7 +1073,7 @@ Report End
                   {(reportFilters.minPrice || reportFilters.maxPrice) && (
                     <div className="flex justify-between items-center py-1">
                       <span className="text-muted-foreground font-medium">Price Range:</span>
-                      <span className="font-semibold text-orange-700 dark:text-orange-400">
+                      <span className="font-medium text-foreground">
                         {reportFilters.minPrice || "0"} - {reportFilters.maxPrice || "∞"} Rs.
                       </span>
                     </div>
@@ -1079,7 +1081,7 @@ Report End
                   {selectedProductId && (
                     <div className="flex justify-between items-center py-1">
                       <span className="text-muted-foreground font-medium">Selected Product:</span>
-                      <span className="font-semibold text-orange-700 dark:text-orange-400">
+                      <span className="font-medium text-foreground">
                         {items.find((i) => i.id === selectedProductId)?.name || selectedProductId}
                       </span>
                     </div>
@@ -1087,7 +1089,7 @@ Report End
                   {reportFilters.reportType === "stock-usage" && (
                     <div className="flex justify-between items-center py-1">
                       <span className="text-muted-foreground font-medium">Period:</span>
-                      <span className="font-semibold text-orange-700 dark:text-orange-400">
+                      <span className="font-medium text-foreground">
                         {reportFilters.timePeriod === "7"
                           ? "Last Week (7 days)"
                           : reportFilters.timePeriod === "14"
@@ -1102,9 +1104,9 @@ Report End
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center pt-3 border-t-2 border-orange-300/50">
-                    <span className="text-muted-foreground font-semibold">Total Items:</span>
-                    <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                  <div className="flex justify-between items-center pt-3 border-t">
+                    <span className="text-muted-foreground font-medium">Items to include:</span>
+                    <span className="font-semibold text-foreground">
                       {getFilteredReportData().length} items
                     </span>
                   </div>
