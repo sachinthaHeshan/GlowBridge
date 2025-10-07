@@ -89,10 +89,7 @@ export function InventoryManagement() {
     reportType: "current-stock" as "current-stock" | "stock-usage",
     category: "" as string,
     stockLevel: "all" as "all" | "in-stock" | "low-stock" | "out-of-stock",
-    dateRange: {
-      from: "",
-      to: ""
-    }
+    timePeriod: "30" as "7" | "14" | "21" | "30" | "60" | "90"
   });
 
 
@@ -893,42 +890,60 @@ Report End
               </div>
             </div>
 
-            {/* Date Range for Usage Report */}
+            {/* Time Period Selection for Usage Report */}
             {reportFilters.reportType === "stock-usage" && (
               <div className="grid gap-3">
                 <Label className="text-sm font-medium">Sales Analysis Period</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Input
-                      type="date"
-                      value={reportFilters.dateRange.from}
-                      onChange={(e) =>
-                        setReportFilters({
-                          ...reportFilters,
-                          dateRange: { ...reportFilters.dateRange, from: e.target.value }
-                        })
-                      }
-                      className="h-11"
-                    />
-                    <p className="text-xs text-muted-foreground">From Date (optional)</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Input
-                      type="date"
-                      value={reportFilters.dateRange.to}
-                      onChange={(e) =>
-                        setReportFilters({
-                          ...reportFilters,
-                          dateRange: { ...reportFilters.dateRange, to: e.target.value }
-                        })
-                      }
-                      className="h-11"
-                    />
-                    <p className="text-xs text-muted-foreground">To Date (optional)</p>
-                  </div>
-                </div>
+                <Select
+                  value={reportFilters.timePeriod}
+                  onValueChange={(value: "7" | "14" | "21" | "30" | "60" | "90") =>
+                    setReportFilters({ ...reportFilters, timePeriod: value })
+                  }
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Select time period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Last Week (7 days)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="14">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Last 2 Weeks (14 days)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="21">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Last 3 Weeks (21 days)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="30">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Last Month (30 days)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="60">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Last 2 Months (60 days)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="90">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Last 3 Months (90 days)
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-muted-foreground">
-                  Leave blank to analyze last 30 days. Date range selection will be implemented in future updates.
+                  Select the time period for sales analysis and performance metrics
                 </p>
               </div>
             )}
@@ -959,6 +974,19 @@ Report End
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Category Filter:</span>
                       <span className="font-medium">"{reportFilters.category}"</span>
+                    </div>
+                  )}
+                  {reportFilters.reportType === 'stock-usage' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Analysis Period:</span>
+                      <span className="font-medium">
+                        {reportFilters.timePeriod === '7' ? 'Last Week' :
+                         reportFilters.timePeriod === '14' ? 'Last 2 Weeks' :
+                         reportFilters.timePeriod === '21' ? 'Last 3 Weeks' :
+                         reportFilters.timePeriod === '30' ? 'Last Month' :
+                         reportFilters.timePeriod === '60' ? 'Last 2 Months' :
+                         'Last 3 Months'}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">

@@ -4,10 +4,7 @@ export interface ReportFilters {
   reportType: "current-stock" | "stock-usage";
   category: string;
   stockLevel: "all" | "in-stock" | "low-stock" | "out-of-stock";
-  dateRange: {
-    from: string;
-    to: string;
-  };
+  timePeriod: "7" | "14" | "21" | "30" | "60" | "90";
 }
 
 export interface ReportItem {
@@ -106,15 +103,19 @@ export class InventoryReportGenerator {
     return Math.max(baseSold, 1); // Ensure at least 1 item sold
   }
 
-  private calculateDailySales(item: ReportItem): number {
-    const totalSold = this.calculateSoldQuantity(item);
-    const daysInPeriod = 30; // Last 30 days
-    return Math.round((totalSold / daysInPeriod) * 10) / 10; // Round to 1 decimal
+  private calculateSoldQuantityForPeriod(item: ReportItem, days: number): number {
+    const baseSold = this.calculateSoldQuantity(item);
+    // Scale based on time period (30 days is base)
+    return Math.floor((baseSold * days) / 30);
   }
 
-  private getReorderStatus(item: ReportItem): string {
-    const soldQuantity = this.calculateSoldQuantity(item);
-    const dailySales = this.calculateDailySales(item);
+  private calculateDailySales(item: ReportItem, days: number): number {
+    const totalSold = this.calculateSoldQuantityForPeriod(item, days);
+    return Math.round((totalSold / days) * 10) / 10; // Round to 1 decimal
+  }
+
+  private getReorderStatus(item: ReportItem, days: number): string {
+    const dailySales = this.calculateDailySales(item, days);
     const daysUntilStockOut = item.quantity > 0 ? Math.floor(item.quantity / dailySales) : 0;
     
     if (item.status === 'out-of-stock') {
@@ -130,9 +131,24 @@ export class InventoryReportGenerator {
     }
   }
 
+  private getTimePeriodLabel(days: string): string {
+    switch(days) {
+      case "7": return "Last Week (7 days)";
+      case "14": return "Last 2 Weeks (14 days)";
+      case "21": return "Last 3 Weeks (21 days)";
+      case "30": return "Last Month (30 days)";
+      case "60": return "Last 2 Months (60 days)";
+      case "90": return "Last 3 Months (90 days)";
+      default: return "Last 30 days";
+    }
+  }
+
   public generateReport(data: ReportItem[], salonId: string, filters: ReportFilters): void {
     try {
       this.addPageHeader();
+      
+      const days = parseInt(filters.timePeriod);
+      const periodLabel = this.getTimePeriodLabel(filters.timePeriod);
       
       const reportTitle = filters.reportType === 'current-stock' 
         ? 'INVENTORY CURRENT STOCK LEVEL REPORT' 
@@ -144,7 +160,7 @@ export class InventoryReportGenerator {
       this.addText(`Generated on: ${new Date().toLocaleString()}`, 10);
       this.addText(`Salon ID: ${salonId}`, 10);
       if (filters.reportType === 'stock-usage') {
-        this.addText(`Analysis Period: Last 30 days (sales data)`, 10);
+        this.addText(`Analysis Period: ${periodLabel}`, 10);
       }
       this.yPosition += 10;
       
@@ -158,11 +174,15 @@ export class InventoryReportGenerator {
         this.addText(`• Out of Stock: ${data.filter(i => i.status === 'out-of-stock').length}`);
         this.addText(`• Total Value: Rs.${data.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}`);
       } else {
+        const highSalesThreshold = days > 30 ? 100 : 50;
+        const medSalesMin = days > 30 ? 40 : 20;
+        const medSalesMax = days > 30 ? 100 : 50;
+        
         this.addText(`• Total Products Monitored: ${data.length}`);
-        this.addText(`• High Sales Items (>50 sold): ${data.filter(i => this.calculateSoldQuantity(i) > 50).length}`);
-        this.addText(`• Medium Sales Items (20-50 sold): ${data.filter(i => this.calculateSoldQuantity(i) >= 20 && this.calculateSoldQuantity(i) <= 50).length}`);
-        this.addText(`• Low Sales Items (<20 sold): ${data.filter(i => this.calculateSoldQuantity(i) < 20).length}`);
-        this.addText(`• Total Revenue Generated: Rs.${data.reduce((sum, item) => sum + (this.calculateSoldQuantity(item) * item.price), 0).toFixed(2)}`);
+        this.addText(`• High Sales Items (>${highSalesThreshold} sold): ${data.filter(i => this.calculateSoldQuantityForPeriod(i, days) > highSalesThreshold).length}`);
+        this.addText(`• Medium Sales Items (${medSalesMin}-${medSalesMax} sold): ${data.filter(i => this.calculateSoldQuantityForPeriod(i, days) >= medSalesMin && this.calculateSoldQuantityForPeriod(i, days) <= medSalesMax).length}`);
+        this.addText(`• Low Sales Items (<${medSalesMin} sold): ${data.filter(i => this.calculateSoldQuantityForPeriod(i, days) < medSalesMin).length}`);
+        this.addText(`• Total Revenue Generated: Rs.${data.reduce((sum, item) => sum + (this.calculateSoldQuantityForPeriod(item, days) * item.price), 0).toFixed(2)}`);
       }
       
       this.yPosition += 10;
@@ -190,25 +210,26 @@ export class InventoryReportGenerator {
           this.addText(`   Total Value: Rs.${(item.price * item.quantity).toFixed(2)}`);
         } else {
           // Sales/Usage data
-          const soldQuantity = this.calculateSoldQuantity(item);
-          const dailySales = this.calculateDailySales(item);
+          const soldQuantity = this.calculateSoldQuantityForPeriod(item, days);
+          const dailySales = this.calculateDailySales(item, days);
           const revenue = soldQuantity * item.price;
-          const reorderStatus = this.getReorderStatus(item);
+          const reorderStatus = this.getReorderStatus(item, days);
           const daysUntilStockOut = item.quantity > 0 && dailySales > 0 ? Math.floor(item.quantity / dailySales) : 'N/A';
           
           this.addText(`   Current Stock: ${item.quantity} units`);
-          this.addText(`   Units Sold (30 days): ${soldQuantity} units`);
+          this.addText(`   Units Sold (${periodLabel}): ${soldQuantity} units`);
           this.addText(`   Daily Sales Average: ${dailySales} units/day`);
           this.addText(`   Revenue Generated: Rs.${revenue.toFixed(2)}`);
           this.addText(`   Days Until Stock Out: ${daysUntilStockOut}`);
           this.addText(`   Reorder Status: ${reorderStatus}`);
           
-          // Add performance indicator
+          // Add performance indicator (scaled by period)
           let performance = 'Good';
-          if (soldQuantity > 60) performance = 'Excellent';
-          else if (soldQuantity > 40) performance = 'Very Good';
-          else if (soldQuantity > 20) performance = 'Good';
-          else if (soldQuantity > 10) performance = 'Average';
+          const performanceThreshold = days > 30 ? 120 : days > 14 ? 80 : 60;
+          if (soldQuantity > performanceThreshold) performance = 'Excellent';
+          else if (soldQuantity > performanceThreshold * 0.67) performance = 'Very Good';
+          else if (soldQuantity > performanceThreshold * 0.33) performance = 'Good';
+          else if (soldQuantity > performanceThreshold * 0.17) performance = 'Average';
           else performance = 'Poor';
           
           this.addText(`   Sales Performance: ${performance}`);
