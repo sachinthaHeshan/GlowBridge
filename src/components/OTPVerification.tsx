@@ -9,7 +9,12 @@ import { Loader2, Shield, Smartphone, RotateCcw } from "lucide-react";
 interface OTPVerificationProps {
   phoneNumber: string;
   sessionId: string;
-  onVerificationSuccess: (sessionData: any) => void;
+  onVerificationSuccess: (sessionData: {
+    sessionId: string;
+    verified: boolean;
+    phoneNumber: string;
+    expiresAt: string;
+  }) => void;
   onVerificationFailure: (error: string) => void;
   onBack: () => void;
   isLoading?: boolean;
@@ -19,7 +24,6 @@ export default function OTPVerification({
   phoneNumber,
   sessionId,
   onVerificationSuccess,
-  onVerificationFailure,
   onBack,
   isLoading = false,
 }: OTPVerificationProps) {
@@ -29,7 +33,7 @@ export default function OTPVerification({
   const [isResending, setIsResending] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
   const [canResend, setCanResend] = useState(false);
-  
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Auto-focus first input on mount
@@ -80,7 +84,10 @@ export default function OTPVerification({
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Backspace") {
       if (!otp[index] && index > 0) {
         // If current box is empty and backspace is pressed, go to previous box
@@ -100,7 +107,7 @@ export default function OTPVerification({
 
   const handleVerifyOTP = async (otpCode?: string) => {
     const codeToVerify = otpCode || otp.join("");
-    
+
     if (codeToVerify.length !== 6) {
       setError("Please enter all 6 digits");
       return;
@@ -195,7 +202,7 @@ export default function OTPVerification({
           </div>
           <CardTitle className="text-xl">Verify Payment</CardTitle>
           <p className="text-muted-foreground">
-            We've sent a 6-digit verification code to
+            We&apos;ve sent a 6-digit verification code to
           </p>
           <div className="flex items-center justify-center gap-2 mt-2">
             <Smartphone className="w-4 h-4 text-muted-foreground" />
@@ -280,7 +287,12 @@ export default function OTPVerification({
               )}
             </Button>
 
-            <Button variant="outline" onClick={onBack} className="w-full" disabled={isVerifying || isLoading}>
+            <Button
+              variant="outline"
+              onClick={onBack}
+              className="w-full"
+              disabled={isVerifying || isLoading}
+            >
               Back to Payment
             </Button>
           </div>
@@ -288,7 +300,8 @@ export default function OTPVerification({
           {/* Security Note */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-800 text-center">
-              🔒 This verification ensures your payment security. Never share this code with anyone.
+              🔒 This verification ensures your payment security. Never share
+              this code with anyone.
             </p>
           </div>
         </CardContent>

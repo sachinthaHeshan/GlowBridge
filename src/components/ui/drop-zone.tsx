@@ -1,27 +1,35 @@
-import React, { useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { useDropzone } from "react-dropzone";
+import { cn } from "@/lib/utils";
 
-interface DropZoneProps extends React.HTMLAttributes<HTMLDivElement> {
+interface DropZoneProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onDrop"> {
   onDrop: (acceptedFiles: File[]) => void;
   currentImage?: string | null;
 }
 
-export function DropZone({ onDrop, currentImage, className, ...props }: DropZoneProps) {
+export function DropZone({
+  onDrop,
+  currentImage,
+  className,
+  ...props
+}: DropZoneProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.gif']
+      "image/*": [".jpeg", ".jpg", ".png", ".gif"],
     },
-    maxFiles: 1
+    maxFiles: 1,
   });
 
   return (
     <div
       {...getRootProps()}
       className={cn(
-        'border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors',
-        isDragActive ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50',
+        "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors",
+        isDragActive
+          ? "border-primary bg-primary/10"
+          : "border-border hover:border-primary/50",
         className
       )}
       {...props}

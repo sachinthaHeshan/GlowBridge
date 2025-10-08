@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link"
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,7 +56,6 @@ export default function CategoriesPage() {
   const router = useRouter();
   const limit = 10;
 
-
   const loadCategories = async (page: number = 1, search?: string) => {
     try {
       setLoading(true);
@@ -76,11 +74,9 @@ export default function CategoriesPage() {
     }
   };
 
-
   useEffect(() => {
     loadCategories(1);
   }, []);
-
 
   const handleSearch = useCallback(() => {
     setCurrentPage(1);
@@ -92,7 +88,6 @@ export default function CategoriesPage() {
     setCurrentPage(1);
     loadCategories(1);
   };
-
 
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -182,8 +177,6 @@ export default function CategoriesPage() {
     router.push(`/dashboard/categories/${category.id}/services`);
   };
 
-
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -207,7 +200,6 @@ export default function CategoriesPage() {
             Manage your service categories and organize your offerings
           </p>
         </div>
-        
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
