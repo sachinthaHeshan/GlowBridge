@@ -42,6 +42,9 @@ import {
   Loader2,
   AlertCircle,
   FileText,
+  Download,
+  Filter,
+  Calendar,
 } from "lucide-react";
 import {
   Product,
@@ -52,15 +55,18 @@ import {
   ApiError,
 } from "@/lib/productApi";
 import { showApiErrorToast } from "@/lib/errorToast";
+import { InventoryReportGenerator } from "@/lib/reportGeneratorNew";
 type InventoryItem = Product;
 
 export function InventoryManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
 
   const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
@@ -77,6 +83,19 @@ export function InventoryManagement() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  // Product picker for report: query + selected product id
+  const [productQuery, setProductQuery] = useState("");
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [showProductSuggestions, setShowProductSuggestions] = useState(false);
+
+  // Report generation state
+  const [reportFilters, setReportFilters] = useState({
+    reportType: "current-stock" as "current-stock" | "stock-usage",
+    minPrice: "" as string,
+    maxPrice: "" as string,
+    stockLevel: "all" as "all" | "in-stock" | "low-stock" | "out-of-stock",
+    timePeriod: "30" as "7" | "14" | "21" | "30" | "60" | "90"
+  });
 
 
   useEffect(() => {
@@ -234,6 +253,141 @@ export function InventoryManagement() {
 
       return matchesSearch && matchesPrice;
     });
+  };
+
+  // Report generation functions
+  const getFilteredReportData = () => {
+    let filteredItems = [...items];
+
+    // If a specific product is selected, return only that
+    if (selectedProductId) {
+      return filteredItems.filter((i) => i.id === selectedProductId);
+    }
+
+    // Filter by stock level
+    if (reportFilters.stockLevel && reportFilters.stockLevel !== "all") {
+      filteredItems = filteredItems.filter((item) => item.status === reportFilters.stockLevel);
+    }
+
+    // Filter by price range
+    if (reportFilters.minPrice || reportFilters.maxPrice) {
+      const minPrice = reportFilters.minPrice ? parseFloat(reportFilters.minPrice) : 0;
+      const maxPrice = reportFilters.maxPrice ? parseFloat(reportFilters.maxPrice) : Infinity;
+      filteredItems = filteredItems.filter((item) => item.price >= minPrice && item.price <= maxPrice);
+    }
+
+    return filteredItems;
+  };
+
+  const generateCurrentStockReport = (data: InventoryItem[]) => {
+    const reportContent = `
+INVENTORY CURRENT STOCK LEVEL REPORT
+Generated on: ${new Date().toLocaleString()}
+Salon ID: ${salonId}
+
+====================================================
+
+SUMMARY:
+- Total Items: ${data.length}
+- In Stock: ${data.filter(i => i.status === 'in-stock').length}
+- Low Stock: ${data.filter(i => i.status === 'low-stock').length}
+- Out of Stock: ${data.filter(i => i.status === 'out-of-stock').length}
+- Total Value: Rs.${data.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+
+====================================================
+
+DETAILED INVENTORY:
+
+${data.map(item => `
+Product: ${item.name}
+Price: Rs.${item.price.toFixed(2)}
+Quantity: ${item.quantity}
+Status: ${item.status.toUpperCase()}
+Discount: ${item.discount}%
+Description: ${item.description || 'N/A'}
+Total Value: Rs.${(item.price * item.quantity).toFixed(2)}
+---
+`).join('')}
+
+====================================================
+Report End
+`;
+    return reportContent;
+  };
+
+  const generateStockUsageReport = (data: InventoryItem[]) => {
+    // This is a simulated stock usage report
+    // In a real application, you would track actual usage data
+    const reportContent = `
+INVENTORY STOCK USAGE REPORT
+Generated on: ${new Date().toLocaleString()}
+Salon ID: ${salonId}
+Period: Last 30 days (simulated data)
+
+====================================================
+
+USAGE SUMMARY:
+- Total Products Monitored: ${data.length}
+- High Usage Items: ${data.filter(i => i.quantity < 10).length}
+- Medium Usage Items: ${data.filter(i => i.quantity >= 10 && i.quantity < 50).length}
+- Low Usage Items: ${data.filter(i => i.quantity >= 50).length}
+
+====================================================
+
+USAGE DETAILS:
+
+${data.map(item => {
+  // Simulate usage data based on current stock levels
+  const estimatedUsage = item.status === 'low-stock' ? 'High' : 
+                        item.status === 'out-of-stock' ? 'Critical' : 'Normal';
+  const simulatedDailyUsage = item.status === 'low-stock' ? Math.floor(item.quantity * 0.1) + 1 :
+                             item.status === 'out-of-stock' ? 'N/A' :
+                             Math.floor(item.quantity * 0.05) + 1;
+  
+  return `
+Product: ${item.name}
+Current Stock: ${item.quantity}
+Usage Level: ${estimatedUsage}
+Estimated Daily Usage: ${simulatedDailyUsage}
+Reorder Recommendation: ${item.quantity < 20 ? 'URGENT - Reorder required' : 'Normal monitoring'}
+---
+`;
+}).join('')}
+
+====================================================
+Report End
+`;
+    return reportContent;
+  };
+
+  const downloadReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const filteredData = getFilteredReportData();
+      
+      if (filteredData.length === 0) {
+        alert('No data available for the selected filters. Please adjust your filters and try again.');
+        return;
+      }
+      
+      // Create report generator instance
+      const reportGenerator = new InventoryReportGenerator();
+
+      // Download the PDF report
+      reportGenerator.generateReport(filteredData, salonId, reportFilters);
+      
+      // Show success message
+      setTimeout(() => {
+        alert('📄 Report generated successfully! Check your downloads folder.');
+      }, 500);
+      
+      setIsReportDialogOpen(false);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('❌ Error generating report. Please try again.');
+    } finally {
+      setGeneratingReport(false);
+    }
   };
 
 
@@ -427,12 +581,11 @@ export function InventoryManagement() {
           </div>
           <div className="flex items-center space-x-2">
             <Button
-              onClick={() => {
-              }}
+              onClick={() => setIsReportDialogOpen(true)}
               className="bg-primary hover:bg-primary/90"
             >
               <FileText className="h-4 w-4 mr-2" />
-              Generate PDF
+              Generate Report
             </Button>
             <Button
               onClick={handleAddItem}
@@ -638,6 +791,354 @@ export function InventoryManagement() {
                 </>
               ) : (
                 <>{editingItem ? "Update" : "Create"} Item</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Generation Dialog */}
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold">
+                Generate Inventory Report
+              </span>
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Configure your report parameters and download as PDF
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-5 py-4">
+            {/* Report Type Selection */}
+            <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Report Type
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Select
+                  value={reportFilters.reportType}
+                  onValueChange={(value: "current-stock" | "stock-usage") =>
+                    setReportFilters({ ...reportFilters, reportType: value })
+                  }
+                >
+                  <SelectTrigger className="h-12 p-6 border-2 border-blue-200 hover:border-blue-400 transition-colors">
+                    <SelectValue placeholder="Select report type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="current-stock" className="cursor-pointer">
+                      <div className="flex items-center gap-3 py-1">
+                        <div className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow-md">
+                          <Package className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-base">Current Stock Level Report</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">Inventory status and quantities</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="stock-usage" className="cursor-pointer">
+                      <div className="flex items-center gap-3 py-1">
+                        <div className="p-2 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg shadow-md">
+                          <Calendar className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-base">Sales & Usage Analysis Report</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">Sales performance and reorder recommendations</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            {/* Filters Section */}
+            <Card className="border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
+                  <div className="p-1.5 bg-gradient-to-br from-green-400 to-green-600 rounded-lg shadow-md">
+                    <Filter className="h-4 w-4 text-white" />
+                  </div>
+                  Filters
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Stock Level Filter */}
+                  <div className="space-y-2">
+                    <Label htmlFor="stockLevel" className="text-sm font-semibold text-green-700 dark:text-green-400">
+                      Stock Level
+                    </Label>
+                    <Select
+                      value={reportFilters.stockLevel}
+                      onValueChange={(value: "all" | "in-stock" | "low-stock" | "out-of-stock") =>
+                        setReportFilters({ ...reportFilters, stockLevel: value })
+                      }
+                    >
+                      <SelectTrigger className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors">
+                        <SelectValue placeholder="All stock levels" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all" className="font-medium">All Stock Levels</SelectItem>
+                        <SelectItem value="in-stock">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500 shadow-md shadow-green-300"></div>
+                            <span className="font-medium">In Stock</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="low-stock">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-md shadow-yellow-300"></div>
+                            <span className="font-medium">Low Stock</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="out-of-stock">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500 shadow-md shadow-red-300"></div>
+                            <span className="font-medium">Out of Stock</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Price Range Filter */}
+                  {/* Product Search / Select */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-green-700 dark:text-green-400">
+                      Select Product
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        placeholder="Serach product by name "
+                        value={productQuery}
+                        onChange={(e) => {
+                          setProductQuery(e.target.value);
+                          setShowProductSuggestions(true);
+                          setSelectedProductId(null);
+                        }}
+                        onFocus={() => setShowProductSuggestions(true)}
+                        className="h-11 border-2 border-green-200 focus:outline-none focus:ring-2 focus:ring-green-400"
+                      />
+                      {showProductSuggestions && productQuery && (
+                        <div className="absolute z-40 left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-auto">
+                          {items
+                            .filter((it) =>
+                              it.name.toLowerCase().includes(productQuery.toLowerCase()) ||
+                              (it.description || "").toLowerCase().includes(productQuery.toLowerCase()) ||
+                              it.id.toLowerCase().includes(productQuery.toLowerCase())
+                            )
+                            .slice(0, 8)
+                            .map((it) => (
+                              <div
+                                key={it.id}
+                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                                onMouseDown={(e) => {
+                                  // prevent blur before click
+                                  e.preventDefault();
+                                  setSelectedProductId(it.id);
+                                  setProductQuery(it.name);
+                                  setShowProductSuggestions(false);
+                                }}
+                              >
+                                <div>
+                                  <div className="font-medium">{it.name}</div>
+                                  <div className="text-xs text-muted-foreground">{it.description || it.id}</div>
+                                </div>
+                                <div className="text-sm text-muted-foreground">Rs.{it.price}</div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                      {selectedProductId && (
+                        <div className="mt-2 text-sm flex items-center gap-2">
+                          <Badge>{items.find((i) => i.id === selectedProductId)?.name}</Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedProductId(null);
+                              setProductQuery("");
+                            }}
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-green-700 dark:text-green-400">
+                      Price Range (Rs.)
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder="Min"
+                        value={reportFilters.minPrice}
+                        onChange={(e) =>
+                          setReportFilters({ ...reportFilters, minPrice: e.target.value })
+                        }
+                        className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
+                      />
+                      <span className="text-muted-foreground">-</span>
+                      <Input
+                        type="number"
+                        placeholder="Max"
+                        value={reportFilters.maxPrice}
+                        onChange={(e) =>
+                          setReportFilters({ ...reportFilters, maxPrice: e.target.value })
+                        }
+                        className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Time Period Selection for Usage Report */}
+            {reportFilters.reportType === "stock-usage" && (
+              <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-950/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold text-purple-700 dark:text-purple-400 flex items-center gap-2">
+                    <div className="p-1.5 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg shadow-md">
+                      <Calendar className="h-4 w-4 text-white" />
+                    </div>
+                    Analysis Period
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select
+                    value={reportFilters.timePeriod}
+                    onValueChange={(value: "7" | "14" | "21" | "30" | "60" | "90") =>
+                      setReportFilters({ ...reportFilters, timePeriod: value })
+                    }
+                  >
+                    <SelectTrigger className="h-12 border-2 border-purple-200 hover:border-purple-400 transition-colors">
+                      <SelectValue placeholder="Select time period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7" className="font-medium">📅 Last Week (7 days)</SelectItem>
+                      <SelectItem value="14" className="font-medium">📅 Last 2 Weeks (14 days)</SelectItem>
+                      <SelectItem value="21" className="font-medium">📅 Last 3 Weeks (21 days)</SelectItem>
+                      <SelectItem value="30" className="font-medium">📅 Last Month (30 days)</SelectItem>
+                      <SelectItem value="60" className="font-medium">📅 Last 2 Months (60 days)</SelectItem>
+                      <SelectItem value="90" className="font-medium">📅 Last 3 Months (90 days)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Preview Section */}
+            <Card className="border-l-4 border-l-orange-500">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-3">
+                  <div className="p-2 bg-orange-500 rounded-lg shadow-sm">
+                    <FileText className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-base font-semibold text-orange-600">
+                    Report Summary
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="border-2 border-orange-200/50 rounded-md p-4 bg-white/60 dark:bg-gray-900/20 text-sm space-y-2.5">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-muted-foreground font-medium">Report Type:</span>
+                    <span className="font-medium text-foreground">
+                      {reportFilters.reportType === "current-stock"
+                        ? "Current Stock Level"
+                        : "Sales & Usage Analysis"}
+                    </span>
+                  </div>
+                  {reportFilters.stockLevel !== "all" && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-muted-foreground font-medium">Stock Level:</span>
+                      <span className="font-medium capitalize text-foreground">
+                        {reportFilters.stockLevel.replace("-", " ")}
+                      </span>
+                    </div>
+                  )}
+                  {(reportFilters.minPrice || reportFilters.maxPrice) && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-muted-foreground font-medium">Price Range:</span>
+                      <span className="font-medium text-foreground">
+                        {reportFilters.minPrice || "0"} - {reportFilters.maxPrice || "∞"} Rs.
+                      </span>
+                    </div>
+                  )}
+                  {selectedProductId && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-muted-foreground font-medium">Selected Product:</span>
+                      <span className="font-medium text-foreground">
+                        {items.find((i) => i.id === selectedProductId)?.name || selectedProductId}
+                      </span>
+                    </div>
+                  )}
+                  {reportFilters.reportType === "stock-usage" && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-muted-foreground font-medium">Period:</span>
+                      <span className="font-medium text-foreground">
+                        {reportFilters.timePeriod === "7"
+                          ? "Last Week (7 days)"
+                          : reportFilters.timePeriod === "14"
+                          ? "Last 2 Weeks (14 days)"
+                          : reportFilters.timePeriod === "21"
+                          ? "Last 3 Weeks (21 days)"
+                          : reportFilters.timePeriod === "30"
+                          ? "Last Month (30 days)"
+                          : reportFilters.timePeriod === "60"
+                          ? "Last 2 Months (60 days)"
+                          : "Last 3 Months (90 days)"}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-3 border-t">
+                    <span className="text-muted-foreground font-medium">Items to include:</span>
+                    <span className="font-semibold text-foreground">
+                      {getFilteredReportData().length} items
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-6 border-t-2 border-gradient-to-r from-blue-200 to-purple-200">
+            <Button
+              variant="outline"
+              onClick={() => setIsReportDialogOpen(false)}
+              disabled={generatingReport}
+              className="h-11 px-6 border-2 hover:border-red-400 hover:bg-red-50 transition-all"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={downloadReport}
+              disabled={generatingReport || getFilteredReportData().length === 0}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all font-semibold h-11 px-6"
+            >
+              {generatingReport ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Download className="h-5 w-5 mr-2" />
+                  Download PDF Report
+                </>
               )}
             </Button>
           </div>
