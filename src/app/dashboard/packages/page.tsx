@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -161,6 +162,16 @@ export default function PackagesPage() {
               Add New Package
             </Button>
           </DialogTrigger>
+
+          <Link
+            href={`/dashboard/packages/reports/`}
+            className="inline-block"
+          >
+  <Button className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white shadow-lg ml-3">
+    
+    Generate Report
+  </Button>
+</Link>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Package</DialogTitle>
