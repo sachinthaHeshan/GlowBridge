@@ -460,18 +460,50 @@ export default function Marketplace() {
                       {}
                       <div className="relative overflow-hidden rounded-t-lg">
                         <div className="aspect-square bg-gradient-to-br from-primary/5 to-secondary/10 flex items-center justify-center relative">
-                          {/* Decorative pattern */}
-                          <div className="absolute inset-0 opacity-20">
-                            <div className="w-full h-full bg-gradient-to-br from-transparent via-primary/10 to-transparent"></div>
-                          </div>
-                          <div className="relative z-10 text-center">
-                            <div className="w-16 h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
-                              <Scissors className="h-8 w-8 text-primary" />
-                            </div>
-                            <span className="text-muted-foreground text-sm font-medium">
-                              {product.name}
-                            </span>
-                          </div>
+                          {product.image && product.image !== "/api/placeholder/300/300" ? (
+                            <>
+                              <img 
+                                src={product.image} 
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const fallback = target.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.classList.remove('hidden');
+                                }}
+                              />
+                              {/* Fallback UI (hidden by default) */}
+                              <div className="absolute inset-0 items-center justify-center hidden">
+                                <div className="absolute inset-0 opacity-20">
+                                  <div className="w-full h-full bg-gradient-to-br from-transparent via-primary/10 to-transparent"></div>
+                                </div>
+                                <div className="relative z-10 text-center">
+                                  <div className="w-16 h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <Scissors className="h-8 w-8 text-primary" />
+                                  </div>
+                                  <span className="text-muted-foreground text-sm font-medium">
+                                    {product.name}
+                                  </span>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {/* Decorative pattern */}
+                              <div className="absolute inset-0 opacity-20">
+                                <div className="w-full h-full bg-gradient-to-br from-transparent via-primary/10 to-transparent"></div>
+                              </div>
+                              <div className="relative z-10 text-center">
+                                <div className="w-16 h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
+                                  <Scissors className="h-8 w-8 text-primary" />
+                                </div>
+                                <span className="text-muted-foreground text-sm font-medium">
+                                  {product.name}
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
                         <Button
                           variant="ghost"

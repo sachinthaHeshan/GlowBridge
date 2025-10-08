@@ -79,6 +79,7 @@ export function InventoryManagement() {
     description: "",
     isPublic: true,
     discount: 0,
+    imageUrl: "",
   });
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -134,6 +135,7 @@ export function InventoryManagement() {
       description: "",
       isPublic: true,
       discount: 0,
+      imageUrl: "",
     });
     setIsDialogOpen(true);
   };
@@ -148,6 +150,7 @@ export function InventoryManagement() {
       description: item.description || "",
       isPublic: item.isPublic,
       discount: item.discount,
+      imageUrl: (item as any).imageUrl || "",
     });
     setIsDialogOpen(true);
   };
@@ -166,6 +169,7 @@ export function InventoryManagement() {
           description: formData.description,
           isPublic: formData.isPublic,
           discount: formData.discount,
+          imageUrl: formData.imageUrl,
         });
 
         setItems(
@@ -182,6 +186,7 @@ export function InventoryManagement() {
           description: formData.description,
           isPublic: formData.isPublic,
           discount: formData.discount,
+          imageUrl: formData.imageUrl,
         });
 
         setItems([...items, newItem]);
@@ -658,7 +663,7 @@ Report End
 
       {}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingItem ? "Edit Item" : "Add New Item"}
@@ -670,6 +675,30 @@ Report End
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="imageUrl">Product Image URL</Label>
+              <Input
+                id="imageUrl"
+                value={formData.imageUrl}
+                onChange={(e) =>
+                  setFormData({ ...formData, imageUrl: e.target.value })
+                }
+                placeholder="Enter image URL (e.g., https://example.com/image.jpg)"
+              />
+              {formData.imageUrl && (
+                <div className="mt-2 relative w-full h-48 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
+                  <img
+                    src={formData.imageUrl}
+                    alt="Product preview"
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '';
+                      (e.target as HTMLImageElement).alt = 'Invalid image URL';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="name">Item Name</Label>
               <Input
