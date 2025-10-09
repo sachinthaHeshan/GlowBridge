@@ -4,15 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Plus,
   Edit,
@@ -23,7 +14,17 @@ import {
   Loader2,
   Search,
   X,
+  BarChart2
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import ServiceForm from "@/components/service-form";
 import ConfirmationModal from "@/components/confirmation-modal";
 import { Pagination } from "@/shared/components/pagination";
@@ -267,25 +268,34 @@ export default function CategoryServicesPage() {
           <p className="text-muted-foreground mt-2">{category.description}</p>
         </div>
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg">
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Service
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Service to {category.name}</DialogTitle>
-            </DialogHeader>
-            <ServiceForm
-              onSubmit={handleAddService}
-              onCancel={() => setIsAddDialogOpen(false)}
-              prefilledCategory={category.name}
-              isLoading={actionLoading}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button 
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
+            onClick={() => router.push(`/dashboard/categories/${categoryId}/services/reports`)}
+          >
+            <BarChart2 className="w-4 h-4 mr-2" />
+            View Report
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Service
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Service to {category?.name}</DialogTitle>
+              </DialogHeader>
+              <ServiceForm
+                onSubmit={handleAddService}
+                onCancel={() => setIsAddDialogOpen(false)}
+                prefilledCategory={category?.name || ""}
+                isLoading={actionLoading}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {}
@@ -547,13 +557,13 @@ export default function CategoryServicesPage() {
           {editingService && (
             <ServiceForm
               initialData={{
-                name: editingService.name,
-                description: editingService.description,
-                category: category.name,
-                duration: editingService.duration,
-                price: editingService.price.toString(),
-                discount: editingService.discount.toString(),
-                isPrivate: !editingService.is_public,
+                name: editingService?.name || "",
+                description: editingService?.description || "",
+                category: category?.name || "",
+                duration: editingService?.duration || "",
+                price: editingService?.price.toString() || "0",
+                discount: editingService?.discount.toString() || "0",
+                isPrivate: !editingService?.is_public,
               }}
               onSubmit={handleUpdateService}
               onCancel={() => {
@@ -561,7 +571,7 @@ export default function CategoryServicesPage() {
                 setEditingService(null);
               }}
               isEditing={true}
-              prefilledCategory={category.name}
+              prefilledCategory={category?.name || ""}
               isLoading={actionLoading}
             />
           )}

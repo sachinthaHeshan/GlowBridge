@@ -101,7 +101,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserData(userCookieData);
 
         toast.success("Welcome back!");
-      } catch {
+      } catch( error) {
+        console.log(88888 ,error);
         await signOut(firebaseAuth);
 
         toast.error(

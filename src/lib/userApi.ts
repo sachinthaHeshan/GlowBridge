@@ -241,43 +241,14 @@ export const fetchUserById = async (id: string): Promise<User> => {
 
 export const fetchUserByEmail = async (email: string): Promise<User> => {
   try {
-    try {
-      const directResponse = await apiRequest(
-        `/users?page=1&limit=1&email=${encodeURIComponent(email)}`
-      );
-
-      const response = directResponse as PaginatedUsersResponse;
-      if (response.data && response.data.length > 0) {
-        const user = response.data.find(
-          (u) => u.email.toLowerCase() === email.toLowerCase()
-        );
-        if (user) {
-          return transformBackendUser(user);
-        }
-      }
-    } catch {}
-
-    let page = 1;
-    const limit = 100;
-
-    while (true) {
-      const result = await fetchUsers(page, limit);
-
-      const userWithEmail = result.users.find(
-        (user) => user.email.toLowerCase() === email.toLowerCase()
-      );
-
-      if (userWithEmail) {
-        return userWithEmail;
-      }
-
-      if (page >= result.totalPages || result.users.length === 0) {
-        break;
-      }
-
-      page++;
+    const response = await apiRequest(`/users?email=${encodeURIComponent(email)}`);
+    const userResponse = response as UsersResponse;
+    const user = userResponse.users.find(
+      (u) => u.email.toLowerCase() === email.toLowerCase()
+    );
+    if (user) {
+      return transformBackendUser(user);
     }
-
     throw new ApiError(`User with email ${email} not found`, 404);
   } catch (error) {
     if (error instanceof ApiError) {
