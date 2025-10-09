@@ -26,7 +26,6 @@ import {
 } from "@/lib/marketplaceApi";
 import AuthModal from "./AuthModal";
 
-const categories = ["All", "Hair Care", "Skincare", "Tools", "Accessories"];
 const sortOptions = [
   { value: "featured", label: "Featured" },
   { value: "price-low", label: "Price: Low to High" },
@@ -37,10 +36,10 @@ const sortOptions = [
 
 export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [showFilters, setShowFilters] = useState(false);
+  const [inStockOnly, setInStockOnly] = useState(false);
   const [wishlist, setWishlist] = useState<number[]>([]);
 
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
@@ -65,7 +64,7 @@ export default function Marketplace() {
       const result = await fetchMarketplaceProducts(
         currentPage,
         productsPerPage,
-        selectedCategory,
+        undefined, // No category filtering
         priceRange[0],
         priceRange[1],
         searchQuery
@@ -79,30 +78,37 @@ export default function Marketplace() {
     } finally {
       setProductsLoading(false);
     }
-  }, [currentPage, productsPerPage, selectedCategory, priceRange, searchQuery]);
+  }, [currentPage, productsPerPage, priceRange, searchQuery, inStockOnly]);
 
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
 
   const filteredProducts = useMemo(() => {
-    const sortedProducts = [...products];
+    let filtered = [...products];
+    
+    // Filter by stock status if "In Stock Only" is checked
+    if (inStockOnly) {
+      filtered = filtered.filter(product => product.inStock);
+    }
+    
+    // Apply sorting
     switch (sortBy) {
       case "price-low":
-        sortedProducts.sort((a, b) => a.price - b.price);
+        filtered.sort((a, b) => a.price - b.price);
         break;
       case "price-high":
-        sortedProducts.sort((a, b) => b.price - a.price);
+        filtered.sort((a, b) => b.price - a.price);
         break;
       case "rating":
-        sortedProducts.sort((a, b) => b.rating - a.rating);
+        filtered.sort((a, b) => b.rating - a.rating);
         break;
       default:
         break;
     }
 
-    return sortedProducts;
-  }, [products, sortBy]);
+    return filtered;
+  }, [products, sortBy, inStockOnly]);
 
   const handleAddToCart = (product: MarketplaceProduct) => {
     addToCart({
@@ -325,42 +331,6 @@ export default function Marketplace() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {}
-                <div>
-                  <h3 className="font-medium text-foreground mb-4 flex items-center">
-                    <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
-                    Category
-                  </h3>
-                  <div className="space-y-3">
-                    {categories.map((category) => (
-                      <label
-                        key={category}
-                        className="flex items-center space-x-3 cursor-pointer group hover:bg-muted/50 p-2 rounded-md transition-colors"
-                      >
-                        <input
-                          type="radio"
-                          name="category"
-                          value={category}
-                          checked={selectedCategory === category}
-                          onChange={(e) => setSelectedCategory(e.target.value)}
-                          className="text-primary focus:ring-primary w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground group-hover:text-primary transition-colors">
-                          {category}
-                        </span>
-                        {selectedCategory === category && (
-                          <Badge
-                            variant="secondary"
-                            className="ml-auto text-xs"
-                          >
-                            Selected
-                          </Badge>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
                 <div>
                   <h3 className="font-medium text-foreground mb-3">
                     Price Range
@@ -381,11 +351,12 @@ export default function Marketplace() {
                   </div>
                 </div>
 
-                {}
                 <div>
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
+                      checked={inStockOnly}
+                      onChange={(e) => setInStockOnly(e.target.checked)}
                       className="text-primary focus:ring-primary"
                     />
                     <span className="text-sm text-foreground">
@@ -439,9 +410,9 @@ export default function Marketplace() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setSelectedCategory("All");
                         setSearchQuery("");
                         setPriceRange([0, 10000]);
+                        setInStockOnly(false);
                       }}
                     >
                       Clear Filters
