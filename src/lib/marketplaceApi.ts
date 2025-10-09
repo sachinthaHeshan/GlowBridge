@@ -1,4 +1,11 @@
-import { fetchProducts, Product as BackendProduct } from "./productApi";
+import { fetchProducts, Product as ProductApiBackendProduct } from "./productApi";
+
+interface BackendProduct extends ProductApiBackendProduct {
+  salon_name?: string;
+  salon_type?: string;
+  salon_location?: string;
+}
+
 export interface MarketplaceProduct {
   id: number;
   originalId: string;
@@ -26,7 +33,7 @@ const transformToMarketplaceProduct = (
     reviews: Math.floor(Math.random() * 200) + 50,
     image: backendProduct.imageUrl || "/api/placeholder/300/300",
     inStock: backendProduct.status !== "out-of-stock",
-    salon: `Salon ${backendProduct.salonId.slice(0, 8)}`,
+    salon: backendProduct.salon_name || `Salon ${backendProduct.salonId.slice(0, 8)}`,
   };
 };
 const getCategoryDisplayName = (category: string): string => {
@@ -54,21 +61,21 @@ export const fetchMarketplaceProducts = async (
   search?: string
 ): Promise<MarketplacePaginatedResult> => {
   try {
-    const result = await fetchProducts(
-      page,
-      limit,
-      undefined,
-      true,
-      minPrice,
-      maxPrice
-    );
+    // Fetch from the new public products endpoint that includes salon information
+    const response = await fetch('/api_g/products/public');
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to fetch products');
+    }
 
-    let products = result.products.map(transformToMarketplaceProduct);
+    let products: MarketplaceProduct[] = result.data.map(transformToMarketplaceProduct);
 
+    // Apply client-side filtering
     if (search) {
       const searchLower = search.toLowerCase();
       products = products.filter(
-        (product) =>
+        (product: MarketplaceProduct) =>
           product.name.toLowerCase().includes(searchLower) ||
           product.description.toLowerCase().includes(searchLower) ||
           product.category.toLowerCase().includes(searchLower)
@@ -76,15 +83,29 @@ export const fetchMarketplaceProducts = async (
     }
 
     if (category && category !== "All") {
-      products = products.filter((product) => product.category === category);
+      products = products.filter((product: MarketplaceProduct) => product.category === category);
     }
 
+    // Apply price filtering
+    if (minPrice !== undefined) {
+      products = products.filter((product: MarketplaceProduct) => product.price >= minPrice);
+    }
+    if (maxPrice !== undefined) {
+      products = products.filter((product: MarketplaceProduct) => product.price <= maxPrice);
+    }
+
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedProducts = products.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(products.length / limit);
+
     return {
-      products,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-      totalPages: result.totalPages,
+      products: paginatedProducts,
+      total: products.length,
+      page,
+      limit,
+      totalPages,
     };
   } catch {
     return {

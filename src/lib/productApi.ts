@@ -8,7 +8,9 @@ interface BackendProduct {
   available_quantity: number;
   is_public: boolean;
   discount: number;
-  image_url?: string;
+  salon_name?: string;
+  salon_type?: string;
+  salon_location?: string;
 }
 export interface Product {
   id: string;
