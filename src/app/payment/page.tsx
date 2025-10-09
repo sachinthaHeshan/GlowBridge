@@ -471,24 +471,30 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        {/* Header */}
-        <div className="flex items-center mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
-            className="mr-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Secure Checkout</h1>
-            <p className="text-gray-600">Complete your order with confidence</p>
+    <div className="min-h-screen bg-background">
+      {/* Sticky Header */}
+      <div className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-sm bg-card/90">
+        <div className="container mx-auto px-4 max-w-4xl py-4">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="mr-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">Secure Checkout</h1>
+              <p className="text-sm text-muted-foreground">Complete your order with confidence</p>
+            </div>
           </div>
         </div>
+      </div>
+      
+      <div className="py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Form */}
@@ -880,6 +886,7 @@ export default function PaymentPage() {
               </CardContent>
             </Card>
           </div>
+        </div>
         </div>
       </div>
 
