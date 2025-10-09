@@ -241,9 +241,9 @@ export const fetchUserById = async (id: string): Promise<User> => {
 
 export const fetchUserByEmail = async (email: string): Promise<User> => {
   try {
-    const response = await apiRequest(`/users?email=${encodeURIComponent(email)}`);
-    const userResponse = response as UsersResponse;
-    const user = userResponse.users.find(
+    const response = await apiRequest(`/users?email=${encodeURIComponent(email)}&page=1&limit=10`);
+    const userResponse = response as PaginatedUsersResponse;
+    const user = userResponse.data.find(
       (u) => u.email.toLowerCase() === email.toLowerCase()
     );
     if (user) {
