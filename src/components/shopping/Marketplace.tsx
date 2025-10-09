@@ -137,7 +137,7 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen bg-background">
       {}
-      <div className="bg-card border-b border-border">
+      <div className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-sm bg-card/90">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
