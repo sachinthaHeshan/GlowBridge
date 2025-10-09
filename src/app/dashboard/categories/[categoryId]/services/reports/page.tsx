@@ -54,20 +54,35 @@ export default function ServiceReportsPage() {
     const fetchData = async () => {
       try {
         // Fetch category data
-        const response = await fetch(`/api/categories/${categoryId}`)
+        const response = await fetch(`/api_g/categories/${categoryId}`)
         const categoryData = await response.json()
-        setCategory(categoryData)
+        setCategory(categoryData.category)
 
-        // Fetch report data
-        const reportResponse = await fetch(
-          serviceId 
-            ? `/api/reports/service/${serviceId}`
-            : `/api/reports/category/${categoryId}`
-        )
-        const reportData = await reportResponse.json()
+        // Fetch services data for this category using the working services endpoint
+        const servicesResponse = await fetch(`/api_g/services?page=1&limit=100`)
+        const servicesData = await servicesResponse.json()
         
-        setReportServices(reportData.services)
-        setReportAppointments(reportData.appointments)
+        // Filter services by category
+        const categoryServices = servicesData.data.filter((service: any) => 
+          service.categories && service.categories.some((cat: any) => cat.id.toString() === categoryId)
+        )
+        
+        // Transform services to match expected format
+        const transformedServices = categoryServices.map((service: any) => ({
+          id: service.id,
+          name: service.name,
+          duration: service.duration,
+          price: service.price,
+          discount: service.discount || 0,
+          finalPrice: service.price - (service.price * (service.discount || 0) / 100),
+          is_completed: service.is_completed,
+          appointment_count: 0 // We'll need to implement appointment fetching separately
+        }))
+        
+        setReportServices(transformedServices)
+        
+        // For now, set empty appointments - we can implement this later
+        setReportAppointments([])
       } catch (error) {
         console.error('Error fetching report data:', error)
       } finally {
