@@ -413,18 +413,20 @@ export const fetchServicesByCategory = async (
 };
 export const fetchServiceById = async (id: string): Promise<Service> => {
   const response = (await apiRequest(`/services/${id}`)) as {
-    service: BackendService;
+    success: boolean;
+    data: BackendService;
+    message?: string;
   };
 
-  if (!response.service) {
-    throw new ApiError("Service not found", 404);
+  if (!response.success || !response.data) {
+    throw new ApiError(response.message || "Service not found", 404);
   }
 
-  if (!response.service.id) {
+  if (!response.data.id) {
     throw new ApiError("Invalid service data received", 500);
   }
 
-  return transformBackendService(response.service);
+  return transformBackendService(response.data);
 };
 export const createService = async (serviceData: {
   salon_id: string;

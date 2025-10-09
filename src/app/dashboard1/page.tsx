@@ -1,5 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,75 +18,201 @@ import {
   Calendar,
   Clock,
   MapPin,
-  User,
+  Plus,
   Phone,
   Mail,
-  Scissors,
   ArrowLeft,
-  Plus,
+  Scissors,
+  Loader2,
+  AlertCircle,
+  User,
 } from "lucide-react";
-import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { fetchUserAppointments, cancelAppointment } from "@/lib/appointmentApi";
+import type { Appointment } from "@/lib/appointmentApi";
+import { toast } from "react-hot-toast";
+
+interface AppointmentDetails {
+  id: string;
+  service_id: string;
+  service: string;
+  salon: string;
+  staff: string;
+  date: string;
+  time: string;
+  duration: string;
+  price: string;
+  status: string;
+  location: string;
+}
+
+const formatTime = (date: Date): string => {
+  return format(date, 'h:mm a');
+};
 
 export default function DashboardPage() {
-  const upcomingAppointments = [
-    {
-      id: "1",
-      service: "Classic Haircut & Style",
-      salon: "Elegance Beauty Studio",
-      staff: "Priya Perera",
-      date: "March 20, 2024",
-      time: "2:00 PM",
-      duration: "60 min",
-      price: "Rs. 3,500",
-      status: "confirmed",
-      location: "Colombo 03",
-    },
-    {
-      id: "2",
-      service: "Deep Cleansing Facial",
-      salon: "Serenity Spa & Salon",
-      staff: "Nisha Fernando",
-      date: "March 25, 2024",
-      time: "10:30 AM",
-      duration: "90 min",
-      price: "Rs. 4,500",
-      status: "confirmed",
-      location: "Kandy",
-    },
-  ];
+  const { userData, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<AppointmentDetails[]>([]);
+  const [pastAppointments, setPastAppointments] = useState<AppointmentDetails[]>([]);
 
-  const pastAppointments = [
-    {
-      id: "3",
-      service: "Manicure & Pedicure",
-      salon: "Glamour Zone",
-      staff: "Sasha Silva",
-      date: "March 10, 2024",
-      time: "3:00 PM",
-      duration: "75 min",
-      price: "Rs. 2,800",
-      status: "completed",
-      location: "Galle",
-    },
-    {
-      id: "4",
-      service: "Hair Color & Highlights",
-      salon: "Elegance Beauty Studio",
-      staff: "Priya Perera",
-      date: "February 28, 2024",
-      time: "11:00 AM",
-      duration: "120 min",
-      price: "Rs. 8,500",
-      status: "completed",
-      location: "Colombo 03",
-    },
-  ];
-
-  const sampleUser = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "1234567890",
+  const handleReschedule = (service_id: string) => {
+    console.log('Reschedule clicked for service ID:', service_id);
+    if (!service_id) {
+      toast.error('Service ID not available for rescheduling');
+      return;
+    }
+    router.push(`/services/${service_id}`);
   };
+
+  const handleCancel = async (appointmentId: string) => {
+    try {
+      await cancelAppointment(appointmentId);
+      toast.success('Appointment cancelled successfully');
+      
+      // Update the appointments list by removing the cancelled appointment
+      setUpcomingAppointments(prev => 
+        prev.filter(appointment => appointment.id !== appointmentId)
+      );
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+      toast.error('Failed to cancel appointment');
+    }
+  };
+
+  const transformAppointment = (appointment: Appointment): AppointmentDetails => {
+    const startDate = new Date(appointment.start_at);
+    const endDate = new Date(appointment.end_at);
+    const durationMs = endDate.getTime() - startDate.getTime();
+    const durationMinutes = Math.floor(durationMs / (1000 * 60));
+    
+    let serviceName = 'Loading...';
+    let serviceDuration = `${durationMinutes} min`;
+
+    if (appointment.service) {
+      serviceName = appointment.service.name;
+      serviceDuration = appointment.service.duration || serviceDuration;
+    } else if (!appointment.service && appointment.service_id) {
+      // Service data is missing but we have the ID
+      console.warn(`Service data missing for appointment ${appointment.id}, service_id: ${appointment.service_id}`);
+      serviceName = 'Loading service details...';
+    } else {
+      console.error('Missing service data for appointment:', appointment.id);
+      serviceName = 'Service Unavailable';
+    }
+    
+    return {
+      id: appointment.id,
+      service: serviceName,
+      service_id: appointment.service_id,
+      salon: "GlowBridge Salon",
+      staff: "Your Stylist", // Will be updated when staff information is added to the API
+      date: format(startDate, 'MMMM d, yyyy'),
+      time: format(startDate, 'h:mm a'),
+      duration: serviceDuration,
+      price: `Rs. ${appointment.amount.toFixed(2)}`,
+      status: appointment.status,
+      location: "Colombo 03"
+    };
+  };
+
+  useEffect(() => {
+    // Don't do anything while auth is still loading
+    if (authLoading) {
+      return;
+    }
+
+    // If auth is done loading and we don't have user data, redirect to login
+    if (!authLoading && !userData?.id) {
+      router.push('/login');
+      return;
+    }
+
+    const fetchAppointments = async () => {
+      try {
+        const appointments = await fetchUserAppointments(userData!.id);
+        
+        // Debug log to see the full response
+        console.log('Raw appointments data:', JSON.stringify(appointments, null, 2));
+        
+        if (!appointments || !Array.isArray(appointments)) {
+          console.error('Invalid appointments data:', appointments);
+          setError('Failed to load appointments data');
+          setLoading(false);
+          return;
+        }
+
+        const now = new Date();
+        const upcoming = [];
+        const past = [];
+
+        // Transform and sort appointments
+        const transformed = appointments.map(appointment => ({
+          date: new Date(appointment.start_at),
+          data: transformAppointment(appointment)
+        }));
+
+        // Sort by date and split into upcoming and past
+        const { upcomingAppts, pastAppts } = transformed.reduce((acc, item) => {
+          if (item.date > now) {
+            acc.upcomingAppts.push(item.data);
+          } else {
+            acc.pastAppts.push(item.data);
+          }
+          return acc;
+        }, { 
+          upcomingAppts: [] as AppointmentDetails[], 
+          pastAppts: [] as AppointmentDetails[] 
+        });
+
+        // Sort appointments by date
+        upcomingAppts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        pastAppts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        setUpcomingAppointments(upcomingAppts);
+        setPastAppointments(pastAppts);
+      } catch (err) {
+        console.error("Error fetching appointments:", err);
+        setError("Failed to load your appointments");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, [userData]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin">
+          <Loader2 className="w-8 h-8 text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-destructive mb-4">
+            <AlertCircle className="w-12 h-12 mx-auto" />
+          </div>
+          <h2 className="text-2xl font-semibold mb-2">Error</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Get user info from userData
+  const userName = userData?.name || 'User';
+  const userEmail = userData?.email || '';
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <div className="min-h-screen bg-background">
@@ -109,11 +239,11 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback>{sampleUser.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{userInitial}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium">{sampleUser.name}</span>
+                <span className="text-sm font-medium">{userName}</span>
               </div>
-              <Button variant="outline" size="sm" onClick={() => {}}>
+              <Button variant="outline" size="sm" onClick={() => router.push('/login')}>
                 Sign Out
               </Button>
             </div>
@@ -129,21 +259,21 @@ export default function DashboardPage() {
               <CardHeader className="text-center">
                 <Avatar className="w-20 h-20 mx-auto mb-4">
                   <AvatarFallback className="text-2xl">
-                    {sampleUser.name.charAt(0)}
+                    {userInitial}
                   </AvatarFallback>
                 </Avatar>
-                <CardTitle className="text-lg">{sampleUser.name}</CardTitle>
+                <CardTitle className="text-lg">{userName}</CardTitle>
                 <CardDescription>BeautyBook Member</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="w-4 h-4 text-muted-foreground" />
-                  <span>{sampleUser.email}</span>
+                  <span>{userEmail}</span>
                 </div>
-                {sampleUser.phone && (
+                {userData?.phone && (
                   <div className="flex items-center gap-2 text-sm">
                     <Phone className="w-4 h-4 text-muted-foreground" />
-                    <span>{sampleUser.phone}</span>
+                    <span>{userData.phone}</span>
                   </div>
                 )}
                 <Button
@@ -260,6 +390,7 @@ export default function DashboardPage() {
                                 variant="outline"
                                 size="sm"
                                 className="bg-transparent"
+                                onClick={() => handleReschedule(appointment.service_id)}
                               >
                                 Reschedule
                               </Button>
@@ -267,6 +398,11 @@ export default function DashboardPage() {
                                 variant="outline"
                                 size="sm"
                                 className="bg-transparent text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => {
+                                  if (window.confirm('Are you sure you want to cancel this appointment?')) {
+                                    handleCancel(appointment.id);
+                                  }
+                                }}
                               >
                                 Cancel
                               </Button>
