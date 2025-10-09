@@ -7,7 +7,6 @@ export interface CookieOptions {
 }
 
 export class CookieManager {
-
   static set(name: string, value: string, options: CookieOptions = {}): void {
     if (typeof window === "undefined") return;
 
@@ -18,12 +17,10 @@ export class CookieManager {
     if (options.expires) {
       let expiresString: string;
       if (typeof options.expires === "number") {
-
         const date = new Date();
         date.setTime(date.getTime() + options.expires * 24 * 60 * 60 * 1000);
         expiresString = date.toUTCString();
       } else {
-
         expiresString = options.expires.toUTCString();
       }
       cookieString += `; expires=${expiresString}`;
@@ -48,7 +45,6 @@ export class CookieManager {
     document.cookie = cookieString;
   }
 
-
   static get(name: string): string | null {
     if (typeof window === "undefined") return null;
 
@@ -65,7 +61,6 @@ export class CookieManager {
     return null;
   }
 
-
   static remove(
     name: string,
     options: Pick<CookieOptions, "path" | "domain"> = {}
@@ -78,7 +73,6 @@ export class CookieManager {
     });
   }
 
-
   static getJSON<T>(name: string): T | null {
     const value = this.get(name);
     if (!value) return null;
@@ -90,7 +84,6 @@ export class CookieManager {
     }
   }
 
-
   static setJSON(
     name: string,
     value: unknown,
@@ -99,11 +92,9 @@ export class CookieManager {
     this.set(name, JSON.stringify(value), options);
   }
 
-
   static exists(name: string): boolean {
     return this.get(name) !== null;
   }
-
 
   static getAll(): Record<string, string> {
     if (typeof window === "undefined") return {};
@@ -122,7 +113,6 @@ export class CookieManager {
 
     return cookies;
   }
-
 
   static clearAll(): void {
     if (typeof window === "undefined") return;
@@ -145,6 +135,7 @@ export interface UserCookieData {
   status: string;
   joinDate: string;
   salonId: string;
+  firebaseUid: string;
 }
 export const COOKIE_NAMES = {
   USER_DATA: "glowbridge_user_data",
@@ -152,7 +143,6 @@ export const COOKIE_NAMES = {
   SESSION_ID: "glowbridge_session_id",
 } as const;
 export class UserCookies {
-
   static setUserData(userData: UserCookieData, days: number = 30): void {
     CookieManager.setJSON(COOKIE_NAMES.USER_DATA, userData, {
       expires: days,
@@ -162,28 +152,23 @@ export class UserCookies {
     });
   }
 
-
   static getUserData(): UserCookieData | null {
     return CookieManager.getJSON<UserCookieData>(COOKIE_NAMES.USER_DATA);
   }
-
 
   static clearUserData(): void {
     CookieManager.remove(COOKIE_NAMES.USER_DATA, { path: "/" });
   }
 
-
   static isLoggedIn(): boolean {
     return CookieManager.exists(COOKIE_NAMES.USER_DATA);
   }
-
 
   static clearAllUserCookies(): void {
     CookieManager.remove(COOKIE_NAMES.USER_DATA, { path: "/" });
     CookieManager.remove(COOKIE_NAMES.AUTH_TOKEN, { path: "/" });
     CookieManager.remove(COOKIE_NAMES.SESSION_ID, { path: "/" });
   }
-
 
   static setAuthToken(token: string, days: number = 30): void {
     CookieManager.set(COOKIE_NAMES.AUTH_TOKEN, token, {
@@ -193,7 +178,6 @@ export class UserCookies {
       sameSite: "lax",
     });
   }
-
 
   static getAuthToken(): string | null {
     return CookieManager.get(COOKIE_NAMES.AUTH_TOKEN);
