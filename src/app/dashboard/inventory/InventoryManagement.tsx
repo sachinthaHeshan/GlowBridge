@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -58,6 +59,7 @@ import {
 } from "@/lib/productApi";
 import { showApiErrorToast } from "@/lib/errorToast";
 import { InventoryReportGenerator } from "@/lib/reportGeneratorNew";
+import { UserCookies } from "@/lib/cookies";
 type InventoryItem = Product;
 
 export function InventoryManagement() {
@@ -80,8 +82,10 @@ export function InventoryManagement() {
   });
   const [generatingReport, setGeneratingReport] = useState(false);
 
-  const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
-
+  // Get salonId from auth user cookies
+  const userData = UserCookies.getUserData();
+  const salonId = userData?.salonId;
+  console.log(11111222, salonId);
   const [formData, setFormData] = useState({
     name: "",
     quantity: 0,
@@ -91,6 +95,8 @@ export function InventoryManagement() {
     isPublic: true,
     discount: 0,
     imageUrl: "",
+    image: null as File | null,
+    imagePreview: "",
   });
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -113,6 +119,12 @@ export function InventoryManagement() {
 
   useEffect(() => {
     const loadProducts = async () => {
+      if (!salonId) {
+        setError("No salon ID found. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -157,6 +169,8 @@ export function InventoryManagement() {
       isPublic: true,
       discount: 0,
       imageUrl: "",
+      image: null,
+      imagePreview: "",
     });
     setIsDialogOpen(true);
   };
@@ -171,12 +185,23 @@ export function InventoryManagement() {
       description: item.description || "",
       isPublic: item.isPublic,
       discount: item.discount,
-      imageUrl: (item as any).imageUrl || "",
+      imageUrl: item.imageUrl || "",
+      image: null,
+      imagePreview: item.imageUrl || "",
     });
     setIsDialogOpen(true);
   };
 
   const handleSaveItem = async () => {
+    if (!salonId) {
+      setError("No salon ID found. Please log in again.");
+      showApiErrorToast(
+        new Error("No salon ID found"),
+        "Authentication required"
+      );
+      return;
+    }
+
     try {
       setSaving(true);
       setError(null);
@@ -316,6 +341,11 @@ export function InventoryManagement() {
   };
 
   const downloadReport = async () => {
+    if (!salonId) {
+      alert("❌ No salon ID found. Please log in again.");
+      return;
+    }
+
     setGeneratingReport(true);
     try {
       const filteredData = getFilteredReportData();
@@ -649,14 +679,12 @@ export function InventoryManagement() {
               />
               {formData.imageUrl && (
                 <div className="mt-2 relative w-full h-48 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
-                  <img
+                  <Image
                     src={formData.imageUrl}
                     alt="Product preview"
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '';
-                      (e.target as HTMLImageElement).alt = 'Invalid image URL';
-                    }}
+                    fill
+                    className="object-contain"
+                    unoptimized
                   />
                 </div>
               )}

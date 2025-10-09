@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "react-hot-toast";
-import { fetchUserByEmail, createUser } from "@/lib/userApi";
+import { fetchUserByFirebaseUid, createUser } from "@/lib/userApi";
 import { UserCookies, UserCookieData } from "@/lib/cookies";
 
 interface AuthContextType {
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       );
 
       try {
-        const dbUser = await fetchUserByEmail(firebaseUser.email || email);
+        const dbUser = await fetchUserByFirebaseUid(firebaseUser.uid);
 
         const userCookieData: UserCookieData = {
           id: dbUser.id,
@@ -94,7 +94,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           role: dbUser.role.toLowerCase(),
           status: dbUser.status,
           joinDate: dbUser.joinDate,
-          salonId: dbUser.salonId,
+          salonId: dbUser.salonId || "",
+          firebaseUid: firebaseUser.uid,
         };
 
         UserCookies.setUserData(userCookieData);
@@ -143,7 +144,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         role: dbUser.role.toLowerCase(),
         status: dbUser.status,
         joinDate: dbUser.joinDate,
-        salonId: dbUser.salonId,
+        salonId: dbUser.salonId || "",
+        firebaseUid: dbUser.firebaseUid,
       };
 
       UserCookies.setUserData(userCookieData);

@@ -45,6 +45,7 @@ import {
 import { UserRole } from "@/constraint";
 import { showApiErrorToast } from "@/lib/errorToast";
 import { Pagination } from "@/shared/components/pagination";
+import { fetchSalons, Salon } from "@/lib/salonApi";
 
 export function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -54,8 +55,10 @@ export function UserManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSalons, setIsLoadingSalons] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [salons, setSalons] = useState<Salon[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [formData, setFormData] = useState({
@@ -64,6 +67,7 @@ export function UserManagement() {
     phone: "",
     role: UserRole.STAFF,
     status: "active" as "active" | "inactive",
+    salonId: "" as string | undefined,
   });
 
   const [validationErrors, setValidationErrors] = useState({
@@ -103,7 +107,7 @@ export function UserManagement() {
         if (!value.trim()) {
           return "Phone number is required";
         }
-        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+        const phoneRegex = /^[\d]{0,10}$/;
         if (!phoneRegex.test(value.replace(/\s/g, ""))) {
           return "Please enter a valid phone number";
         }
@@ -181,6 +185,7 @@ export function UserManagement() {
       phone: "",
       role: UserRole.STAFF,
       status: "active",
+      salonId: "",
     });
     setValidationErrors({
       name: "",
@@ -203,6 +208,7 @@ export function UserManagement() {
       phone: user.phone,
       role: user.role,
       status: user.status,
+      salonId: user.salonId || "",
     });
     setValidationErrors({
       name: "",
@@ -231,10 +237,20 @@ export function UserManagement() {
 
     setIsSubmitting(true);
     try {
+      const payload = { ...formData };
+
+      // Only include salonId for STAFF and SALON_OWNER roles
+      if (
+        formData.role !== UserRole.STAFF &&
+        formData.role !== UserRole.SALON_OWNER
+      ) {
+        delete payload.salonId;
+      }
+
       if (editingUser) {
-        await updateUser(editingUser.id, formData);
+        await updateUser(editingUser.id, payload);
       } else {
-        await createUser(formData);
+        await createUser(payload);
       }
       setIsDialogOpen(false);
       await loadUsers();
@@ -282,6 +298,22 @@ export function UserManagement() {
     setRoleFilter(value);
     setCurrentPage(1);
   };
+
+  const loadSalons = async (page: number = 1, limit: number = 10) => {
+    try {
+      setIsLoadingSalons(true);
+      const response = await fetchSalons(page, limit);
+      setSalons(response.salons);
+    } catch (err) {
+      showApiErrorToast(err, "Failed to load salons");
+    } finally {
+      setIsLoadingSalons(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSalons();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -569,9 +601,17 @@ export function UserManagement() {
               <Label htmlFor="role">Role</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value: UserRole) =>
-                  setFormData({ ...formData, role: value })
-                }
+                onValueChange={(value: UserRole) => {
+                  const newFormData = { ...formData, role: value };
+                  // Clear salonId if role is not STAFF or SALON_OWNER
+                  if (
+                    value !== UserRole.STAFF &&
+                    value !== UserRole.SALON_OWNER
+                  ) {
+                    newFormData.salonId = "";
+                  }
+                  setFormData(newFormData);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
@@ -586,6 +626,39 @@ export function UserManagement() {
                 </SelectContent>
               </Select>
             </div>
+            {(formData.role === UserRole.STAFF ||
+              formData.role === UserRole.SALON_OWNER) && (
+              <div className="grid gap-2">
+                <Label htmlFor="salon">Salon</Label>
+                <Select
+                  value={formData.salonId || ""}
+                  onValueChange={(value: string) =>
+                    setFormData({ ...formData, salonId: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select salon" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {isLoadingSalons ? (
+                      <div className="flex items-center justify-center py-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      </div>
+                    ) : salons.length === 0 ? (
+                      <div className="text-sm text-muted-foreground px-2 py-1">
+                        No salons available
+                      </div>
+                    ) : (
+                      salons.map((salon) => (
+                        <SelectItem key={salon.id} value={salon.id}>
+                          {salon.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="status">Status</Label>
               <Select

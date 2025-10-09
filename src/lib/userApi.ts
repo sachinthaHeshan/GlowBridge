@@ -7,6 +7,8 @@ interface BackendUser {
   email: string;
   contact_number: string;
   role: string;
+  firebase_uid: string;
+  salon_id?: string;
 }
 
 export interface User {
@@ -17,7 +19,8 @@ export interface User {
   role: UserRole;
   status: "active" | "inactive";
   joinDate: string;
-  salonId: string;
+  salonId?: string;
+  firebaseUid: string;
 }
 
 interface CreateUserPayload {
@@ -27,6 +30,7 @@ interface CreateUserPayload {
   contact_number: string;
   role: string;
   password?: string;
+  salon_id?: string;
 }
 
 interface UpdateUserPayload {
@@ -35,6 +39,7 @@ interface UpdateUserPayload {
   email?: string;
   contact_number?: string;
   role?: string;
+  salon_id?: string;
 }
 
 interface UsersResponse {
@@ -141,7 +146,8 @@ const transformBackendUser = (backendUser: BackendUser): User => {
     role: mapBackendRoleToUserRole(backendUser.role),
     status: "active",
     joinDate: new Date().toISOString().split("T")[0],
-    salonId: "1",
+    salonId: backendUser.salon_id,
+    firebaseUid: backendUser.firebase_uid,
   };
 };
 
@@ -239,52 +245,25 @@ export const fetchUserById = async (id: string): Promise<User> => {
   return transformBackendUser(response.user);
 };
 
-export const fetchUserByEmail = async (email: string): Promise<User> => {
+export const fetchUserByFirebaseUid = async (
+  firebaseUid: string
+): Promise<User> => {
   try {
-    try {
-      const directResponse = await apiRequest(
-        `/users?page=1&limit=1&email=${encodeURIComponent(email)}`
-      );
+    const directResponse = (await apiRequest(
+      `/users/firebase/${firebaseUid}`
+    )) as {
+      data: BackendUser;
+    };
 
-      const response = directResponse as PaginatedUsersResponse;
-      if (response.data && response.data.length > 0) {
-        const user = response.data.find(
-          (u) => u.email.toLowerCase() === email.toLowerCase()
-        );
-        if (user) {
-          return transformBackendUser(user);
-        }
-      }
-    } catch {}
+    const response = directResponse?.data as BackendUser;
 
-    let page = 1;
-    const limit = 100;
-
-    while (true) {
-      const result = await fetchUsers(page, limit);
-
-      const userWithEmail = result.users.find(
-        (user) => user.email.toLowerCase() === email.toLowerCase()
-      );
-
-      if (userWithEmail) {
-        return userWithEmail;
-      }
-
-      if (page >= result.totalPages || result.users.length === 0) {
-        break;
-      }
-
-      page++;
-    }
-
-    throw new ApiError(`User with email ${email} not found`, 404);
+    return transformBackendUser(response);
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
     }
     throw new ApiError(
-      `Failed to fetch user by email: ${
+      `Failed to fetch user by Firebase UID: ${
         error instanceof Error ? error.message : "Unknown error"
       }`,
       500
@@ -320,6 +299,7 @@ export const createUser = async (userData: {
   role: UserRole | string;
   status: "active" | "inactive";
   password?: string;
+  salonId?: string;
 }): Promise<User> => {
   const nameParts = userData.name.trim().split(" ");
   const firstName = nameParts[0] || "";
@@ -337,12 +317,16 @@ export const createUser = async (userData: {
     payload.password = userData.password;
   }
 
+  if (userData.salonId) {
+    payload.salon_id = userData.salonId;
+  }
+
   try {
     const response = (await apiRequest("/users", {
       method: "POST",
       body: JSON.stringify(payload),
     })) as UserResponse;
-
+    console.log(11111, response);
     return transformBackendUser(response.user);
   } catch (error) {
     if (error instanceof ApiError) {
@@ -408,6 +392,7 @@ export const updateUser = async (
     phone?: string;
     role?: UserRole;
     status?: "active" | "inactive";
+    salonId?: string;
   }
 ): Promise<User> => {
   const payload: UpdateUserPayload = {};
@@ -421,6 +406,7 @@ export const updateUser = async (
   if (userData.email) payload.email = userData.email;
   if (userData.phone) payload.contact_number = userData.phone;
   if (userData.role) payload.role = mapUserRoleToBackendRole(userData.role);
+  if (userData.salonId) payload.salon_id = userData.salonId;
 
   const response = (await apiRequest(`/users/${id}`, {
     method: "PUT",

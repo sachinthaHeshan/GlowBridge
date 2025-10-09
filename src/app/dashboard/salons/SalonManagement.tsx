@@ -318,7 +318,6 @@ export function SalonManagement() {
         </Button>
       </div>
 
-      {}
       {loading && (
         <Card>
           <CardContent className="pt-6">
@@ -332,7 +331,6 @@ export function SalonManagement() {
         </Card>
       )}
 
-      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
