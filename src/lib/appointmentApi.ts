@@ -130,8 +130,15 @@ const apiRequest = async (
 };
 export const fetchServiceById = async (serviceId: string): Promise<Service> => {
   try {
-    console.log('Fetching service:', serviceId);
+    console.log('Fetching service with ID:', serviceId);
+    
+    if (!serviceId || serviceId.trim() === '') {
+      throw new ApiError('Invalid service ID provided', 400);
+    }
+    
     const response = (await apiRequest(`/services/${serviceId}`)) as ServiceResponse;
+
+    console.log('Service API response:', response);
 
     if (!response || !response.success) {
       console.error('Service API Error:', response);
@@ -141,10 +148,14 @@ export const fetchServiceById = async (serviceId: string): Promise<Service> => {
       );
     }
 
+    console.log('Service fetched successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching service:', error);
-    throw error;
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError('Network error while fetching service', 500);
   }
 };
 

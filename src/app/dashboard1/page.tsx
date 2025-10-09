@@ -59,6 +59,11 @@ export default function DashboardPage() {
   const [pastAppointments, setPastAppointments] = useState<AppointmentDetails[]>([]);
 
   const handleReschedule = (service_id: string) => {
+    console.log('Reschedule clicked for service ID:', service_id);
+    if (!service_id) {
+      toast.error('Service ID not available for rescheduling');
+      return;
+    }
     router.push(`/services/${service_id}`);
   };
 

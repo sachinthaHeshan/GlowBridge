@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       {
         source: "/api_g/:path*",
         destination: `${
-          process.env.BACKEND_URL || "https://glow-bridge-backend.vercel.app"
+          process.env.BACKEND_URL || "http://localhost:3005"
         }/api/:path*`,
       },
     ];
