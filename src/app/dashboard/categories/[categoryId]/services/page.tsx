@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+
 import {
   Dialog,
   DialogContent,
@@ -132,7 +134,7 @@ export default function CategoryServicesPage() {
     setCurrentPage(page);
     loadCategoryAndServices(page, searchTerm || undefined);
   };
-
+  //Add service (create) flow
   const handleAddService = async (formData: {
     name: string;
     description: string;
@@ -166,7 +168,7 @@ export default function CategoryServicesPage() {
       setActionLoading(false);
     }
   };
-
+  //Edit / Update flow
   const handleEditService = (service: Service) => {
     setEditingService(service);
     setIsEditDialogOpen(true);
@@ -207,6 +209,7 @@ export default function CategoryServicesPage() {
     }
   };
 
+  //Delete flow
   const handleDeleteService = (id: string) => {
     setDeleteConfirmation({ isOpen: true, serviceId: id });
   };
@@ -274,6 +277,17 @@ export default function CategoryServicesPage() {
               Add New Service
             </Button>
           </DialogTrigger>
+
+          <Link
+  href={`/dashboard/categories/${categoryId}/services/reports`}
+  className="inline-block"
+>
+  <Button className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white shadow-lg ml-3">
+    <Package className="w-4 h-4 mr-2" />
+    Generate Report
+  </Button>
+</Link>
+
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Service to {category.name}</DialogTitle>

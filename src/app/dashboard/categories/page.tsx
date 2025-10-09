@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+
 import {
   Dialog,
   DialogContent,
@@ -55,7 +56,6 @@ export default function CategoriesPage() {
   const router = useRouter();
   const limit = 10;
 
-
   const loadCategories = async (page: number = 1, search?: string) => {
     try {
       setLoading(true);
@@ -74,11 +74,9 @@ export default function CategoriesPage() {
     }
   };
 
-
   useEffect(() => {
     loadCategories(1);
   }, []);
-
 
   const handleSearch = useCallback(() => {
     setCurrentPage(1);
@@ -90,7 +88,6 @@ export default function CategoriesPage() {
     setCurrentPage(1);
     loadCategories(1);
   };
-
 
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -179,8 +176,6 @@ export default function CategoriesPage() {
   const handleViewServices = (category: Category) => {
     router.push(`/dashboard/categories/${category.id}/services`);
   };
-
-
 
   if (loading) {
     return (

@@ -18,9 +18,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useShoppingCart } from "@/components/shopping/ShoppingProvider";
+import {
+  useShoppingCart,
+  CartItem,
+} from "@/components/shopping/ShoppingProvider";
 import { useAuth } from "@/contexts/AuthContext";
-import { createOrder, CreateOrderItem, ApiError } from "@/lib/orderApi";
+import { createOrder, CreateOrderItem } from "@/lib/orderApi";
 import { generateReceiptFromOrderData } from "@/lib/receiptGeneratorSimple";
 import OTPModal from "@/components/OTPModal";
 import { usePaymentWithOTP } from "@/hooks/usePaymentWithOTP";
@@ -102,8 +105,10 @@ export default function PaymentPage() {
   });
 
   const [errors, setErrors] = useState<Partial<PaymentFormData>>({});
-  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
-  const [savedCartItems, setSavedCartItems] = useState<any[]>([]);
+  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(
+    null
+  );
+  const [savedCartItems, setSavedCartItems] = useState<CartItem[]>([]);
   const [savedCartTotal, setSavedCartTotal] = useState<number>(0);
 
   const taxAmount = cartTotal * 0.1;
@@ -112,8 +117,8 @@ export default function PaymentPage() {
   // Input styling utility
   const getInputClassName = (hasError: boolean) => {
     return `border-2 bg-white transition-all duration-200 ${
-      hasError 
-        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200" 
+      hasError
+        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
         : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
     }`;
   };
@@ -130,26 +135,33 @@ export default function PaymentPage() {
       id: paymentResult.orderId,
       transactionId: paymentResult.transactionId,
       orderDate: new Date().toISOString(),
-      items: itemsToUse.map(item => ({
+      items: itemsToUse.map((item) => ({
         productName: item.name,
         quantity: item.quantity,
         unitPrice: item.price,
         totalPrice: item.price * item.quantity,
       })),
-      totalAmount: totalToUse + (totalToUse * 0.1), // Include tax in final total
-      paymentType: formData.cardNumber ? `Credit Card ending in ${formData.cardNumber.slice(-4)}` : 'Credit Card',
+      totalAmount: totalToUse + totalToUse * 0.1, // Include tax in final total
+      paymentType: formData.cardNumber
+        ? `Credit Card ending in ${formData.cardNumber.slice(-4)}`
+        : "Credit Card",
     };
 
     const customerData = {
       firstName: formData.firstName,
       lastName: formData.lastName,
-      email: userData?.email || '',
+      email: userData?.email || "",
       address: formData.address,
       city: formData.city,
       postalCode: formData.postalCode,
     };
 
-    generateReceiptFromOrderData(orderData, customerData, totalToUse, totalToUse * 0.1);
+    generateReceiptFromOrderData(
+      orderData,
+      customerData,
+      totalToUse,
+      totalToUse * 0.1
+    );
   };
 
   const handleInputChange = (field: keyof PaymentFormData, value: string) => {
@@ -195,7 +207,7 @@ export default function PaymentPage() {
           newErrors.phone = "Phone number is required";
           isValid = false;
         } else if (!validatePhoneNumber(formData.phone)) {
-          newErrors.phone = "Please enter a valid Sri Lankan phone number";
+          newErrors.phone = "Please enter a valid phone number";
           isValid = false;
         }
         break;
@@ -212,14 +224,15 @@ export default function PaymentPage() {
           newErrors.expiryDate = "Expiry date is required";
           isValid = false;
         } else if (!isExpiryDateValid(formData.expiryDate)) {
-          newErrors.expiryDate = "Please enter a valid expiry date (MM/YY) that is not in the past";
+          newErrors.expiryDate =
+            "Please enter a valid expiry date (MM/YY) that is not in the past";
           isValid = false;
         }
         if (!formData.cvv) {
           newErrors.cvv = "CVV is required";
           isValid = false;
         } else if (formData.cvv.length < 3) {
-          newErrors.cvv = "CVV must be at least 3 digits";
+          newErrors.cvv = "CVV must be 3 digits";
           isValid = false;
         }
         if (!formData.cardholderName.trim()) {
@@ -238,7 +251,7 @@ export default function PaymentPage() {
       if (currentStep === 2) {
         // After payment details are validated, require OTP verification
         setCurrentStep(3);
-        requireOTPVerification(formData.phone);
+        requireOTPVerification();
       } else {
         setCurrentStep((prev) => Math.min(prev + 1, 3));
       }
@@ -253,13 +266,17 @@ export default function PaymentPage() {
     try {
       // Check if user is authenticated
       if (!userData?.id) {
-        throw new Error("User authentication required. Please sign in and try again.");
+        throw new Error(
+          "User authentication required. Please sign in and try again."
+        );
       }
 
       // Validate cart items have originalId (UUID)
       const invalidItems = cartItems.filter((item) => !item.originalId);
       if (invalidItems.length > 0) {
-        throw new Error("Some cart items are invalid. Please refresh the page and add items to cart again.");
+        throw new Error(
+          "Some cart items are invalid. Please refresh the page and add items to cart again."
+        );
       }
 
       // Convert cart items to order items format
@@ -269,7 +286,9 @@ export default function PaymentPage() {
         price: item.price,
       }));
 
-      const paymentType = `Credit Card ending in ${formData.cardNumber.slice(-4)}`;
+      const paymentType = `Credit Card ending in ${formData.cardNumber.slice(
+        -4
+      )}`;
       const description = `Complete beauty package order containing ${cartItems.length} item(s). Order placed via web payment for ${userData.email}.`;
 
       // Create order using the new API
@@ -284,19 +303,23 @@ export default function PaymentPage() {
         success: true,
         message: "Payment processed and order created successfully!",
         orderId: orderData.id,
-        transactionId: `TXN${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+        transactionId: `TXN${Date.now()}${Math.random()
+          .toString(36)
+          .substr(2, 5)
+          .toUpperCase()}`,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Order creation failed:", error);
       throw error;
     }
   };
 
-  const [isProcessingFinalPayment, setIsProcessingFinalPayment] = useState(false);
+  const [isProcessingFinalPayment, setIsProcessingFinalPayment] =
+    useState(false);
 
   const handleFinalPayment = async () => {
     if (!otpSession?.verified) {
-      requireOTPVerification(formData.phone);
+      requireOTPVerification();
       return;
     }
 
@@ -305,36 +328,36 @@ export default function PaymentPage() {
       // Process the actual order creation (from original payment page logic)
       const result = await processOrderWithOTP();
       setPaymentResult(result);
-      
+
       if (result.success) {
         // Save cart items and total before clearing for receipt generation
         setSavedCartItems([...cartItems]);
         setSavedCartTotal(cartTotal);
         clearCart();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Payment processing error:", error);
       setPaymentResult({
         success: false,
-        message: error.message || "Payment failed. Please try again.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Payment failed. Please try again.",
       });
     } finally {
       setIsProcessingFinalPayment(false);
     }
   };
 
-  const handleOTPSuccess = (sessionData: any) => {
+  const handleOTPSuccess = (sessionData: {
+    sessionId: string;
+    verified: boolean;
+    phoneNumber: string;
+    expiresAt: string;
+  }) => {
     handleOTPVerified(sessionData);
     console.log("OTP verified successfully!", sessionData);
     // Don't automatically proceed - let user click the final payment button
-  };
-
-  const handleOTPError = (error: string) => {
-    console.error("OTP Error:", error);
-    setPaymentResult({
-      success: false,
-      message: error,
-    });
   };
 
   const formatCardNumber = (value: string) => {
@@ -362,30 +385,30 @@ export default function PaymentPage() {
 
   const isExpiryDateValid = (expiryDate: string) => {
     if (!expiryDate || expiryDate.length !== 5) return false;
-    
-    const [month, year] = expiryDate.split('/');
+
+    const [month, year] = expiryDate.split("/");
     const monthNum = parseInt(month, 10);
     const yearNum = parseInt(`20${year}`, 10);
-    
+
     // Check if month is valid (01-12)
     if (monthNum < 1 || monthNum > 12) return false;
-    
+
     // Get current date
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1; // getMonth() returns 0-11
-    
+
     // Check if the expiry date is in the future
     if (yearNum > currentYear) return true;
     if (yearNum === currentYear && monthNum >= currentMonth) return true;
-    
+
     return false;
   };
 
   // Show success/error result
   if (paymentResult) {
     const result = paymentResult;
-    
+
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4 max-w-2xl">
@@ -394,11 +417,14 @@ export default function PaymentPage() {
               {result.success ? (
                 <div className="space-y-4">
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-                  <h1 className="text-2xl font-bold text-green-700">Payment Successful!</h1>
+                  <h1 className="text-2xl font-bold text-green-700">
+                    Payment Successful!
+                  </h1>
                   <p className="text-gray-600">{result.message}</p>
                   {result.transactionId && (
                     <p className="text-sm text-gray-500">
-                      Transaction ID: <span className="font-mono">{result.transactionId}</span>
+                      Transaction ID:{" "}
+                      <span className="font-mono">{result.transactionId}</span>
                     </p>
                   )}
                   <div className="flex gap-4 justify-center mt-6">
@@ -414,16 +440,24 @@ export default function PaymentPage() {
               ) : (
                 <div className="space-y-4">
                   <XCircle className="w-16 h-16 text-red-500 mx-auto" />
-                  <h1 className="text-2xl font-bold text-red-700">Payment Failed</h1>
+                  <h1 className="text-2xl font-bold text-red-700">
+                    Payment Failed
+                  </h1>
                   <p className="text-gray-600">{result.message}</p>
                   <div className="flex gap-4 justify-center mt-6">
-                    <Button onClick={() => {
-                      setPaymentResult(null);
-                      setCurrentStep(1);
-                    }} variant="outline">
+                    <Button
+                      onClick={() => {
+                        setPaymentResult(null);
+                        setCurrentStep(1);
+                      }}
+                      variant="outline"
+                    >
                       Try Again
                     </Button>
-                    <Button onClick={() => router.push("/")} variant="secondary">
+                    <Button
+                      onClick={() => router.push("/")}
+                      variant="secondary"
+                    >
                       Continue Shopping
                     </Button>
                   </div>
@@ -495,7 +529,10 @@ export default function PaymentPage() {
 
             <Card>
               <CardContent className="p-6">
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+                <form
+                  onSubmit={(e) => e.preventDefault()}
+                  className="space-y-6"
+                >
                   {/* Step 1: Shipping Details */}
                   {currentStep === 1 && (
                     <div className="space-y-4">
@@ -504,24 +541,34 @@ export default function PaymentPage() {
                           <Label htmlFor="firstName">First Name</Label>
                           <Input
                             id="firstName"
+                            placeholder="Enter the First Name"
                             value={formData.firstName}
-                            onChange={(e) => handleInputChange("firstName", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange("firstName", e.target.value)
+                            }
                             className={getInputClassName(!!errors.firstName)}
                           />
                           {errors.firstName && (
-                            <p className="text-sm text-red-600">{errors.firstName}</p>
+                            <p className="text-sm text-red-600">
+                              {errors.firstName}
+                            </p>
                           )}
                         </div>
                         <div>
                           <Label htmlFor="lastName">Last Name</Label>
                           <Input
                             id="lastName"
+                            placeholder="Enter the Last Name"
                             value={formData.lastName}
-                            onChange={(e) => handleInputChange("lastName", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange("lastName", e.target.value)
+                            }
                             className={getInputClassName(!!errors.lastName)}
                           />
                           {errors.lastName && (
-                            <p className="text-sm text-red-600">{errors.lastName}</p>
+                            <p className="text-sm text-red-600">
+                              {errors.lastName}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -530,12 +577,17 @@ export default function PaymentPage() {
                         <Label htmlFor="address">Address</Label>
                         <Input
                           id="address"
+                          placeholder="Enter the Address"
                           value={formData.address}
-                          onChange={(e) => handleInputChange("address", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("address", e.target.value)
+                          }
                           className={getInputClassName(!!errors.address)}
                         />
                         {errors.address && (
-                          <p className="text-sm text-red-600">{errors.address}</p>
+                          <p className="text-sm text-red-600">
+                            {errors.address}
+                          </p>
                         )}
                       </div>
 
@@ -544,24 +596,34 @@ export default function PaymentPage() {
                           <Label htmlFor="city">City</Label>
                           <Input
                             id="city"
+                            placeholder="Enter the City"
                             value={formData.city}
-                            onChange={(e) => handleInputChange("city", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange("city", e.target.value)
+                            }
                             className={getInputClassName(!!errors.city)}
                           />
                           {errors.city && (
-                            <p className="text-sm text-red-600">{errors.city}</p>
+                            <p className="text-sm text-red-600">
+                              {errors.city}
+                            </p>
                           )}
                         </div>
                         <div>
                           <Label htmlFor="postalCode">Postal Code</Label>
                           <Input
                             id="postalCode"
+                            placeholder="Enter the Posatal Code"
                             value={formData.postalCode}
-                            onChange={(e) => handleInputChange("postalCode", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange("postalCode", e.target.value)
+                            }
                             className={getInputClassName(!!errors.postalCode)}
                           />
                           {errors.postalCode && (
-                            <p className="text-sm text-red-600">{errors.postalCode}</p>
+                            <p className="text-sm text-red-600">
+                              {errors.postalCode}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -571,9 +633,11 @@ export default function PaymentPage() {
                         <Input
                           id="phone"
                           type="tel"
-                          placeholder="+94 77 123 4567"
+                          placeholder="Enter the Phone Nmuber"
                           value={formData.phone}
-                          onChange={(e) => handleInputChange("phone", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("phone", e.target.value)
+                          }
                           className={getInputClassName(!!errors.phone)}
                         />
                         {errors.phone && (
@@ -594,13 +658,20 @@ export default function PaymentPage() {
                         <Input
                           id="cardNumber"
                           value={formData.cardNumber}
-                          onChange={(e) => handleInputChange("cardNumber", formatCardNumber(e.target.value))}
-                          placeholder="1234 5678 9012 3456"
+                          onChange={(e) =>
+                            handleInputChange(
+                              "cardNumber",
+                              formatCardNumber(e.target.value)
+                            )
+                          }
+                          placeholder="XXXX XXXX XXXX XXXX"
                           maxLength={19}
                           className={getInputClassName(!!errors.cardNumber)}
                         />
                         {errors.cardNumber && (
-                          <p className="text-sm text-red-600">{errors.cardNumber}</p>
+                          <p className="text-sm text-red-600">
+                            {errors.cardNumber}
+                          </p>
                         )}
                       </div>
 
@@ -610,13 +681,20 @@ export default function PaymentPage() {
                           <Input
                             id="expiryDate"
                             value={formData.expiryDate}
-                            onChange={(e) => handleInputChange("expiryDate", formatExpiryDate(e.target.value))}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "expiryDate",
+                                formatExpiryDate(e.target.value)
+                              )
+                            }
                             placeholder="MM/YY"
                             maxLength={5}
                             className={getInputClassName(!!errors.expiryDate)}
                           />
                           {errors.expiryDate && (
-                            <p className="text-sm text-red-600">{errors.expiryDate}</p>
+                            <p className="text-sm text-red-600">
+                              {errors.expiryDate}
+                            </p>
                           )}
                         </div>
                         <div>
@@ -624,9 +702,14 @@ export default function PaymentPage() {
                           <Input
                             id="cvv"
                             value={formData.cvv}
-                            onChange={(e) => handleInputChange("cvv", e.target.value.replace(/\D/g, ""))}
-                            placeholder="123"
-                            maxLength={4}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "cvv",
+                                e.target.value.replace(/\D/g, "")
+                              )
+                            }
+                            placeholder="XXX"
+                            maxLength={3}
                             className={getInputClassName(!!errors.cvv)}
                           />
                           {errors.cvv && (
@@ -640,12 +723,16 @@ export default function PaymentPage() {
                         <Input
                           id="cardholderName"
                           value={formData.cardholderName}
-                          onChange={(e) => handleInputChange("cardholderName", e.target.value)}
-                          placeholder="John Doe"
+                          onChange={(e) =>
+                            handleInputChange("cardholderName", e.target.value)
+                          }
+                          placeholder="Enter the Cardholder's Name"
                           className={getInputClassName(!!errors.cardholderName)}
                         />
                         {errors.cardholderName && (
-                          <p className="text-sm text-red-600">{errors.cardholderName}</p>
+                          <p className="text-sm text-red-600">
+                            {errors.cardholderName}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -656,22 +743,31 @@ export default function PaymentPage() {
                     <div className="space-y-6 text-center">
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                         <Smartphone className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Security Verification Required</h3>
+                        <h3 className="text-lg font-semibold mb-2">
+                          Security Verification Required
+                        </h3>
                         <p className="text-gray-600 mb-4">
-                          For your security, we'll send a verification code to your phone number:
+                          For your security, we&apos;ll send a verification code
+                          to your phone number:
                         </p>
-                        <p className="font-medium text-blue-800">{formData.phone}</p>
-                        
+                        <p className="font-medium text-blue-800">
+                          {formData.phone}
+                        </p>
+
                         {otpSession?.verified ? (
                           <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                             <CheckCircle className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                            <p className="text-green-800 font-medium">Phone verified successfully!</p>
-                            <p className="text-sm text-green-600">You can now complete your payment</p>
+                            <p className="text-green-800 font-medium">
+                              Phone verified successfully!
+                            </p>
+                            <p className="text-sm text-green-600">
+                              You can now complete your payment
+                            </p>
                           </div>
                         ) : (
                           <div className="mt-4">
-                            <Button 
-                              onClick={() => requireOTPVerification(formData.phone)}
+                            <Button
+                              onClick={() => requireOTPVerification()}
                               className="w-full"
                               disabled={isProcessingFinalPayment}
                             >
@@ -687,12 +783,16 @@ export default function PaymentPage() {
                   {/* Navigation Buttons */}
                   <div className="flex justify-between pt-6">
                     {currentStep > 1 && (
-                      <Button variant="outline" onClick={prevStep} disabled={isProcessingFinalPayment}>
+                      <Button
+                        variant="outline"
+                        onClick={prevStep}
+                        disabled={isProcessingFinalPayment}
+                      >
                         <ChevronLeft className="w-4 h-4 mr-2" />
                         Previous
                       </Button>
                     )}
-                    
+
                     <div className="ml-auto">
                       {currentStep < 3 ? (
                         <Button onClick={nextStep}>
@@ -700,9 +800,11 @@ export default function PaymentPage() {
                           <ChevronRight className="w-4 h-4 ml-2" />
                         </Button>
                       ) : (
-                        <Button 
+                        <Button
                           onClick={handleFinalPayment}
-                          disabled={!otpSession?.verified || isProcessingFinalPayment}
+                          disabled={
+                            !otpSession?.verified || isProcessingFinalPayment
+                          }
                           className="bg-green-600 hover:bg-green-700"
                         >
                           {isProcessingFinalPayment ? (
@@ -736,12 +838,16 @@ export default function PaymentPage() {
                   <div key={item.id} className="flex justify-between">
                     <div>
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                      <p className="text-sm text-gray-600">
+                        Qty: {item.quantity}
+                      </p>
                     </div>
-                    <p className="font-medium">LKR {(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-medium">
+                      LKR {(item.price * item.quantity).toFixed(2)}
+                    </p>
                   </div>
                 ))}
-                
+
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between">
                     <p>Subtotal</p>
@@ -762,8 +868,12 @@ export default function PaymentPage() {
                   <div className="flex items-center">
                     <Shield className="w-5 h-5 text-green-600 mr-2" />
                     <div>
-                      <p className="text-sm font-medium text-green-800">Secure Payment</p>
-                      <p className="text-xs text-green-600">Protected by SMS verification</p>
+                      <p className="text-sm font-medium text-green-800">
+                        Secure Payment
+                      </p>
+                      <p className="text-xs text-green-600">
+                        Protected by SMS verification
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -779,7 +889,6 @@ export default function PaymentPage() {
         phoneNumber={formData.phone}
         onClose={closeOTPModal}
         onOTPVerified={handleOTPSuccess}
-        onError={handleOTPError}
       />
     </div>
   );

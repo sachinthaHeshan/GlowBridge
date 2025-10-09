@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DropZone } from "@/components/ui/drop-zone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +47,7 @@ import {
   Filter,
   Calendar,
 } from "lucide-react";
+import ConfirmationModal from "@/components/confirmation-modal";
 import {
   Product,
   fetchSalonProducts,
@@ -66,8 +68,17 @@ export function InventoryManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [generatingReport, setGeneratingReport] = useState(false);
 
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    itemId: string | null;
+    itemName: string;
+  }>({
+    isOpen: false,
+    itemId: null,
+    itemName: "",
+  });
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   const salonId = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
 
@@ -86,7 +97,9 @@ export function InventoryManagement() {
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   // Product picker for report: query + selected product id
   const [productQuery, setProductQuery] = useState("");
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null
+  );
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
 
   // Report generation state
@@ -95,9 +108,8 @@ export function InventoryManagement() {
     minPrice: "" as string,
     maxPrice: "" as string,
     stockLevel: "all" as "all" | "in-stock" | "low-stock" | "out-of-stock",
-    timePeriod: "30" as "7" | "14" | "21" | "30" | "60" | "90"
+    timePeriod: "30" as "7" | "14" | "21" | "30" | "60" | "90",
   });
-
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -124,6 +136,15 @@ export function InventoryManagement() {
 
     loadProducts();
   }, [salonId]);
+
+  // Clean up object URLs when form data changes or component unmounts
+  useEffect(() => {
+    return () => {
+      if (formData.imagePreview && !formData.imagePreview.startsWith("http")) {
+        URL.revokeObjectURL(formData.imagePreview);
+      }
+    };
+  }, [formData.imagePreview]);
 
   const handleAddItem = () => {
     setEditingItem(null);
@@ -161,7 +182,6 @@ export function InventoryManagement() {
       setError(null);
 
       if (editingItem) {
-
         const updatedItem = await updateProduct(editingItem.id, {
           name: formData.name,
           quantity: formData.quantity,
@@ -176,7 +196,6 @@ export function InventoryManagement() {
           items.map((item) => (item.id === editingItem.id ? updatedItem : item))
         );
       } else {
-
         const newItem = await createProduct({
           name: formData.name,
           quantity: formData.quantity,
@@ -212,11 +231,30 @@ export function InventoryManagement() {
     }
   };
 
-  const handleDeleteItem = async (id: string) => {
+  const handleDeleteConfirm = (item: InventoryItem) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      itemId: item.id,
+      itemName: item.name,
+    });
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmation({
+      isOpen: false,
+      itemId: null,
+      itemName: "",
+    });
+  };
+
+  const handleDeleteItem = async () => {
+    if (!deleteConfirmation.itemId) return;
+
     try {
       setError(null);
-      await deleteProduct(id);
-      setItems(items.filter((item) => item.id !== id));
+      await deleteProduct(deleteConfirmation.itemId);
+      setItems(items.filter((item) => item.id !== deleteConfirmation.itemId));
+      handleDeleteCancel(); // Close the confirmation dialog
     } catch (error) {
       if (error instanceof ApiError) {
         setError(error.message);
@@ -231,26 +269,11 @@ export function InventoryManagement() {
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "in-stock":
-        return "default";
-      case "low-stock":
-        return "secondary";
-      case "out-of-stock":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
-
   const filterItems = (items: InventoryItem[]) => {
     return items.filter((item) => {
-
       const matchesSearch = item.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
-
 
       const matchesPrice =
         (!priceRange.min || item.price >= Number(priceRange.min)) &&
@@ -271,130 +294,58 @@ export function InventoryManagement() {
 
     // Filter by stock level
     if (reportFilters.stockLevel && reportFilters.stockLevel !== "all") {
-      filteredItems = filteredItems.filter((item) => item.status === reportFilters.stockLevel);
+      filteredItems = filteredItems.filter(
+        (item) => item.status === reportFilters.stockLevel
+      );
     }
 
     // Filter by price range
     if (reportFilters.minPrice || reportFilters.maxPrice) {
-      const minPrice = reportFilters.minPrice ? parseFloat(reportFilters.minPrice) : 0;
-      const maxPrice = reportFilters.maxPrice ? parseFloat(reportFilters.maxPrice) : Infinity;
-      filteredItems = filteredItems.filter((item) => item.price >= minPrice && item.price <= maxPrice);
+      const minPrice = reportFilters.minPrice
+        ? parseFloat(reportFilters.minPrice)
+        : 0;
+      const maxPrice = reportFilters.maxPrice
+        ? parseFloat(reportFilters.maxPrice)
+        : Infinity;
+      filteredItems = filteredItems.filter(
+        (item) => item.price >= minPrice && item.price <= maxPrice
+      );
     }
 
     return filteredItems;
-  };
-
-  const generateCurrentStockReport = (data: InventoryItem[]) => {
-    const reportContent = `
-INVENTORY CURRENT STOCK LEVEL REPORT
-Generated on: ${new Date().toLocaleString()}
-Salon ID: ${salonId}
-
-====================================================
-
-SUMMARY:
-- Total Items: ${data.length}
-- In Stock: ${data.filter(i => i.status === 'in-stock').length}
-- Low Stock: ${data.filter(i => i.status === 'low-stock').length}
-- Out of Stock: ${data.filter(i => i.status === 'out-of-stock').length}
-- Total Value: Rs.${data.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
-
-====================================================
-
-DETAILED INVENTORY:
-
-${data.map(item => `
-Product: ${item.name}
-Price: Rs.${item.price.toFixed(2)}
-Quantity: ${item.quantity}
-Status: ${item.status.toUpperCase()}
-Discount: ${item.discount}%
-Description: ${item.description || 'N/A'}
-Total Value: Rs.${(item.price * item.quantity).toFixed(2)}
----
-`).join('')}
-
-====================================================
-Report End
-`;
-    return reportContent;
-  };
-
-  const generateStockUsageReport = (data: InventoryItem[]) => {
-    // This is a simulated stock usage report
-    // In a real application, you would track actual usage data
-    const reportContent = `
-INVENTORY STOCK USAGE REPORT
-Generated on: ${new Date().toLocaleString()}
-Salon ID: ${salonId}
-Period: Last 30 days (simulated data)
-
-====================================================
-
-USAGE SUMMARY:
-- Total Products Monitored: ${data.length}
-- High Usage Items: ${data.filter(i => i.quantity < 10).length}
-- Medium Usage Items: ${data.filter(i => i.quantity >= 10 && i.quantity < 50).length}
-- Low Usage Items: ${data.filter(i => i.quantity >= 50).length}
-
-====================================================
-
-USAGE DETAILS:
-
-${data.map(item => {
-  // Simulate usage data based on current stock levels
-  const estimatedUsage = item.status === 'low-stock' ? 'High' : 
-                        item.status === 'out-of-stock' ? 'Critical' : 'Normal';
-  const simulatedDailyUsage = item.status === 'low-stock' ? Math.floor(item.quantity * 0.1) + 1 :
-                             item.status === 'out-of-stock' ? 'N/A' :
-                             Math.floor(item.quantity * 0.05) + 1;
-  
-  return `
-Product: ${item.name}
-Current Stock: ${item.quantity}
-Usage Level: ${estimatedUsage}
-Estimated Daily Usage: ${simulatedDailyUsage}
-Reorder Recommendation: ${item.quantity < 20 ? 'URGENT - Reorder required' : 'Normal monitoring'}
----
-`;
-}).join('')}
-
-====================================================
-Report End
-`;
-    return reportContent;
   };
 
   const downloadReport = async () => {
     setGeneratingReport(true);
     try {
       const filteredData = getFilteredReportData();
-      
+
       if (filteredData.length === 0) {
-        alert('No data available for the selected filters. Please adjust your filters and try again.');
+        alert(
+          "No data available for the selected filters. Please adjust your filters and try again."
+        );
         return;
       }
-      
+
       // Create report generator instance
       const reportGenerator = new InventoryReportGenerator();
 
       // Download the PDF report
       reportGenerator.generateReport(filteredData, salonId, reportFilters);
-      
+
       // Show success message
       setTimeout(() => {
-        alert('📄 Report generated successfully! Check your downloads folder.');
+        alert("📄 Report generated successfully! Check your downloads folder.");
       }, 500);
-      
+
       setIsReportDialogOpen(false);
     } catch (error) {
-      console.error('Error generating report:', error);
-      alert('❌ Error generating report. Please try again.');
+      console.error("Error generating report:", error);
+      alert("❌ Error generating report. Please try again.");
     } finally {
       setGeneratingReport(false);
     }
   };
-
 
   if (loading) {
     return (
@@ -418,7 +369,6 @@ Report End
       </div>
     );
   }
-
 
   if (error && items.length === 0) {
     return (
@@ -451,20 +401,17 @@ Report End
     );
   }
 
-
   return (
     <div className="space-y-6">
       {}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Inventory Management
-            </h1>
-            <p className="text-muted-foreground">
-              Manage inventory for this salon location
-            </p>
-          </div>
+      <div className="flex items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Inventory Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage inventory for this salon location
+          </p>
         </div>
       </div>
 
@@ -609,9 +556,10 @@ Report End
                 <TableHead>Item</TableHead>
                 <TableHead className="text-right">Price</TableHead>
                 <TableHead className="text-center">Quantity</TableHead>
-                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center">Visibility</TableHead>
                 <TableHead className="text-right">Discount (%)</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
+                <TableHead>Update</TableHead>
+                <TableHead>Delete</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -630,29 +578,29 @@ Report End
                   </TableCell>
                   <TableCell className="text-center">{item.quantity}</TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={getStatusBadgeVariant(item.status)}>
-                      {item.status}
+                    <Badge variant={item.isPublic ? "default" : "secondary"}>
+                      {item.isPublic ? "Public" : "Private"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">{item.discount}%</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditItem(item)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteItem(item.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditItem(item)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteConfirm(item)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -674,7 +622,21 @@ Report End
                 : "Add a new item to your inventory."}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 overflow-y-auto max-h-[calc(90vh-8rem)] pr-2">
+            <div className="grid gap-2">
+              <Label>Product Image</Label>
+              <DropZone
+                onDrop={(files) => {
+                  const file = files[0];
+                  setFormData({
+                    ...formData,
+                    image: file,
+                    imagePreview: URL.createObjectURL(file),
+                  });
+                }}
+                currentImage={formData.imagePreview}
+              />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="imageUrl">Product Image URL</Label>
               <Input
@@ -826,6 +788,14 @@ Report End
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteItem}
+        title="Delete Item"
+        description={`Are you sure you want to delete "${deleteConfirmation.itemName}"? This action cannot be undone.`}
+      />
       {/* Report Generation Dialog */}
       <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
         <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
@@ -842,7 +812,7 @@ Report End
               Configure your report parameters and download as PDF
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-5 py-4">
             {/* Report Type Selection */}
             <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20">
@@ -863,14 +833,21 @@ Report End
                     <SelectValue placeholder="Select report type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="current-stock" className="cursor-pointer">
+                    <SelectItem
+                      value="current-stock"
+                      className="cursor-pointer"
+                    >
                       <div className="flex items-center gap-3 py-1">
                         <div className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow-md">
                           <Package className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                          <div className="font-semibold text-base">Current Stock Level Report</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">Inventory status and quantities</div>
+                          <div className="font-semibold text-base">
+                            Current Stock Level Report
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            Inventory status and quantities
+                          </div>
                         </div>
                       </div>
                     </SelectItem>
@@ -880,8 +857,12 @@ Report End
                           <Calendar className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                          <div className="font-semibold text-base">Sales & Usage Analysis Report</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">Sales performance and reorder recommendations</div>
+                          <div className="font-semibold text-base">
+                            Sales & Usage Analysis Report
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            Sales performance and reorder recommendations
+                          </div>
                         </div>
                       </div>
                     </SelectItem>
@@ -904,20 +885,30 @@ Report End
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Stock Level Filter */}
                   <div className="space-y-2">
-                    <Label htmlFor="stockLevel" className="text-sm font-semibold text-green-700 dark:text-green-400">
+                    <Label
+                      htmlFor="stockLevel"
+                      className="text-sm font-semibold text-green-700 dark:text-green-400"
+                    >
                       Stock Level
                     </Label>
                     <Select
                       value={reportFilters.stockLevel}
-                      onValueChange={(value: "all" | "in-stock" | "low-stock" | "out-of-stock") =>
-                        setReportFilters({ ...reportFilters, stockLevel: value })
+                      onValueChange={(
+                        value: "all" | "in-stock" | "low-stock" | "out-of-stock"
+                      ) =>
+                        setReportFilters({
+                          ...reportFilters,
+                          stockLevel: value,
+                        })
                       }
                     >
                       <SelectTrigger className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors">
                         <SelectValue placeholder="All stock levels" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all" className="font-medium">All Stock Levels</SelectItem>
+                        <SelectItem value="all" className="font-medium">
+                          All Stock Levels
+                        </SelectItem>
                         <SelectItem value="in-stock">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-green-500 shadow-md shadow-green-300"></div>
@@ -961,10 +952,17 @@ Report End
                       {showProductSuggestions && productQuery && (
                         <div className="absolute z-40 left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-auto">
                           {items
-                            .filter((it) =>
-                              it.name.toLowerCase().includes(productQuery.toLowerCase()) ||
-                              (it.description || "").toLowerCase().includes(productQuery.toLowerCase()) ||
-                              it.id.toLowerCase().includes(productQuery.toLowerCase())
+                            .filter(
+                              (it) =>
+                                it.name
+                                  .toLowerCase()
+                                  .includes(productQuery.toLowerCase()) ||
+                                (it.description || "")
+                                  .toLowerCase()
+                                  .includes(productQuery.toLowerCase()) ||
+                                it.id
+                                  .toLowerCase()
+                                  .includes(productQuery.toLowerCase())
                             )
                             .slice(0, 8)
                             .map((it) => (
@@ -981,16 +979,25 @@ Report End
                               >
                                 <div>
                                   <div className="font-medium">{it.name}</div>
-                                  <div className="text-xs text-muted-foreground">{it.description || it.id}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {it.description || it.id}
+                                  </div>
                                 </div>
-                                <div className="text-sm text-muted-foreground">Rs.{it.price}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  Rs.{it.price}
+                                </div>
                               </div>
                             ))}
                         </div>
                       )}
                       {selectedProductId && (
                         <div className="mt-2 text-sm flex items-center gap-2">
-                          <Badge>{items.find((i) => i.id === selectedProductId)?.name}</Badge>
+                          <Badge>
+                            {
+                              items.find((i) => i.id === selectedProductId)
+                                ?.name
+                            }
+                          </Badge>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1015,7 +1022,10 @@ Report End
                         placeholder="Min"
                         value={reportFilters.minPrice}
                         onChange={(e) =>
-                          setReportFilters({ ...reportFilters, minPrice: e.target.value })
+                          setReportFilters({
+                            ...reportFilters,
+                            minPrice: e.target.value,
+                          })
                         }
                         className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
                       />
@@ -1025,7 +1035,10 @@ Report End
                         placeholder="Max"
                         value={reportFilters.maxPrice}
                         onChange={(e) =>
-                          setReportFilters({ ...reportFilters, maxPrice: e.target.value })
+                          setReportFilters({
+                            ...reportFilters,
+                            maxPrice: e.target.value,
+                          })
                         }
                         className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
                       />
@@ -1049,7 +1062,9 @@ Report End
                 <CardContent>
                   <Select
                     value={reportFilters.timePeriod}
-                    onValueChange={(value: "7" | "14" | "21" | "30" | "60" | "90") =>
+                    onValueChange={(
+                      value: "7" | "14" | "21" | "30" | "60" | "90"
+                    ) =>
                       setReportFilters({ ...reportFilters, timePeriod: value })
                     }
                   >
@@ -1057,12 +1072,24 @@ Report End
                       <SelectValue placeholder="Select time period" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="7" className="font-medium">📅 Last Week (7 days)</SelectItem>
-                      <SelectItem value="14" className="font-medium">📅 Last 2 Weeks (14 days)</SelectItem>
-                      <SelectItem value="21" className="font-medium">📅 Last 3 Weeks (21 days)</SelectItem>
-                      <SelectItem value="30" className="font-medium">📅 Last Month (30 days)</SelectItem>
-                      <SelectItem value="60" className="font-medium">📅 Last 2 Months (60 days)</SelectItem>
-                      <SelectItem value="90" className="font-medium">📅 Last 3 Months (90 days)</SelectItem>
+                      <SelectItem value="7" className="font-medium">
+                        📅 Last Week (7 days)
+                      </SelectItem>
+                      <SelectItem value="14" className="font-medium">
+                        📅 Last 2 Weeks (14 days)
+                      </SelectItem>
+                      <SelectItem value="21" className="font-medium">
+                        📅 Last 3 Weeks (21 days)
+                      </SelectItem>
+                      <SelectItem value="30" className="font-medium">
+                        📅 Last Month (30 days)
+                      </SelectItem>
+                      <SelectItem value="60" className="font-medium">
+                        📅 Last 2 Months (60 days)
+                      </SelectItem>
+                      <SelectItem value="90" className="font-medium">
+                        📅 Last 3 Months (90 days)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </CardContent>
@@ -1084,7 +1111,9 @@ Report End
               <CardContent>
                 <div className="border-2 border-orange-200/50 rounded-md p-4 bg-white/60 dark:bg-gray-900/20 text-sm space-y-2.5">
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-muted-foreground font-medium">Report Type:</span>
+                    <span className="text-muted-foreground font-medium">
+                      Report Type:
+                    </span>
                     <span className="font-medium text-foreground">
                       {reportFilters.reportType === "current-stock"
                         ? "Current Stock Level"
@@ -1093,7 +1122,9 @@ Report End
                   </div>
                   {reportFilters.stockLevel !== "all" && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-muted-foreground font-medium">Stock Level:</span>
+                      <span className="text-muted-foreground font-medium">
+                        Stock Level:
+                      </span>
                       <span className="font-medium capitalize text-foreground">
                         {reportFilters.stockLevel.replace("-", " ")}
                       </span>
@@ -1101,23 +1132,31 @@ Report End
                   )}
                   {(reportFilters.minPrice || reportFilters.maxPrice) && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-muted-foreground font-medium">Price Range:</span>
+                      <span className="text-muted-foreground font-medium">
+                        Price Range:
+                      </span>
                       <span className="font-medium text-foreground">
-                        {reportFilters.minPrice || "0"} - {reportFilters.maxPrice || "∞"} Rs.
+                        {reportFilters.minPrice || "0"} -{" "}
+                        {reportFilters.maxPrice || "∞"} Rs.
                       </span>
                     </div>
                   )}
                   {selectedProductId && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-muted-foreground font-medium">Selected Product:</span>
+                      <span className="text-muted-foreground font-medium">
+                        Selected Product:
+                      </span>
                       <span className="font-medium text-foreground">
-                        {items.find((i) => i.id === selectedProductId)?.name || selectedProductId}
+                        {items.find((i) => i.id === selectedProductId)?.name ||
+                          selectedProductId}
                       </span>
                     </div>
                   )}
                   {reportFilters.reportType === "stock-usage" && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-muted-foreground font-medium">Period:</span>
+                      <span className="text-muted-foreground font-medium">
+                        Period:
+                      </span>
                       <span className="font-medium text-foreground">
                         {reportFilters.timePeriod === "7"
                           ? "Last Week (7 days)"
@@ -1134,7 +1173,9 @@ Report End
                     </div>
                   )}
                   <div className="flex justify-between items-center pt-3 border-t">
-                    <span className="text-muted-foreground font-medium">Items to include:</span>
+                    <span className="text-muted-foreground font-medium">
+                      Items to include:
+                    </span>
                     <span className="font-semibold text-foreground">
                       {getFilteredReportData().length} items
                     </span>
@@ -1155,7 +1196,9 @@ Report End
             </Button>
             <Button
               onClick={downloadReport}
-              disabled={generatingReport || getFilteredReportData().length === 0}
+              disabled={
+                generatingReport || getFilteredReportData().length === 0
+              }
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all font-semibold h-11 px-6"
             >
               {generatingReport ? (
