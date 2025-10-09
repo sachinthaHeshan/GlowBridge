@@ -36,6 +36,7 @@ import {
   Category,
 } from "@/lib/categoryApi";
 import { showApiErrorToast } from "@/lib/errorToast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -56,37 +57,44 @@ export default function CategoriesPage() {
   const router = useRouter();
   const limit = 10;
 
-  const loadCategories = async (page: number = 1, search?: string) => {
-    try {
-      setLoading(true);
+  const salon_id = useAuth().userData?.salonId as string;
 
-      const result = await fetchCategories(page, limit, search);
+  const loadCategories = useCallback(
+    async (salon_id: string, page: number = 1, search?: string) => {
+      try {
+        setLoading(true);
 
-      setCategories(result.categories);
-      setFilteredCategories(result.categories);
-      setCurrentPage(result.page);
-      setTotalPages(result.totalPages);
-      setTotal(result.total);
-    } catch (error) {
-      showApiErrorToast(error, "Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
-  };
+        const result = await fetchCategories(salon_id, page, limit, search);
+
+        setCategories(result.categories);
+        setFilteredCategories(result.categories);
+        setCurrentPage(result.page);
+        setTotalPages(result.totalPages);
+        setTotal(result.total);
+      } catch (error) {
+        showApiErrorToast(error, "Failed to load categories");
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    loadCategories(1);
-  }, []);
+    if (salon_id) {
+      loadCategories(salon_id, 1);
+    }
+  }, [salon_id, loadCategories]);
 
   const handleSearch = useCallback(() => {
     setCurrentPage(1);
-    loadCategories(1, searchTerm || undefined);
-  }, [searchTerm]);
+    loadCategories(salon_id, 1, searchTerm || undefined);
+  }, [searchTerm, salon_id, loadCategories]);
 
   const handleClearSearch = () => {
     setSearchTerm("");
     setCurrentPage(1);
-    loadCategories(1);
+    loadCategories(salon_id, 1);
   };
 
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -97,7 +105,7 @@ export default function CategoriesPage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    loadCategories(page, searchTerm || undefined);
+    loadCategories(salon_id, page, searchTerm || undefined);
   };
 
   const handleAddCategory = async (formData: {
@@ -114,7 +122,7 @@ export default function CategoriesPage() {
 
       setIsAddDialogOpen(false);
 
-      await loadCategories(currentPage, searchTerm || undefined);
+      await loadCategories(salon_id, currentPage, searchTerm || undefined);
     } catch (error) {
       showApiErrorToast(error, "Failed to create category");
     } finally {
@@ -144,7 +152,7 @@ export default function CategoriesPage() {
       setIsEditDialogOpen(false);
       setEditingCategory(null);
 
-      await loadCategories(currentPage, searchTerm || undefined);
+      await loadCategories(salon_id, currentPage, searchTerm || undefined);
     } catch (error) {
       showApiErrorToast(error, "Failed to update category");
     } finally {
@@ -165,7 +173,7 @@ export default function CategoriesPage() {
 
       setDeleteConfirmation({ isOpen: false, categoryId: null });
 
-      await loadCategories(currentPage, searchTerm || undefined);
+      await loadCategories(salon_id, currentPage, searchTerm || undefined);
     } catch (error) {
       showApiErrorToast(error, "Failed to delete category");
     } finally {

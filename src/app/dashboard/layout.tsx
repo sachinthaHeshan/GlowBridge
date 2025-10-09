@@ -47,7 +47,14 @@ const navigation = [
     name: "User Management",
     icon: User,
     description: "Manage salon users",
-    permission: [UserRole.ADMIN, UserRole.SALON_OWNER],
+    permission: [UserRole.ADMIN],
+  },
+  {
+    href: "/dashboard/staff-management",
+    name: "Staff Management",
+    icon: User,
+    description: "Manage salon staff",
+    permission: [UserRole.SALON_OWNER],
   },
   {
     name: "Categories",
@@ -135,7 +142,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="flex items-center space-x-3">
                 <div>
                   <h1 className="text-xl font-bold text-foreground">
-                    GlowBridge
+                    {"GlowBridge"}
                   </h1>
                   <p className="text-sm text-gray-600">Management Dashboard</p>
                 </div>

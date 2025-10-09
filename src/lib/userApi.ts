@@ -442,3 +442,102 @@ export const updateStaffAvailability = async (
 
   return response;
 };
+
+// Salon-specific staff management APIs
+interface SalonStaffResponse {
+  success: boolean;
+  message: string;
+  data: BackendUser[];
+  count: number;
+}
+
+export const fetchSalonStaff = async (salonId: string): Promise<User[]> => {
+  const response = (await apiRequest(
+    `/salon/${salonId}/users`
+  )) as SalonStaffResponse;
+  return response.data.map(transformBackendUser);
+};
+
+export const createSalonStaff = async (
+  salonId: string,
+  userData: {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+  }
+): Promise<User> => {
+  const nameParts = userData.name.trim().split(" ");
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.slice(1).join(" ") || "";
+
+  const payload: CreateUserPayload = {
+    first_name: firstName,
+    last_name: lastName,
+    email: userData.email,
+    contact_number: userData.phone,
+    role: "salon_staff",
+    password: userData.password,
+    salon_id: salonId,
+  };
+
+  try {
+    const response = (await apiRequest("/users", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })) as UserResponse;
+    return transformBackendUser(response.user);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      let errorMessage = error.message;
+
+      if (
+        error.message.includes("Email already exists") ||
+        error.message.includes("already exists in Firebase")
+      ) {
+        errorMessage = "An account with this email already exists";
+      } else if (
+        error.message.includes("weak password") ||
+        error.message.includes("password")
+      ) {
+        errorMessage = "Password is too weak. Please use at least 6 characters";
+      } else if (
+        error.message.includes("invalid email") ||
+        error.message.includes("email")
+      ) {
+        errorMessage = "Please enter a valid email address";
+      }
+
+      throw new ApiError(errorMessage, error.status, error.response);
+    }
+
+    throw error;
+  }
+};
+
+export const updateSalonStaff = async (
+  id: string,
+  userData: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  }
+): Promise<User> => {
+  const payload: UpdateUserPayload = {};
+
+  if (userData.name) {
+    const nameParts = userData.name.trim().split(" ");
+    payload.first_name = nameParts[0] || "";
+    payload.last_name = nameParts.slice(1).join(" ") || "";
+  }
+
+  if (userData.email) payload.email = userData.email;
+  if (userData.phone) payload.contact_number = userData.phone;
+
+  const response = (await apiRequest(`/users/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  })) as UserResponse;
+
+  return transformBackendUser(response.user);
+};

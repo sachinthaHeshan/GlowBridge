@@ -34,7 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Search, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Loader2, FileText } from "lucide-react";
 import {
   fetchUsers,
   createUser,
@@ -46,9 +46,11 @@ import { UserRole } from "@/constraint";
 import { showApiErrorToast } from "@/lib/errorToast";
 import { Pagination } from "@/shared/components/pagination";
 import { fetchSalons, Salon } from "@/lib/salonApi";
+import { UserReportGenerator } from "@/lib/userReportGenerator";
 
 export function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -57,6 +59,7 @@ export function UserManagement() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSalons, setIsLoadingSalons] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [salons, setSalons] = useState<Salon[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -68,6 +71,14 @@ export function UserManagement() {
     role: UserRole.STAFF,
     status: "active" as "active" | "inactive",
     salonId: "" as string | undefined,
+  });
+
+  const [reportFilters, setReportFilters] = useState({
+    reportType: "user-list" as "user-list" | "role-analysis",
+    roleFilter: "all",
+    statusFilter: "all",
+    dateFrom: "",
+    dateTo: "",
   });
 
   const [validationErrors, setValidationErrors] = useState({
@@ -315,6 +326,64 @@ export function UserManagement() {
     loadSalons();
   }, []);
 
+  const handleGenerateReport = async () => {
+    setIsGeneratingReport(true);
+    try {
+      // Fetch all users based on filters
+      let reportUsers = users;
+
+      // Apply role filter
+      if (reportFilters.roleFilter !== "all") {
+        reportUsers = reportUsers.filter(
+          (user) => user.role === reportFilters.roleFilter
+        );
+      }
+
+      // Apply status filter
+      if (reportFilters.statusFilter !== "all") {
+        reportUsers = reportUsers.filter(
+          (user) => user.status === reportFilters.statusFilter
+        );
+      }
+
+      // Apply date range filter
+      if (reportFilters.dateFrom || reportFilters.dateTo) {
+        reportUsers = reportUsers.filter((user) => {
+          const joinDate = new Date(user.joinDate);
+          const fromDate = reportFilters.dateFrom
+            ? new Date(reportFilters.dateFrom)
+            : new Date(0);
+          const toDate = reportFilters.dateTo
+            ? new Date(reportFilters.dateTo)
+            : new Date();
+          return joinDate >= fromDate && joinDate <= toDate;
+        });
+      }
+
+      if (reportUsers.length === 0) {
+        alert(
+          "No users found matching the selected filters. Please adjust your filters and try again."
+        );
+        return;
+      }
+
+      // Generate report
+      const reportGenerator = new UserReportGenerator();
+      reportGenerator.generateReport(reportUsers, reportFilters);
+
+      setTimeout(() => {
+        alert("📄 Report generated successfully! Check your downloads folder.");
+      }, 500);
+
+      setIsReportDialogOpen(false);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      showApiErrorToast(error, "Failed to generate report");
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -326,13 +395,23 @@ export function UserManagement() {
             Manage all users across all salon locations
           </p>
         </div>
-        <Button
-          onClick={handleAddUser}
-          className="bg-primary hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add User
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={() => setIsReportDialogOpen(true)}
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary/10"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Generate Report
+          </Button>
+          <Button
+            onClick={handleAddUser}
+            className="bg-primary hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -690,6 +769,118 @@ export function UserManagement() {
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               )}
               {editingUser ? "Update" : "Create"} User
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Generation Dialog */}
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Generate User Report</DialogTitle>
+            <DialogDescription>
+              Select filters to customize your PDF report
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="reportRoleFilter">Role Filter</Label>
+              <Select
+                value={reportFilters.roleFilter}
+                onValueChange={(value) =>
+                  setReportFilters({ ...reportFilters, roleFilter: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="salon_staff">Staff</SelectItem>
+                  <SelectItem value="salon_owner">Salon Owner</SelectItem>
+                  <SelectItem value="customer">Customer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="reportStatusFilter">Status Filter</Label>
+              <Select
+                value={reportFilters.statusFilter}
+                onValueChange={(value) =>
+                  setReportFilters({ ...reportFilters, statusFilter: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="dateFrom">Date From</Label>
+                <Input
+                  id="dateFrom"
+                  type="date"
+                  value={reportFilters.dateFrom}
+                  onChange={(e) =>
+                    setReportFilters({
+                      ...reportFilters,
+                      dateFrom: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="dateTo">Date To</Label>
+                <Input
+                  id="dateTo"
+                  type="date"
+                  value={reportFilters.dateTo}
+                  onChange={(e) =>
+                    setReportFilters({
+                      ...reportFilters,
+                      dateTo: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="bg-muted p-3 rounded-md">
+              <p className="text-sm text-muted-foreground">
+                <strong>Report Preview:</strong>
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Detailed list of users with their information including name,
+                email, phone, role, status, and join date.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsReportDialogOpen(false)}
+              disabled={isGeneratingReport}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleGenerateReport}
+              disabled={isGeneratingReport}
+            >
+              {isGeneratingReport && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
+              Generate PDF
             </Button>
           </div>
         </DialogContent>

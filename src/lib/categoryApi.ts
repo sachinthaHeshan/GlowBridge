@@ -187,12 +187,13 @@ export interface PaginatedServicesResult {
   totalPages: number;
 }
 export const fetchCategories = async (
+  salon_id: string,
   page: number = 1,
   limit: number = 10,
   search?: string,
   is_active?: boolean
 ): Promise<PaginatedCategoriesResult> => {
-  let endpoint = `/categories?page=${page}&limit=${limit}`;
+  let endpoint = `/categories?page=${page}&limit=${limit}?salon_id=${salon_id}`;
 
   if (search) endpoint += `&search=${encodeURIComponent(search)}`;
   if (is_active !== undefined) endpoint += `&is_active=${is_active}`;

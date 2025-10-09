@@ -39,7 +39,7 @@ import {
   Service,
 } from "@/lib/categoryApi";
 import { showApiErrorToast } from "@/lib/errorToast";
-const DEFAULT_SALON_ID = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
+const DEFAULT_SALON_ID = "a0664e1e-396e-4ff6-8bce-8ed60c636578";
 
 export default function CategoryServicesPage() {
   const params = useParams();
@@ -64,19 +64,15 @@ export default function CategoryServicesPage() {
   const [total, setTotal] = useState(0);
   const limit = 10;
 
-
   const loadCategoryAndServices = useCallback(
     async (page: number = 1, search?: string) => {
       try {
         setLoading(true);
 
-
         const categoryData = await fetchCategoryById(categoryId);
         setCategory(categoryData);
 
-
         const servicesData = await fetchServicesByCategory(categoryId);
-
 
         let filteredData = servicesData;
         if (search) {
@@ -86,7 +82,6 @@ export default function CategoryServicesPage() {
               service.description.toLowerCase().includes(search.toLowerCase())
           );
         }
-
 
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
@@ -106,11 +101,9 @@ export default function CategoryServicesPage() {
     [categoryId, limit]
   );
 
-
   useEffect(() => {
     loadCategoryAndServices(1);
   }, [categoryId, loadCategoryAndServices]);
-
 
   const handleSearch = useCallback(() => {
     setCurrentPage(1);
@@ -122,7 +115,6 @@ export default function CategoryServicesPage() {
     setCurrentPage(1);
     loadCategoryAndServices(1);
   };
-
 
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -279,14 +271,14 @@ export default function CategoryServicesPage() {
           </DialogTrigger>
 
           <Link
-  href={`/dashboard/categories/${categoryId}/services/reports`}
-  className="inline-block"
->
-  <Button className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white shadow-lg ml-3">
-    <Package className="w-4 h-4 mr-2" />
-    Generate Report
-  </Button>
-</Link>
+            href={`/dashboard/categories/${categoryId}/services/reports`}
+            className="inline-block"
+          >
+            <Button className="bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white shadow-lg ml-3">
+              <Package className="w-4 h-4 mr-2" />
+              Generate Report
+            </Button>
+          </Link>
 
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
