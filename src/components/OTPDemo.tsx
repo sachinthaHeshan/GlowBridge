@@ -13,44 +13,44 @@ export default function OTPDemo() {
 
   const {
     isOTPRequired,
-    isOTPModalOpen,
     otpSession,
     isProcessingPayment,
     paymentError,
     paymentSuccess,
     requireOTPVerification,
     handleOTPVerified,
-    closeOTPModal,
     processPayment,
     resetPayment,
   } = usePaymentWithOTP();
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [`[${timestamp}] ${message}`, ...prev.slice(0, 9)]);
+    setLogs((prev) => [`[${timestamp}] ${message}`, ...prev.slice(0, 9)]);
   };
 
   const handleTestOTP = () => {
     addLog("Starting OTP verification test");
+    requireOTPVerification();
     setShowModal(true);
   };
 
-  const handleOTPSuccess = (sessionData: any) => {
+  const handleOTPSuccess = (sessionData: {
+    sessionId: string;
+    verified: boolean;
+    phoneNumber: string;
+    expiresAt: string;
+  }) => {
     addLog(`OTP verified successfully! Session: ${sessionData.sessionId}`);
     handleOTPVerified(sessionData);
     setShowModal(false);
   };
 
-  const handleOTPError = (error: string) => {
-    addLog(`OTP Error: ${error}`);
-  };
-
   const handleTestPayment = async () => {
     addLog("Testing payment with OTP verification");
-    
+
     const mockPaymentData = {
       orderId: `TEST_${Date.now()}`,
-      amount: 1500.00,
+      amount: 1500.0,
       currency: "LKR",
       description: "Test Order - Beauty Package",
       customerInfo: {
@@ -63,7 +63,7 @@ export default function OTPDemo() {
           id: "test-1",
           name: "Test Product",
           quantity: 1,
-          price: 1500.00,
+          price: 1500.0,
         },
       ],
     };
@@ -71,8 +71,12 @@ export default function OTPDemo() {
     try {
       await processPayment(mockPaymentData);
       addLog("Payment processing initiated");
-    } catch (error: any) {
-      addLog(`Payment error: ${error.message}`);
+    } catch (error: unknown) {
+      addLog(
+        `Payment error: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
@@ -93,12 +97,11 @@ export default function OTPDemo() {
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
-            
             {/* Demo Controls */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-4">
                 <h3 className="font-semibold">Test Controls</h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     Test Phone Number
@@ -113,14 +116,11 @@ export default function OTPDemo() {
                 </div>
 
                 <div className="space-y-2">
-                  <Button 
-                    onClick={handleTestOTP}
-                    className="w-full"
-                  >
+                  <Button onClick={handleTestOTP} className="w-full">
                     🔐 Test OTP Modal
                   </Button>
-                  
-                  <Button 
+
+                  <Button
                     onClick={handleTestPayment}
                     variant="outline"
                     className="w-full"
@@ -128,8 +128,8 @@ export default function OTPDemo() {
                   >
                     💳 Test Payment Flow
                   </Button>
-                  
-                  <Button 
+
+                  <Button
                     onClick={handleReset}
                     variant="secondary"
                     className="w-full"
@@ -142,24 +142,48 @@ export default function OTPDemo() {
               {/* Status Display */}
               <div className="space-y-4">
                 <h3 className="font-semibold">Current Status</h3>
-                
+
                 <div className="space-y-2 text-sm">
-                  <div className={`p-2 rounded ${isOTPRequired ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100'}`}>
-                    OTP Required: {isOTPRequired ? 'Yes' : 'No'}
+                  <div
+                    className={`p-2 rounded ${
+                      isOTPRequired
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    OTP Required: {isOTPRequired ? "Yes" : "No"}
                   </div>
-                  
-                  <div className={`p-2 rounded ${otpSession?.verified ? 'bg-green-100 text-green-800' : 'bg-gray-100'}`}>
-                    Phone Verified: {otpSession?.verified ? 'Yes' : 'No'}
+
+                  <div
+                    className={`p-2 rounded ${
+                      otpSession?.verified
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    Phone Verified: {otpSession?.verified ? "Yes" : "No"}
                   </div>
-                  
-                  <div className={`p-2 rounded ${isProcessingPayment ? 'bg-blue-100 text-blue-800' : 'bg-gray-100'}`}>
-                    Processing Payment: {isProcessingPayment ? 'Yes' : 'No'}
+
+                  <div
+                    className={`p-2 rounded ${
+                      isProcessingPayment
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    Processing Payment: {isProcessingPayment ? "Yes" : "No"}
                   </div>
-                  
-                  <div className={`p-2 rounded ${paymentSuccess ? 'bg-green-100 text-green-800' : 'bg-gray-100'}`}>
-                    Payment Success: {paymentSuccess ? 'Yes' : 'No'}
+
+                  <div
+                    className={`p-2 rounded ${
+                      paymentSuccess
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    Payment Success: {paymentSuccess ? "Yes" : "No"}
                   </div>
-                  
+
                   {paymentError && (
                     <div className="p-2 rounded bg-red-100 text-red-800">
                       Error: {paymentError}
@@ -173,7 +197,10 @@ export default function OTPDemo() {
                     <div className="text-xs space-y-1">
                       <div>ID: {otpSession.sessionId}</div>
                       <div>Phone: {otpSession.phoneNumber}</div>
-                      <div>Expires: {new Date(otpSession.expiresAt).toLocaleString()}</div>
+                      <div>
+                        Expires:{" "}
+                        {new Date(otpSession.expiresAt).toLocaleString()}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -201,7 +228,10 @@ export default function OTPDemo() {
               <h3 className="font-semibold text-blue-800 mb-2">How to Test:</h3>
               <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
                 <li>Enter a valid Sri Lankan phone number (+94XXXXXXXXX)</li>
-                <li>Click "Test OTP Modal" to open the verification dialog</li>
+                <li>
+                  Click &quot;Test OTP Modal&quot; to open the verification
+                  dialog
+                </li>
                 <li>Enter your phone number and request the OTP</li>
                 <li>Check your phone for the SMS and enter the 6-digit code</li>
                 <li>Once verified, test the payment flow</li>
@@ -218,7 +248,6 @@ export default function OTPDemo() {
         phoneNumber={demoPhone}
         onClose={() => setShowModal(false)}
         onOTPVerified={handleOTPSuccess}
-        onError={handleOTPError}
       />
     </div>
   );

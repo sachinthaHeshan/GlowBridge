@@ -1,18 +1,27 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Loader2, Smartphone, AlertTriangle } from "lucide-react";
 
 interface OTPModalProps {
   isOpen: boolean;
   phoneNumber: string;
   onClose: () => void;
-  onOTPVerified: (sessionData: any) => void;
-  onError: (error: string) => void;
+  onOTPVerified: (sessionData: {
+    sessionId: string;
+    verified: boolean;
+    phoneNumber: string;
+    expiresAt: string;
+  }) => void;
 }
 
 export default function OTPModal({
@@ -20,7 +29,6 @@ export default function OTPModal({
   phoneNumber,
   onClose,
   onOTPVerified,
-  onError,
 }: OTPModalProps) {
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [enteredPhone, setEnteredPhone] = useState(phoneNumber || "");
@@ -33,7 +41,7 @@ export default function OTPModal({
     if (phoneNumber && phoneNumber !== enteredPhone) {
       setEnteredPhone(phoneNumber);
     }
-  }, [phoneNumber]);
+  }, [phoneNumber, enteredPhone]);
 
   const validatePhoneNumber = (phone: string): boolean => {
     // Sri Lankan phone number validation
@@ -44,7 +52,7 @@ export default function OTPModal({
   const formatPhoneNumber = (phone: string): string => {
     // Remove all non-digits
     const cleaned = phone.replace(/\D/g, "");
-    
+
     // Handle different formats
     if (cleaned.startsWith("94")) {
       return "+" + cleaned;
@@ -53,11 +61,11 @@ export default function OTPModal({
     } else if (cleaned.length === 9) {
       return "+94" + cleaned;
     }
-    
+
     return phone;
   };
 
-  const handleSendOTP = async () => {
+  const handleSendOTP = useCallback(async () => {
     if (!validatePhoneNumber(enteredPhone)) {
       setPhoneError("Please enter a valid Sri Lankan phone number");
       return;
@@ -68,7 +76,7 @@ export default function OTPModal({
 
     try {
       const formattedPhone = formatPhoneNumber(enteredPhone);
-      
+
       const response = await fetch("/api_g/otp/send", {
         method: "POST",
         headers: {
@@ -93,7 +101,7 @@ export default function OTPModal({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [enteredPhone]);
 
   const handlePhoneNumberChange = (value: string) => {
     setEnteredPhone(value);
@@ -102,19 +110,26 @@ export default function OTPModal({
 
   // Auto-send OTP if modal opens with valid phone number from shipping details
   useEffect(() => {
-    if (isOpen && phoneNumber && validatePhoneNumber(phoneNumber) && step === "phone" && !isLoading) {
+    if (
+      isOpen &&
+      phoneNumber &&
+      validatePhoneNumber(phoneNumber) &&
+      step === "phone" &&
+      !isLoading
+    ) {
       // Auto-send OTP if we have a valid phone number from shipping details
       handleSendOTP();
     }
-  }, [isOpen, phoneNumber, step]);
+  }, [isOpen, phoneNumber, step, isLoading, handleSendOTP]);
 
-  const handleVerificationSuccess = (sessionData: any) => {
+  const handleVerificationSuccess = (sessionData: {
+    sessionId: string;
+    verified: boolean;
+    phoneNumber: string;
+    expiresAt: string;
+  }) => {
     onOTPVerified(sessionData);
     onClose();
-  };
-
-  const handleVerificationFailure = (error: string) => {
-    onError(error);
   };
 
   const handleBack = () => {
@@ -131,7 +146,9 @@ export default function OTPModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Smartphone className="w-5 h-5" />
-            {step === "phone" ? "Verify Phone Number" : "Enter Verification Code"}
+            {step === "phone"
+              ? "Verify Phone Number"
+              : "Enter Verification Code"}
           </DialogTitle>
           <DialogDescription>
             {step === "phone"
@@ -153,7 +170,11 @@ export default function OTPModal({
                 value={enteredPhone}
                 onChange={(e) => handlePhoneNumberChange(e.target.value)}
                 disabled={isLoading}
-                className={`border-2 bg-white transition-all duration-200 ${phoneError ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200" : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"}`}
+                className={`border-2 bg-white transition-all duration-200 ${
+                  phoneError
+                    ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                    : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                }`}
               />
               {phoneError && (
                 <div className="flex items-center gap-2 text-sm text-destructive">
@@ -196,9 +217,7 @@ export default function OTPModal({
             {/* Inline OTP verification - simplified version */}
             <OTPVerificationInline
               sessionId={sessionId}
-              phoneNumber={enteredPhone}
               onVerificationSuccess={handleVerificationSuccess}
-              onVerificationFailure={handleVerificationFailure}
               onBack={handleBack}
               isLoading={isLoading}
             />
@@ -212,18 +231,19 @@ export default function OTPModal({
 // Simplified inline OTP component for modal
 interface OTPVerificationInlineProps {
   sessionId: string;
-  phoneNumber: string;
-  onVerificationSuccess: (sessionData: any) => void;
-  onVerificationFailure: (error: string) => void;
+  onVerificationSuccess: (sessionData: {
+    sessionId: string;
+    verified: boolean;
+    phoneNumber: string;
+    expiresAt: string;
+  }) => void;
   onBack: () => void;
   isLoading?: boolean;
 }
 
 function OTPVerificationInline({
   sessionId,
-  phoneNumber,
   onVerificationSuccess,
-  onVerificationFailure,
   onBack,
   isLoading = false,
 }: OTPVerificationInlineProps) {
@@ -231,7 +251,7 @@ function OTPVerificationInline({
   const [error, setError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600);
-  
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Auto-focus first input when component mounts
@@ -243,7 +263,7 @@ function OTPVerificationInline({
     }, 100);
     return () => clearTimeout(timer);
   }, []);
-  
+
   React.useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
@@ -276,7 +296,10 @@ function OTPVerificationInline({
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Backspace") {
       if (!otp[index] && index > 0) {
         // If current box is empty and backspace is pressed, go to previous box
@@ -296,7 +319,7 @@ function OTPVerificationInline({
 
   const handleVerifyOTP = async (otpCode?: string) => {
     const codeToVerify = otpCode || otp.join("");
-    
+
     if (codeToVerify.length !== 6) {
       setError("Please enter all 6 digits");
       return;
@@ -324,7 +347,7 @@ function OTPVerificationInline({
           inputRefs.current[0]?.focus();
         }, 100);
       }
-    } catch (error) {
+    } catch {
       setError("Network error. Please try again.");
       setOTP(["", "", "", "", "", ""]);
       // Focus first input after error
@@ -357,16 +380,19 @@ function OTPVerificationInline({
         ))}
       </div>
 
-      {error && (
-        <p className="text-sm text-destructive text-center">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
       <p className="text-sm text-center text-muted-foreground">
         Code expires in {formatTime(timeLeft)}
       </p>
 
       <div className="flex gap-2">
-        <Button variant="outline" onClick={onBack} className="flex-1" disabled={isVerifying}>
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="flex-1"
+          disabled={isVerifying}
+        >
           Back
         </Button>
         <Button

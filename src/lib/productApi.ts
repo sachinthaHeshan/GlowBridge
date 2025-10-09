@@ -24,6 +24,7 @@ export interface Product {
   description?: string;
   isPublic: boolean;
   discount: number;
+  imageUrl?: string;
 }
 interface CreateProductPayload {
   salon_id: string;
@@ -33,6 +34,7 @@ interface CreateProductPayload {
   available_quantity: number;
   is_public: boolean;
   discount: number;
+  image_url?: string;
 }
 interface UpdateProductPayload {
   name?: string;
@@ -41,6 +43,7 @@ interface UpdateProductPayload {
   available_quantity?: number;
   is_public?: boolean;
   discount?: number;
+  image_url?: string;
 }
 interface ProductsResponse {
   data: BackendProduct[];
@@ -113,6 +116,7 @@ const transformBackendProduct = (backendProduct: BackendProduct): Product => {
     description: backendProduct.description,
     isPublic: backendProduct.is_public,
     discount: backendProduct.discount,
+    imageUrl: backendProduct.image_url,
   };
 };
 const transformToBackendPayload = (product: {
@@ -124,6 +128,7 @@ const transformToBackendPayload = (product: {
   description?: string;
   isPublic?: boolean;
   discount?: number;
+  imageUrl?: string;
 }): CreateProductPayload => {
   return {
     salon_id: product.salonId,
@@ -133,6 +138,7 @@ const transformToBackendPayload = (product: {
     available_quantity: product.quantity,
     is_public: product.isPublic ?? true,
     discount: product.discount ?? 0,
+    image_url: product.imageUrl,
   };
 };
 export class ApiError extends Error {
@@ -247,6 +253,7 @@ export const createProduct = async (productData: {
   description?: string;
   isPublic?: boolean;
   discount?: number;
+  imageUrl?: string;
 }): Promise<Product> => {
   const payload = transformToBackendPayload(productData);
 
@@ -267,6 +274,7 @@ export const updateProduct = async (
     description?: string;
     isPublic?: boolean;
     discount?: number;
+    imageUrl?: string;
   }
 ): Promise<Product> => {
   const payload: UpdateProductPayload = {};
@@ -281,6 +289,8 @@ export const updateProduct = async (
     payload.is_public = productData.isPublic;
   if (productData.discount !== undefined)
     payload.discount = productData.discount;
+  if (productData.imageUrl !== undefined)
+    payload.image_url = productData.imageUrl;
 
   const response = (await apiRequest(`/products/${id}`, {
     method: "PUT",

@@ -5,7 +5,6 @@ import {
   Search,
   Filter,
   ShoppingCart,
-  Star,
   Heart,
   ArrowLeft,
   Scissors,
@@ -221,7 +220,7 @@ export default function Marketplace() {
             <p className="text-base text-muted-foreground mb-4 max-w-xl mx-auto">
               Discover premium beauty products from top-rated salons
             </p>
-            
+
             {/* Quick stats */}
             <div className="flex justify-center items-center space-x-8 text-sm text-muted-foreground">
               <div className="flex items-center">
@@ -290,7 +289,7 @@ export default function Marketplace() {
                     </option>
                   ))}
                 </select>
-                
+
                 <select
                   value={productsPerPage}
                   onChange={(e) => {
@@ -350,7 +349,10 @@ export default function Marketplace() {
                           {category}
                         </span>
                         {selectedCategory === category && (
-                          <Badge variant="secondary" className="ml-auto text-xs">
+                          <Badge
+                            variant="secondary"
+                            className="ml-auto text-xs"
+                          >
                             Selected
                           </Badge>
                         )}
@@ -430,11 +432,12 @@ export default function Marketplace() {
                     No products found
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    Try adjusting your filters or search terms to find what you're looking for.
+                    Try adjusting your filters or search terms to find what
+                    you&apos;re looking for.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => {
                         setSelectedCategory("All");
                         setSearchQuery("");
@@ -443,9 +446,7 @@ export default function Marketplace() {
                     >
                       Clear Filters
                     </Button>
-                    <Button onClick={loadProducts}>
-                      Refresh Products
-                    </Button>
+                    <Button onClick={loadProducts}>Refresh Products</Button>
                   </div>
                 </div>
               </div>
@@ -460,18 +461,50 @@ export default function Marketplace() {
                       {}
                       <div className="relative overflow-hidden rounded-t-lg">
                         <div className="aspect-square bg-gradient-to-br from-primary/5 to-secondary/10 flex items-center justify-center relative">
-                          {/* Decorative pattern */}
-                          <div className="absolute inset-0 opacity-20">
-                            <div className="w-full h-full bg-gradient-to-br from-transparent via-primary/10 to-transparent"></div>
-                          </div>
-                          <div className="relative z-10 text-center">
-                            <div className="w-16 h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
-                              <Scissors className="h-8 w-8 text-primary" />
-                            </div>
-                            <span className="text-muted-foreground text-sm font-medium">
-                              {product.name}
-                            </span>
-                          </div>
+                          {product.image && product.image !== "/api/placeholder/300/300" ? (
+                            <>
+                              <img 
+                                src={product.image} 
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const fallback = target.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.classList.remove('hidden');
+                                }}
+                              />
+                              {/* Fallback UI (hidden by default) */}
+                              <div className="absolute inset-0 items-center justify-center hidden">
+                                <div className="absolute inset-0 opacity-20">
+                                  <div className="w-full h-full bg-gradient-to-br from-transparent via-primary/10 to-transparent"></div>
+                                </div>
+                                <div className="relative z-10 text-center">
+                                  <div className="w-16 h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <Scissors className="h-8 w-8 text-primary" />
+                                  </div>
+                                  <span className="text-muted-foreground text-sm font-medium">
+                                    {product.name}
+                                  </span>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {/* Decorative pattern */}
+                              <div className="absolute inset-0 opacity-20">
+                                <div className="w-full h-full bg-gradient-to-br from-transparent via-primary/10 to-transparent"></div>
+                              </div>
+                              <div className="relative z-10 text-center">
+                                <div className="w-16 h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
+                                  <Scissors className="h-8 w-8 text-primary" />
+                                </div>
+                                <span className="text-muted-foreground text-sm font-medium">
+                                  {product.name}
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
                         <Button
                           variant="ghost"
@@ -489,7 +522,9 @@ export default function Marketplace() {
                         </Button>
                         {!product.inStock && (
                           <div className="absolute inset-0 bg-background/70 flex items-center justify-center backdrop-blur-sm">
-                            <Badge variant="secondary" className="shadow-sm">Out of Stock</Badge>
+                            <Badge variant="secondary" className="shadow-sm">
+                              Out of Stock
+                            </Badge>
                           </div>
                         )}
                         {/* New badge for popular items */}
@@ -525,7 +560,11 @@ export default function Marketplace() {
                         <div className="space-y-3 pt-4 border-t border-border mt-4">
                           <div>
                             <span className="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                              LKR {product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              LKR{" "}
+                              {product.price.toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
                             </span>
                           </div>
                           <Button
@@ -550,29 +589,37 @@ export default function Marketplace() {
               <div className="flex items-center justify-center space-x-4 mt-8">
                 <Button
                   variant="outline"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                 >
                   Previous
                 </Button>
-                
+
                 <div className="flex items-center space-x-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(pageNum)}
-                      className="min-w-[40px]"
-                    >
-                      {pageNum}
-                    </Button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (pageNum) => (
+                      <Button
+                        key={pageNum}
+                        variant={
+                          currentPage === pageNum ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="min-w-[40px]"
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  )}
                 </div>
-                
+
                 <Button
                   variant="outline"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next
