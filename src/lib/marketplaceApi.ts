@@ -24,7 +24,7 @@ const transformToMarketplaceProduct = (
     category: getCategoryDisplayName(backendProduct.category),
     rating: 4.5 + Math.random() * 0.5,
     reviews: Math.floor(Math.random() * 200) + 50,
-    image: "/api/placeholder/300/300",
+    image: backendProduct.imageUrl || "/api/placeholder/300/300",
     inStock: backendProduct.status !== "out-of-stock",
     salon: `Salon ${backendProduct.salonId.slice(0, 8)}`,
   };
