@@ -37,7 +37,7 @@ interface AppointmentFormData {
   date: string;
   startTime: string;
   endTime: string;
-  paymentType: "cash" | "card" | "online";
+  paymentType: "cash" | "card" ;
   amount: string;
 }
 
@@ -191,15 +191,18 @@ export default function AppointmentBookingPage({
         amount: parseFloat(formData.amount),
       };
 
-      await createAppointment(appointmentPayload);
+      const newAppointment = await createAppointment(appointmentPayload);
 
-      setIsSubmitted(true);
-      toast.success("Appointment booked successfully!");
+setIsSubmitted(true);
+toast.success("Appointment booked successfully!");
 
+// Redirect to confirmation page with bookingId in the URL
+if (newAppointment && newAppointment.id) {
+  router.push(`/confirmation?bookingId=${newAppointment.id}`);
+} else {
+  console.error("No booking ID returned from API:", newAppointment);
+}
 
-      setTimeout(() => {
-        router.push("/confirmation");
-      }, 2000);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -461,7 +464,7 @@ export default function AppointmentBookingPage({
                   <Label htmlFor="paymentType">Payment Method *</Label>
                   <Select
                     value={formData.paymentType}
-                    onValueChange={(value: "cash" | "card" | "online") =>
+                    onValueChange={(value: "cash" | "card" ) =>
                       handleInputChange("paymentType", value)
                     }
                   >
@@ -482,12 +485,7 @@ export default function AppointmentBookingPage({
                           Card Payment
                         </div>
                       </SelectItem>
-                      <SelectItem value="online">
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4" />
-                          Online Payment
-                        </div>
-                      </SelectItem>
+                      
                     </SelectContent>
                   </Select>
                   {errors.paymentType && (

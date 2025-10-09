@@ -64,6 +64,8 @@ export interface AllAppointmentsResponse {
 }
 interface ServiceResponse {
   success: boolean;
+  message?: string;
+  status?: number;
   data: Service;
 }
 
@@ -72,7 +74,9 @@ interface AppointmentResponse {
 }
 
 interface AppointmentsResponse {
-  appointments: Appointment[];
+  success: boolean;
+  message: string;
+  data: Appointment[];
 }
 export class ApiError extends Error {
   constructor(
@@ -88,7 +92,8 @@ const apiRequest = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<unknown> => {
-  const url = `/api_g${endpoint}`;
+  // Always prefix with /api_g unless it already starts with it
+  const url = endpoint.startsWith('/api_g') ? endpoint : `/api_g${endpoint}`;
 
   const config: RequestInit = {
     headers: {
@@ -124,41 +129,172 @@ const apiRequest = async (
   }
 };
 export const fetchServiceById = async (serviceId: string): Promise<Service> => {
-  const response = (await apiRequest(
-    `/services/${serviceId}`
-  )) as ServiceResponse;
+  try {
+    console.log('Fetching service:', serviceId);
+    const response = (await apiRequest(`/services/${serviceId}`)) as ServiceResponse;
 
-  if (!response.success) {
-    throw new ApiError("Failed to fetch service details", 404);
+    if (!response || !response.success) {
+      console.error('Service API Error:', response);
+      throw new ApiError(
+        response?.message || "Failed to fetch service details",
+        response?.status || 404
+      );
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching service:', error);
+    throw error;
   }
-
-  return response.data;
 };
+
+export const fetchUserAppointments = async (userId: string): Promise<Appointment[]> => {
+  try {
+    console.log('Fetching appointments for user:', userId);
+    const response = (await apiRequest(`/appointments/user/${userId}`)) as AppointmentsResponse;
+
+    if (!response.success) {
+      console.error('Failed to fetch appointments:', response);
+      throw new ApiError("Failed to fetch user appointments", 400);
+    }
+
+    const appointments = response.data;
+    console.log('Got appointments:', appointments.length);
+
+    // Return early if no appointments
+    if (!appointments || appointments.length === 0) {
+      return [];
+    }
+
+    // Batch fetch all unique service IDs
+    const uniqueServiceIds = [...new Set(
+      appointments
+        .filter(app => app.service_id && !app.service) // Only fetch for appointments without service data
+        .map(app => app.service_id)
+    )];
+
+    console.log('Fetching services for IDs:', uniqueServiceIds);
+
+    // Create service map
+    const serviceMap = new Map<string, AppointmentService>();
+
+    if (uniqueServiceIds.length > 0) {
+      await Promise.all(
+        uniqueServiceIds.map(async (serviceId) => {
+          try {
+            const service = await fetchServiceById(serviceId);
+            if (service) {
+              serviceMap.set(service.id, {
+                id: service.id,
+                name: service.name,
+                description: service.description,
+                duration: service.duration
+              });
+            }
+          } catch (error) {
+            console.error(`Failed to fetch service ${serviceId}:`, error);
+          }
+        })
+      );
+    }
+
+    // Map appointments with services
+    return appointments.map(appointment => ({
+      ...appointment,
+      service: appointment.service || serviceMap.get(appointment.service_id) || {
+        id: appointment.service_id,
+        name: 'Service Unavailable',
+        description: '',
+        duration: '30 min'
+      }
+    }));
+
+  } catch (error) {
+    console.error('Error in fetchUserAppointments:', error);
+    throw error;
+  }
+};
+
 export const createAppointment = async (
   appointmentData: CreateAppointmentPayload
 ): Promise<Appointment> => {
-  const response = (await apiRequest("/appointments", {
-    method: "POST",
-    body: JSON.stringify(appointmentData),
-  })) as AppointmentResponse;
+  try {
+    const response = (await apiRequest("/appointments", {
+      method: "POST",
+      body: JSON.stringify(appointmentData),
+    })) as AppointmentResponse;
 
-  return response.appointment;
-};
-export const fetchUserAppointments = async (
-  userId: string
-): Promise<Appointment[]> => {
-  const response = (await apiRequest(
-    `/appointments/user/${userId}`
-  )) as AppointmentsResponse;
-  return response.appointments;
+    return response.appointment;
+  } catch (error) {
+    console.error('Error creating appointment:', error);
+    throw error;
+  }
 };
 export const fetchAppointmentById = async (
   id: string
 ): Promise<Appointment> => {
-  const response = (await apiRequest(
-    `/appointments/${id}`
-  )) as AppointmentResponse;
-  return response.appointment;
+  try {
+    console.log(`Fetching appointment with ID: ${id}`);
+    const response = await fetch(`/api_g/appointments/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include'
+    });
+    
+    console.log(`Response status:`, response.status);
+    
+    if (!response.ok) {
+      let errorMessage: string;
+      try {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+      } catch {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new ApiError(errorMessage, response.status);
+    }
+
+    const result = await response.json();
+    console.log('API Response:', result);
+
+    // Handle different response formats
+    let appointment: Appointment | null = null;
+
+    if (result.success && result.data) {
+      // Format: { success: true, data: appointment }
+      appointment = result.data;
+    } else if (result.appointment) {
+      // Format: { appointment }
+      appointment = result.appointment;
+    } else if (typeof result === 'object' && 'id' in result) {
+      // Format: direct appointment object
+      appointment = result;
+    }
+
+    if (!appointment) {
+      console.error('Could not find appointment in response:', result);
+      throw new ApiError("Invalid appointment data received", 404);
+    }
+
+    // Validate the appointment has required fields
+    if (!appointment.id || !appointment.service_id) {
+      console.error('Appointment missing required fields:', appointment);
+      throw new ApiError("Invalid appointment data - missing required fields", 400);
+    }
+
+    return appointment;
+  } catch (error) {
+    console.error('Error in fetchAppointmentById:', error);
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      `Failed to fetch appointment: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      500
+    );
+  }
 };
 export const updateAppointment = async (
   id: string,
