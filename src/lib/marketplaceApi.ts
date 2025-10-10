@@ -4,6 +4,7 @@ interface BackendProduct extends ProductApiBackendProduct {
   salon_name?: string;
   salon_type?: string;
   salon_location?: string;
+  image_url?: string; // Add the actual database field
 }
 
 export interface MarketplaceProduct {
@@ -22,6 +23,42 @@ export interface MarketplaceProduct {
 const transformToMarketplaceProduct = (
   backendProduct: BackendProduct
 ): MarketplaceProduct => {
+  // Enhanced image handling with database images first, then fallbacks
+  const getProductImage = (imageUrl: string | undefined, productName: string) => {
+    console.log(`🔍 Image check for "${productName}":`, { 
+      image_url: backendProduct.image_url, 
+      imageUrl, 
+      category: backendProduct.category 
+    });
+    
+    // First priority: Use actual database image_url
+    if (backendProduct.image_url && 
+        backendProduct.image_url !== "/api/placeholder/300/300" && 
+        backendProduct.image_url !== "" &&
+        backendProduct.image_url !== null) {
+      console.log(`✅ Using database image for "${productName}":`, backendProduct.image_url);
+      return backendProduct.image_url;
+    }
+    
+    // Second priority: Use passed imageUrl parameter
+    if (imageUrl && imageUrl !== "/api/placeholder/300/300" && imageUrl !== "") {
+      console.log(`✅ Using parameter image for "${productName}":`, imageUrl);
+      return imageUrl;
+    }
+    
+    // Last resort: Category-based fallback images
+    console.log(`⚠️ Using fallback image for "${productName}"`);
+    const category = backendProduct.category;
+    const fallbackImages: { [key: string]: string } = {
+      'hair-care': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400',
+      'skin-care': 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=400',
+      'tools': 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400',
+      'accessories': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400'
+    };
+    
+    return fallbackImages[category] || fallbackImages['accessories'];
+  };
+
   return {
     id: parseInt(backendProduct.id) || Math.floor(Math.random() * 10000),
     originalId: backendProduct.id,
@@ -31,7 +68,7 @@ const transformToMarketplaceProduct = (
     category: getCategoryDisplayName(backendProduct.category),
     rating: 4.5 + Math.random() * 0.5,
     reviews: Math.floor(Math.random() * 200) + 50,
-    image: backendProduct.imageUrl || "/api/placeholder/300/300",
+    image: getProductImage(backendProduct.image_url, backendProduct.name), // Use actual DB field
     inStock: backendProduct.status !== "out-of-stock",
     salon: backendProduct.salon_name || `Salon ${backendProduct.salonId.slice(0, 8)}`,
   };
@@ -62,6 +99,7 @@ export const fetchMarketplaceProducts = async (
 ): Promise<MarketplacePaginatedResult> => {
   try {
     // Fetch from the new public products endpoint that includes salon information
+    console.log('🚀 Fetching products from backend...');
     const response = await fetch('/api_g/products/public');
     const result = await response.json();
     
@@ -69,7 +107,12 @@ export const fetchMarketplaceProducts = async (
       throw new Error(result.message || 'Failed to fetch products');
     }
 
+    console.log('🔍 Raw backend response:', result);
+    console.log('🔍 First product data:', result.data?.[0]);
+
     let products: MarketplaceProduct[] = result.data.map(transformToMarketplaceProduct);
+
+    console.log('🖼️ Transformed products with images:', products.map(p => ({ name: p.name, image: p.image })));
 
     // Apply client-side filtering
     if (search) {

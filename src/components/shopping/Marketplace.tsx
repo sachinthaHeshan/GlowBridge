@@ -85,6 +85,16 @@ export default function Marketplace() {
     loadProducts();
   }, [loadProducts]);
 
+  // Debug products when they load
+  useEffect(() => {
+    if (products.length > 0) {
+      console.log('🖼️ Product images debug:');
+      products.forEach(product => {
+        console.log(`Product: ${product.name}, Image: ${product.image}`);
+      });
+    }
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
     
@@ -433,15 +443,43 @@ export default function Marketplace() {
                       {}
                       <div className="relative overflow-hidden rounded-t-lg">
                         <div className="aspect-square bg-gradient-to-br from-primary/5 to-secondary/10 flex items-center justify-center relative">
+                          {(() => {
+                            console.log('Product image data:', { name: product.name, image: product.image });
+                            return null;
+                          })()}
                           {product.image &&
-                          product.image !== "/api/placeholder/300/300" ? (
-                            <Image
-                              src={product.image}
-                              alt={product.name}
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
+                          product.image !== "/api/placeholder/300/300" &&
+                          product.image !== "" ? (
+                            <>
+                              <Image
+                                src={product.image}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                                onError={(e) => {
+                                  console.log('Image load error for:', product.name, product.image);
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const fallback = target.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.classList.remove('hidden');
+                                }}
+                              />
+                              {/* Fallback UI (hidden by default) */}
+                              <div className="absolute inset-0 items-center justify-center hidden">
+                                <div className="absolute inset-0 opacity-20">
+                                  <div className="w-full h-full bg-gradient-to-br from-transparent via-primary/10 to-transparent"></div>
+                                </div>
+                                <div className="relative z-10 text-center">
+                                  <div className="w-16 h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <Scissors className="h-8 w-8 text-primary" />
+                                  </div>
+                                  <span className="text-muted-foreground text-sm font-medium">
+                                    {product.name}
+                                  </span>
+                                </div>
+                              </div>
+                            </>
                           ) : (
                             <>
                               {/* Decorative pattern */}
