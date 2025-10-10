@@ -103,7 +103,6 @@ export default function ServicesPage() {
   }) => {
     let filtered = [...services];
 
-
     if (filters.searchTerm) {
       filtered = filtered.filter(
         (service) =>
@@ -119,20 +118,17 @@ export default function ServicesPage() {
       );
     }
 
-
     if (filters.category) {
       filtered = filtered.filter(
         (service) => service.category === filters.category
       );
     }
 
-
     if (filters.status) {
       filtered = filtered.filter(
         (service) => service.status === filters.status
       );
     }
-
 
     if (filters.priceRange[0] > 0 || filters.priceRange[1] < 500) {
       filtered = filtered.filter(
@@ -142,20 +138,17 @@ export default function ServicesPage() {
       );
     }
 
-
     if (filters.duration) {
       filtered = filtered.filter(
         (service) => service.duration === filters.duration
       );
     }
 
-
     if (filters.isPrivate !== null) {
       filtered = filtered.filter(
         (service) => service.isPrivate === filters.isPrivate
       );
     }
-
 
     filtered.sort((a, b) => {
       let aValue: string | number;
@@ -171,7 +164,6 @@ export default function ServicesPage() {
         aValue = a.name.toLowerCase();
         bValue = b.name.toLowerCase();
       } else {
-
         aValue = a.name.toLowerCase();
         bValue = b.name.toLowerCase();
       }
@@ -273,7 +265,6 @@ export default function ServicesPage() {
 
   return (
     <div className="space-y-6">
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -303,14 +294,12 @@ export default function ServicesPage() {
         </Dialog>
       </div>
 
-      {}
       <AdvancedSearch
         onSearch={handleSearch}
         onReset={handleResetSearch}
         type="services"
       />
 
-      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200/50">
           <CardContent className="p-4">

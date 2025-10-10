@@ -94,6 +94,13 @@ const navigation = [
     icon: Users,
     description: "All appointments",
   },
+  {
+    name: "Services",
+    href: "/dashboard/services",
+    permission: [UserRole.SALON_OWNER],
+    icon: LayoutDashboard,
+    description: "Services",
+  },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {

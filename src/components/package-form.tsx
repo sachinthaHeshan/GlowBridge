@@ -19,6 +19,7 @@ import {
   Category,
 } from "@/lib/categoryApi";
 import { showApiErrorToast } from "@/lib/errorToast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PackageData {
   name: string;
@@ -44,7 +45,6 @@ interface PackageFormProps {
   isEditing?: boolean;
   isSubmitting?: boolean;
 }
-const SALON_ID = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
 
 export default function PackageForm({
   initialData,
@@ -53,6 +53,8 @@ export default function PackageForm({
   isEditing = false,
   isSubmitting = false,
 }: PackageFormProps) {
+  const { userData } = useAuth();
+
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     description: initialData?.description || "",
@@ -60,7 +62,6 @@ export default function PackageForm({
     discount: initialData?.discount || "",
     isPrivate: initialData?.isPrivate || false,
   });
-
 
   useEffect(() => {
     if (initialData) {
@@ -81,7 +82,6 @@ export default function PackageForm({
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -89,9 +89,14 @@ export default function PackageForm({
 
         let servicesData;
         try {
-          servicesData = await fetchServicesBySalon(SALON_ID);
+          if (userData?.salonId) {
+            servicesData = await fetchServicesBySalon(userData.salonId);
+          } else {
+            const { fetchServices } = await import("@/lib/categoryApi");
+            const allServicesResponse = await fetchServices(1, 100);
+            servicesData = allServicesResponse.services;
+          }
         } catch {
-
           const { fetchServices } = await import("@/lib/categoryApi");
           const allServicesResponse = await fetchServices(1, 100);
           servicesData = allServicesResponse.services;
@@ -109,10 +114,9 @@ export default function PackageForm({
     };
 
     fetchData();
-  }, []);
+  }, [userData?.salonId]);
 
   useEffect(() => {
-
     const selectedServiceObjects = availableServices.filter((service) =>
       formData.selectedServices.includes(service.id)
     );
@@ -121,7 +125,6 @@ export default function PackageForm({
       0
     );
     setTotalPrice(total);
-
 
     const discount = Number.parseFloat(formData.discount) || 0;
     const calculated = total - (total * discount) / 100;
@@ -181,7 +184,6 @@ export default function PackageForm({
     setFormData({ ...formData, selectedServices: updatedServices });
     clearError("services");
   };
-
 
   const servicesByCategory = categories.reduce((acc, category) => {
     const servicesInCategory = availableServices.filter((service) =>
