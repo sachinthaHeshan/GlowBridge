@@ -157,7 +157,7 @@ export function InventoryManagement() {
       }
     };
   }, [formData.imagePreview]);
-
+// add new item
   const handleAddItem = () => {
     setEditingItem(null);
     setFormData({
@@ -271,7 +271,7 @@ export function InventoryManagement() {
       itemName: "",
     });
   };
-
+// Delete item
   const handleDeleteItem = async () => {
     if (!deleteConfirmation.itemId) return;
 
@@ -440,11 +440,11 @@ export function InventoryManagement() {
             Inventory Management
           </h1>
           <p className="text-muted-foreground">
-            Manage inventory for this salon location
+            Manage inventory for salon location
           </p>
         </div>
       </div>
-
+{/* QuickView Cards */}
       {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -494,7 +494,7 @@ export function InventoryManagement() {
           </CardContent>
         </Card>
       </div>
-
+{/* Search Filters */}
       {}
       <Card className="mb-6">
         <CardHeader>
@@ -628,7 +628,8 @@ export function InventoryManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">{item.discount}%</TableCell>
-                  <TableCell>
+                  {/* edit item btn*/}
+                  <TableCell>  
                     <Button
                       variant="ghost"
                       size="sm"
@@ -637,6 +638,7 @@ export function InventoryManagement() {
                       <Edit className="h-4 w-4" />
                     </Button>
                   </TableCell>
+                  {/* delete item btn*/}
                   <TableCell>
                     <Button
                       variant="ghost"
