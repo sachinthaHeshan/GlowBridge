@@ -216,8 +216,8 @@ export default function PaymentPage() {
         if (!formData.cardNumber.replace(/\s/g, "")) {
           newErrors.cardNumber = "Card number is required";
           isValid = false;
-        } else if (formData.cardNumber.replace(/\s/g, "").length < 13) {
-          newErrors.cardNumber = "Please enter a valid card number";
+        } else if (formData.cardNumber.replace(/\s/g, "").length !== 16) {
+          newErrors.cardNumber = "Card number must be exactly 16 digits";
           isValid = false;
         }
         if (!formData.expiryDate) {
