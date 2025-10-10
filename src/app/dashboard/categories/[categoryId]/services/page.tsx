@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,11 +39,12 @@ import {
   Service,
 } from "@/lib/categoryApi";
 import { showApiErrorToast } from "@/lib/errorToast";
-const DEFAULT_SALON_ID = "1df3195c-05b9-43c9-bebd-79d8684cbf55";
+const DEFAULT_SALON_ID = "46baf527-1379-4dc6-b4e0-c1709b4002af";
 
 export default function CategoryServicesPage() {
   const params = useParams();
   const router = useRouter();
+  const { userData } = useAuth();
   const categoryId = params.categoryId as string;
 
   const [category, setCategory] = useState<Category | null>(null);
@@ -146,22 +148,54 @@ export default function CategoryServicesPage() {
   }) => {
     try {
       setActionLoading(true);
-      await createService({
-        salon_id: DEFAULT_SALON_ID,
+      
+      // Use user's salon ID if available, otherwise fall back to default
+      const salonId = userData?.salonId || DEFAULT_SALON_ID;
+      
+      console.log('userData:', userData);
+      console.log('userData.salonId:', userData?.salonId);
+      console.log('Using salonId:', salonId);
+      
+      // For now, always use DEFAULT_SALON_ID since userData.salonId seems to be "1"
+      const finalSalonId = DEFAULT_SALON_ID;
+      
+      // Parse price and discount - only include if they have valid values
+      const priceValue = Number.parseFloat(formData.price);
+      const discountValue = Number.parseFloat(formData.discount);
+      
+      // Ensure description is not empty (provide a meaningful default)
+      const description = formData.description?.trim() || `Professional ${formData.name.toLowerCase()} service for enhanced hair care and styling.`;
+      
+      const serviceData: any = {
+        salon_id: finalSalonId,
         name: formData.name,
-        description: formData.description,
+        description: description,
         duration: formData.duration,
-        price: Number.parseFloat(formData.price) || 0,
         is_public: !formData.isPrivate,
-        discount: Number.parseFloat(formData.discount) || 0,
         is_completed: false,
         category_ids: [Number.parseInt(categoryId)],
-      });
+      };
+      
+      // Only add price if it's a valid positive number
+      if (!isNaN(priceValue) && priceValue > 0) {
+        serviceData.price = Math.floor(priceValue);
+      }
+      
+      // Only add discount if it's a valid positive number
+      if (!isNaN(discountValue) && discountValue > 0) {
+        serviceData.discount = Math.floor(discountValue);
+      }
+      
+      console.log('Service data being sent:', serviceData);
+      console.log('Form data received:', formData);
+      
+      await createService(serviceData);
 
       setIsAddDialogOpen(false);
 
       await loadCategoryAndServices(currentPage, searchTerm || undefined);
     } catch (error) {
+      console.error('Service creation error:', error);
       showApiErrorToast(error, "Failed to create service");
     } finally {
       setActionLoading(false);

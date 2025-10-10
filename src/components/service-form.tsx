@@ -90,9 +90,10 @@ export default function ServiceForm({
       newErrors.name = "Service name is required";
     }
 
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
-    }
+    // Description is optional - we'll provide a default if empty
+    // if (!formData.description.trim()) {
+    //   newErrors.description = "Description is required";
+    // }
 
     if (!formData.category) {
       newErrors.category = "Category is required";

@@ -437,17 +437,27 @@ export const createService = async (serviceData: {
   is_completed?: boolean;
   category_ids: number[];
 }): Promise<Service> => {
-  const payload: CreateServicePayload = {
+  const payload: any = {
     salon_id: serviceData.salon_id,
     name: serviceData.name,
     description: serviceData.description,
     duration: serviceData.duration,
-    price: serviceData.price ?? 0,
     is_public: serviceData.is_public,
-    discount: serviceData.discount ?? 0,
     is_completed: serviceData.is_completed ?? false,
     category_ids: serviceData.category_ids,
   };
+
+  // Only include price if it's provided and valid
+  if (serviceData.price !== undefined && serviceData.price > 0) {
+    payload.price = Math.floor(serviceData.price);
+  }
+
+  // Only include discount if it's provided and valid
+  if (serviceData.discount !== undefined && serviceData.discount > 0) {
+    payload.discount = Math.floor(serviceData.discount);
+  }
+
+  console.log('API payload being sent:', payload);
 
   const response = (await apiRequest("/services", {
     method: "POST",
