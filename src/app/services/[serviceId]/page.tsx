@@ -29,8 +29,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   createAppointment,
   CreateAppointmentPayload,
+  fetchServiceById,
+  Service
 } from "@/lib/appointmentApi";
-import { fetchServiceById, Service } from "@/lib/categoryApi";
 
 interface AppointmentFormData {
   note: string;
@@ -70,23 +71,104 @@ export default function AppointmentBookingPage({
     params.then(async ({ serviceId }) => {
       setServiceId(serviceId);
 
-
       try {
         setServiceLoading(true);
         setServiceError(null);
+        
+        // Validate serviceId first
+        if (!serviceId || serviceId.trim() === '') {
+          throw new Error('Invalid service ID');
+        }
+        
+        console.log('Fetching service with ID:', serviceId);
+        
+        // Test backend connectivity first
+        try {
+          console.log('Testing backend connectivity...');
+          const healthCheck = await fetch('/api_g/services/public');
+          console.log('Backend connectivity test - Status:', healthCheck.status);
+          console.log('Backend connectivity test - OK:', healthCheck.ok);
+          
+          if (!healthCheck.ok) {
+            if (healthCheck.status === 404) {
+              throw new Error('Backend services not found. Please ensure the backend server is running on port 3005.');
+            } else {
+              throw new Error(`Backend returned status ${healthCheck.status}. Please check the backend server.`);
+            }
+          } else {
+            console.log('Backend connectivity test passed');
+            
+            // Direct test of service endpoint
+            try {
+              console.log('Testing direct service fetch...');
+              const directTest = await fetch(`/api_g/services/${serviceId}`);
+              console.log('Direct test status:', directTest.status);
+              const directData = await directTest.json();
+              console.log('Direct test response:', directData);
+              console.log('Direct test response keys:', Object.keys(directData || {}));
+            } catch (directError) {
+              console.log('Direct test error:', directError);
+            }
+          }
+        } catch (connectError) {
+          console.error('Backend connectivity error:', connectError);
+          if (connectError instanceof TypeError && connectError.message.includes('fetch')) {
+            throw new Error('Cannot connect to backend server. Please ensure the backend is running on port 3005.');
+          }
+          throw connectError;
+        }
+        
         const serviceData = await fetchServiceById(serviceId);
+        console.log('Service data received:', serviceData);
+        console.log('Service data type:', typeof serviceData);
+        console.log('Service data keys:', Object.keys(serviceData || {}));
+        
+        if (!serviceData) {
+          throw new Error('Service data is null or undefined');
+        }
+        
+        if (!serviceData.id) {
+          console.error('Service data missing ID:', serviceData);
+          throw new Error('Service data is missing required ID field');
+        }
+        
         setService(serviceData);
         setFormData((prev) => ({
           ...prev,
-          amount: serviceData.price.toString(),
+          amount: serviceData.price ? serviceData.price.toString() : "0",
         }));
       } catch (error) {
-        setServiceError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load service details"
-        );
-        toast.error("Failed to load service details");
+        console.error('Service fetch error:', error);
+        const errorMessage = error instanceof Error ? error.message : "Failed to load service details";
+        setServiceError(errorMessage);
+        
+        // Show detailed error for debugging
+        if (error instanceof Error) {
+          toast.error(`Service loading failed: ${error.message}`);
+        } else {
+          toast.error("Failed to load service details. Please try again.");
+        }
+        
+        // Optional: Create fallback service data for testing
+        if (serviceId) {
+          console.log('Creating fallback service data for ID:', serviceId);
+          setService({
+            id: serviceId,
+            salon_id: 'fallback-salon',
+            name: 'Service Not Available',
+            description: 'This service is currently unavailable. Please contact support.',
+            duration: '60',
+            price: 0,
+            is_public: true,
+            discount: 0,
+            is_completed: false,
+            categories: []
+          });
+          setFormData((prev) => ({
+            ...prev,
+            amount: "0",
+          }));
+        }
       } finally {
         setServiceLoading(false);
       }
@@ -272,7 +354,7 @@ if (newAppointment && newAppointment.id) {
         </header>
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
-            <Card className="w-full max-w-md">
+            <Card className="w-full max-w-lg">
               <CardContent className="pt-8 text-center">
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-red-600 text-2xl">!</span>
@@ -280,15 +362,35 @@ if (newAppointment && newAppointment.id) {
                 <h2 className="text-2xl font-semibold text-foreground mb-2">
                   Service Not Available
                 </h2>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-muted-foreground mb-4">
                   {serviceError || "The requested service could not be found."}
                 </p>
-                <Button
-                  onClick={() => router.push("/services")}
-                  className="w-full"
-                >
-                  Browse Services
-                </Button>
+                
+                {/* Debug information */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                  <h3 className="font-medium text-sm text-gray-700 mb-2">Debug Information:</h3>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <div><strong>Service ID:</strong> {serviceId || 'Not provided'}</div>
+                    <div><strong>Error:</strong> {serviceError || 'Unknown error'}</div>
+                    <div><strong>Timestamp:</strong> {new Date().toLocaleString()}</div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={() => router.push("/services")}
+                    className="flex-1"
+                  >
+                    Browse Services
+                  </Button>
+                  <Button
+                    onClick={() => window.location.reload()}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Retry
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

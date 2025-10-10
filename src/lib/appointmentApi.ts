@@ -94,6 +94,9 @@ const apiRequest = async (
 ): Promise<unknown> => {
   // Always prefix with /api_g unless it already starts with it
   const url = endpoint.startsWith('/api_g') ? endpoint : `/api_g${endpoint}`;
+  
+  console.log('Making API request to:', url);
+  console.log('Request options:', options);
 
   const config: RequestInit = {
     headers: {
@@ -105,9 +108,21 @@ const apiRequest = async (
 
   try {
     const response = await fetch(url, config);
+    console.log('Response status:', response.status);
+    console.log('Response ok:', response.ok);
+    console.log('Response headers:', response.headers);
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      console.error('Response not ok, attempting to parse error...');
+      let errorData;
+      try {
+        errorData = await response.json();
+        console.log('Error response data:', errorData);
+      } catch (parseError) {
+        console.error('Failed to parse error response:', parseError);
+        errorData = {};
+      }
+      
       throw new ApiError(
         errorData.message || `HTTP ${response.status}: ${response.statusText}`,
         response.status,
@@ -115,8 +130,17 @@ const apiRequest = async (
       );
     }
 
-    return await response.json();
+    let responseData;
+    try {
+      responseData = await response.json();
+      console.log('Success response data:', responseData);
+      return responseData;
+    } catch (parseError) {
+      console.error('Failed to parse success response:', parseError);
+      throw new ApiError('Invalid JSON response from server', 500);
+    }
   } catch (error) {
+    console.error('API request failed:', error);
     if (error instanceof ApiError) {
       throw error;
     }
@@ -136,26 +160,77 @@ export const fetchServiceById = async (serviceId: string): Promise<Service> => {
       throw new ApiError('Invalid service ID provided', 400);
     }
     
-    const response = (await apiRequest(`/services/${serviceId}`)) as ServiceResponse;
+    // Log the exact URL being called
+    const apiUrl = `/services/${serviceId}`;
+    console.log('API URL:', apiUrl);
+    
+    const response = (await apiRequest(apiUrl)) as any;
 
     console.log('Service API response:', response);
+    console.log('Response type:', typeof response);
+    console.log('Response keys:', Object.keys(response || {}));
 
-    if (!response || !response.success) {
-      console.error('Service API Error:', response);
+    // Handle empty response object
+    if (!response || Object.keys(response).length === 0) {
+      console.error('Received empty response object');
+      throw new ApiError("Service not found - received empty response", 404);
+    }
+
+    // Handle different response formats from backend
+    let serviceData: Service;
+
+    // Backend returns { service: ... } format
+    if (response.service) {
+      console.log('Using backend format: { service: ... }');
+      serviceData = response.service;
+    }
+    // Frontend expects { success: true, data: ... } format
+    else if (response.success && response.data) {
+      console.log('Using frontend format: { success: true, data: ... }');
+      serviceData = response.data;
+    }
+    // Direct service object
+    else if (response.id) {
+      console.log('Using direct service object format');
+      serviceData = response;
+    }
+    else {
+      console.error('Service API Error - unexpected response format:', response);
       throw new ApiError(
-        response?.message || "Failed to fetch service details",
+        response?.message || "Service data not found in response",
         response?.status || 404
       );
     }
 
-    console.log('Service fetched successfully:', response.data);
-    return response.data;
+    // Validate that we have a valid service object
+    if (!serviceData || !serviceData.id) {
+      console.error('Invalid service data:', serviceData);
+      throw new ApiError("Invalid service data received", 500);
+    }
+
+    console.log('Service fetched successfully:', serviceData);
+    return serviceData;
   } catch (error) {
     console.error('Error fetching service:', error);
+    
+    // Enhanced error logging
     if (error instanceof ApiError) {
+      console.error('ApiError details:', {
+        message: error.message,
+        status: error.status,
+        response: error.response
+      });
       throw error;
     }
-    throw new ApiError('Network error while fetching service', 500);
+    
+    // Log unexpected errors
+    console.error('Unexpected error type:', typeof error);
+    console.error('Error details:', error);
+    
+    throw new ApiError(
+      `Network error while fetching service: ${error instanceof Error ? error.message : 'Unknown error'}`, 
+      500
+    );
   }
 };
 
