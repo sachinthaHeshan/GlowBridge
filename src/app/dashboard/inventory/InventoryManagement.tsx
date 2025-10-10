@@ -519,20 +519,32 @@ export function InventoryManagement() {
               <div className="flex items-center space-x-2 mt-1">
                 <Input
                   type="number"
+                  min="0"
+                  step="0.01"
                   placeholder="Min"
                   value={priceRange.min}
-                  onChange={(e) =>
-                    setPriceRange({ ...priceRange, min: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow empty string or positive numbers
+                    if (value === "" || (parseFloat(value) >= 0)) {
+                      setPriceRange({ ...priceRange, min: value });
+                    }
+                  }}
                 />
                 <span>-</span>
                 <Input
                   type="number"
+                  min="0"
+                  step="0.01"
                   placeholder="Max"
                   value={priceRange.max}
-                  onChange={(e) =>
-                    setPriceRange({ ...priceRange, max: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow empty string or positive numbers
+                    if (value === "" || (parseFloat(value) >= 0)) {
+                      setPriceRange({ ...priceRange, max: value });
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -709,13 +721,15 @@ export function InventoryManagement() {
               <Input
                 id="quantity"
                 type="number"
+                min="0"
                 value={formData.quantity}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
                   setFormData({
                     ...formData,
-                    quantity: parseInt(e.target.value) || 0,
-                  })
-                }
+                    quantity: Math.max(0, value),
+                  });
+                }}
                 placeholder="Enter quantity"
               />
             </div>
@@ -724,13 +738,16 @@ export function InventoryManagement() {
               <Input
                 id="price"
                 type="number"
+                min="0"
+                step="0.01"
                 value={formData.price}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value) || 0;
                   setFormData({
                     ...formData,
-                    price: parseFloat(e.target.value) || 0,
-                  })
-                }
+                    price: Math.max(0, value),
+                  });
+                }}
                 placeholder="Enter price"
               />
             </div>
@@ -753,12 +770,13 @@ export function InventoryManagement() {
                 min="0"
                 max="100"
                 value={formData.discount}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
                   setFormData({
                     ...formData,
-                    discount: parseInt(e.target.value) || 0,
-                  })
-                }
+                    discount: Math.max(0, Math.min(100, value)),
+                  });
+                }}
                 placeholder="Enter discount percentage"
               />
             </div>
@@ -1052,27 +1070,39 @@ export function InventoryManagement() {
                     <div className="flex gap-2 items-center">
                       <Input
                         type="number"
+                        min="0"
+                        step="0.01"
                         placeholder="Min"
                         value={reportFilters.minPrice}
-                        onChange={(e) =>
-                          setReportFilters({
-                            ...reportFilters,
-                            minPrice: e.target.value,
-                          })
-                        }
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Allow empty string or positive numbers
+                          if (value === "" || (parseFloat(value) >= 0)) {
+                            setReportFilters({
+                              ...reportFilters,
+                              minPrice: value,
+                            });
+                          }
+                        }}
                         className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
                       />
                       <span className="text-muted-foreground">-</span>
                       <Input
                         type="number"
+                        min="0"
+                        step="0.01"
                         placeholder="Max"
                         value={reportFilters.maxPrice}
-                        onChange={(e) =>
-                          setReportFilters({
-                            ...reportFilters,
-                            maxPrice: e.target.value,
-                          })
-                        }
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Allow empty string or positive numbers
+                          if (value === "" || (parseFloat(value) >= 0)) {
+                            setReportFilters({
+                              ...reportFilters,
+                              maxPrice: value,
+                            });
+                          }
+                        }}
                         className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
                       />
                     </div>
