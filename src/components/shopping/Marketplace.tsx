@@ -65,7 +65,7 @@ export default function Marketplace() {
       const result = await fetchMarketplaceProducts(
         currentPage,
         productsPerPage,
-        undefined, // No category filtering
+        undefined,
         priceRange[0],
         priceRange[1],
         searchQuery
@@ -88,7 +88,7 @@ export default function Marketplace() {
   // Debug products when they load
   useEffect(() => {
     if (products.length > 0) {
-      console.log('🖼️ Product images debug:');
+      console.log('Product images debug:');
       products.forEach(product => {
         console.log(`Product: ${product.name}, Image: ${product.image}`);
       });
@@ -522,7 +522,7 @@ export default function Marketplace() {
                         {product.rating > 4.7 && (
                           <div className="absolute top-2 left-2">
                             <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-sm">
-                              ⭐ Popular
+                              Popular
                             </Badge>
                           </div>
                         )}

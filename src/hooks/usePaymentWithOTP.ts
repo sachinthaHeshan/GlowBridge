@@ -128,12 +128,6 @@ export function usePaymentWithOTP(): PaymentHookReturn {
         // Simulate payment processing (replace with your actual payment gateway)
         await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
 
-        // For now, we'll simulate a successful payment
-        // In a real implementation, you would:
-        // 1. Call your payment gateway (Stripe, PayPal, etc.)
-        // 2. Create the order in your database
-        // 3. Send confirmation emails
-
         setPaymentSuccess(true);
         setOTPSession(null); // Clear OTP session after successful payment
 

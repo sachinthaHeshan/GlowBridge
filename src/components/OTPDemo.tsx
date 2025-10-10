@@ -91,7 +91,7 @@ export default function OTPDemo() {
       <div className="max-w-4xl mx-auto space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>🚀 OTP Payment System Demo</CardTitle>
+            <CardTitle>OTP Payment System Demo</CardTitle>
             <p className="text-gray-600">
               Test the SMS OTP verification system with real phone numbers
             </p>
@@ -117,7 +117,7 @@ export default function OTPDemo() {
 
                 <div className="space-y-2">
                   <Button onClick={handleTestOTP} className="w-full">
-                    🔐 Test OTP Modal
+                    Test OTP Modal
                   </Button>
 
                   <Button
@@ -126,7 +126,7 @@ export default function OTPDemo() {
                     className="w-full"
                     disabled={!otpSession?.verified}
                   >
-                    💳 Test Payment Flow
+                    Test Payment Flow
                   </Button>
 
                   <Button
@@ -134,7 +134,7 @@ export default function OTPDemo() {
                     variant="secondary"
                     className="w-full"
                   >
-                    🔄 Reset Demo
+                    Reset Demo
                   </Button>
                 </div>
               </div>
