@@ -554,6 +554,8 @@ export function InventoryManagement() {
         </CardContent>
       </Card>
 
+{/*Inventory Table */}
+
       {}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -562,6 +564,7 @@ export function InventoryManagement() {
             <CardDescription>Manage your products and supplies</CardDescription>
           </div>
           <div className="flex items-center space-x-2">
+            {/* Btns */}
             <Button
               onClick={() => setIsReportDialogOpen(true)}
               className="bg-primary hover:bg-primary/90"
@@ -639,10 +642,11 @@ export function InventoryManagement() {
         </CardContent>
       </Card>
 
+{/* Create Item Dialog */}
       {}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>
               {editingItem ? "Edit Item" : "Add New Item"}
             </DialogTitle>
@@ -652,7 +656,7 @@ export function InventoryManagement() {
                 : "Add a new item to your inventory."}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4 overflow-y-auto max-h-[calc(90vh-8rem)] pr-2">
+          <div className="grid gap-4 py-4 overflow-y-auto flex-1 pr-2">
             <div className="grid gap-2">
               <Label>Product Image</Label>
               <DropZone
@@ -794,7 +798,8 @@ export function InventoryManagement() {
               </Select>
             </div>
           </div>
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 flex-shrink-0 pt-4 border-t">
+            {/* Btns for create */}
             <Button
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
@@ -816,7 +821,7 @@ export function InventoryManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation  */}
       <ConfirmationModal
         isOpen={deleteConfirmation.isOpen}
         onClose={handleDeleteCancel}
