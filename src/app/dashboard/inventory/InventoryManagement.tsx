@@ -157,7 +157,7 @@ export function InventoryManagement() {
       }
     };
   }, [formData.imagePreview]);
-
+// add new item
   const handleAddItem = () => {
     setEditingItem(null);
     setFormData({
@@ -271,7 +271,7 @@ export function InventoryManagement() {
       itemName: "",
     });
   };
-
+// Delete item
   const handleDeleteItem = async () => {
     if (!deleteConfirmation.itemId) return;
 
@@ -440,11 +440,11 @@ export function InventoryManagement() {
             Inventory Management
           </h1>
           <p className="text-muted-foreground">
-            Manage inventory for this salon location
+            Manage inventory for salon location
           </p>
         </div>
       </div>
-
+{/* QuickView Cards */}
       {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -494,7 +494,7 @@ export function InventoryManagement() {
           </CardContent>
         </Card>
       </div>
-
+{/* Search Filters */}
       {}
       <Card className="mb-6">
         <CardHeader>
@@ -519,20 +519,32 @@ export function InventoryManagement() {
               <div className="flex items-center space-x-2 mt-1">
                 <Input
                   type="number"
+                  min="0"
+                  step="0.01"
                   placeholder="Min"
                   value={priceRange.min}
-                  onChange={(e) =>
-                    setPriceRange({ ...priceRange, min: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow empty string or positive numbers
+                    if (value === "" || (parseFloat(value) >= 0)) {
+                      setPriceRange({ ...priceRange, min: value });
+                    }
+                  }}
                 />
                 <span>-</span>
                 <Input
                   type="number"
+                  min="0"
+                  step="0.01"
                   placeholder="Max"
                   value={priceRange.max}
-                  onChange={(e) =>
-                    setPriceRange({ ...priceRange, max: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow empty string or positive numbers
+                    if (value === "" || (parseFloat(value) >= 0)) {
+                      setPriceRange({ ...priceRange, max: value });
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -554,6 +566,8 @@ export function InventoryManagement() {
         </CardContent>
       </Card>
 
+{/*Inventory Table */}
+
       {}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -562,6 +576,7 @@ export function InventoryManagement() {
             <CardDescription>Manage your products and supplies</CardDescription>
           </div>
           <div className="flex items-center space-x-2">
+            {/* Btns */}
             <Button
               onClick={() => setIsReportDialogOpen(true)}
               className="bg-primary hover:bg-primary/90"
@@ -613,7 +628,8 @@ export function InventoryManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">{item.discount}%</TableCell>
-                  <TableCell>
+                  {/* edit item btn*/}
+                  <TableCell>  
                     <Button
                       variant="ghost"
                       size="sm"
@@ -622,6 +638,7 @@ export function InventoryManagement() {
                       <Edit className="h-4 w-4" />
                     </Button>
                   </TableCell>
+                  {/* delete item btn*/}
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -639,10 +656,11 @@ export function InventoryManagement() {
         </CardContent>
       </Card>
 
+{/* Create Item Dialog */}
       {}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>
               {editingItem ? "Edit Item" : "Add New Item"}
             </DialogTitle>
@@ -652,7 +670,7 @@ export function InventoryManagement() {
                 : "Add a new item to your inventory."}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4 overflow-y-auto max-h-[calc(90vh-8rem)] pr-2">
+          <div className="grid gap-4 py-4 overflow-y-auto flex-1 pr-2">
             <div className="grid gap-2">
               <Label>Product Image</Label>
               <DropZone
@@ -705,13 +723,15 @@ export function InventoryManagement() {
               <Input
                 id="quantity"
                 type="number"
+                min="0"
                 value={formData.quantity}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
                   setFormData({
                     ...formData,
-                    quantity: parseInt(e.target.value) || 0,
-                  })
-                }
+                    quantity: Math.max(0, value),
+                  });
+                }}
                 placeholder="Enter quantity"
               />
             </div>
@@ -720,13 +740,16 @@ export function InventoryManagement() {
               <Input
                 id="price"
                 type="number"
+                min="0"
+                step="0.01"
                 value={formData.price}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value) || 0;
                   setFormData({
                     ...formData,
-                    price: parseFloat(e.target.value) || 0,
-                  })
-                }
+                    price: Math.max(0, value),
+                  });
+                }}
                 placeholder="Enter price"
               />
             </div>
@@ -749,12 +772,13 @@ export function InventoryManagement() {
                 min="0"
                 max="100"
                 value={formData.discount}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
                   setFormData({
                     ...formData,
-                    discount: parseInt(e.target.value) || 0,
-                  })
-                }
+                    discount: Math.max(0, Math.min(100, value)),
+                  });
+                }}
                 placeholder="Enter discount percentage"
               />
             </div>
@@ -794,7 +818,8 @@ export function InventoryManagement() {
               </Select>
             </div>
           </div>
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 flex-shrink-0 pt-4 border-t">
+            {/* Btns for create */}
             <Button
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
@@ -816,7 +841,7 @@ export function InventoryManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation  */}
       <ConfirmationModal
         isOpen={deleteConfirmation.isOpen}
         onClose={handleDeleteCancel}
@@ -1047,27 +1072,39 @@ export function InventoryManagement() {
                     <div className="flex gap-2 items-center">
                       <Input
                         type="number"
+                        min="0"
+                        step="0.01"
                         placeholder="Min"
                         value={reportFilters.minPrice}
-                        onChange={(e) =>
-                          setReportFilters({
-                            ...reportFilters,
-                            minPrice: e.target.value,
-                          })
-                        }
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Allow empty string or positive numbers
+                          if (value === "" || (parseFloat(value) >= 0)) {
+                            setReportFilters({
+                              ...reportFilters,
+                              minPrice: value,
+                            });
+                          }
+                        }}
                         className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
                       />
                       <span className="text-muted-foreground">-</span>
                       <Input
                         type="number"
+                        min="0"
+                        step="0.01"
                         placeholder="Max"
                         value={reportFilters.maxPrice}
-                        onChange={(e) =>
-                          setReportFilters({
-                            ...reportFilters,
-                            maxPrice: e.target.value,
-                          })
-                        }
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Allow empty string or positive numbers
+                          if (value === "" || (parseFloat(value) >= 0)) {
+                            setReportFilters({
+                              ...reportFilters,
+                              maxPrice: value,
+                            });
+                          }
+                        }}
                         className="h-11 border-2 border-green-200 hover:border-green-400 transition-colors focus:border-green-500"
                       />
                     </div>
